@@ -1,15 +1,9 @@
-[gd_scene load_steps=3 format=3 uid="uid://dq88i4qb7d2gj"]
+[gd_scene format=3 uid="uid://dq88i4qb7d2gj"]
 
-[ext_resource type="Texture2D" uid="uid://c5a3a7gkfhwjr" path="res://icon.svg" id="1_4h3qm"]
-[ext_resource type="Script" path="res://demo/test_signal.gd" id="2_wy14d"]
-
-[node name="Node2D" type="Node2D"]
-
-[node name="GDExample" type="GDExample" parent="."]
-speed = 7.3
-position = Vector2(138.039, 122.558)
-texture = ExtResource("1_4h3qm")
-centered = false
-script = ExtResource("2_wy14d")
-
-[connection signal="position_changed" from="GDExample" to="GDExample" method="_on_position_changed"]
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
