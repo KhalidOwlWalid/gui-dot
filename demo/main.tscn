@@ -9,25 +9,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Graph_2D" type="Graph_2D" parent="."]
-_background_color = Color(0.344752, 0.4835, 1, 1)
-_window_info.frame.size = Vector2(258, 205)
+_window_info.frame.size = Vector2(800, 600)
 layout_mode = 0
-offset_left = 107.0
-offset_top = 208.0
-offset_right = 365.0
-offset_bottom = 413.0
-
-[node name="Graph_2D2" type="Graph_2D" parent="."]
-_window_info.frame.size = Vector2(409, 400)
-layout_mode = 0
-offset_left = 567.0
-offset_top = 126.0
-offset_right = 962.0
-offset_bottom = 519.0
-
-[node name="ColorRect" type="ColorRect" parent="."]
-layout_mode = 0
-offset_left = 131.0
-offset_top = 38.0
-offset_right = 340.0
-offset_bottom = 175.0
+offset_right = 800.0
+offset_bottom = 600.0

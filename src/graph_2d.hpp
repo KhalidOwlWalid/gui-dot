@@ -47,9 +47,18 @@ class Graph_2D : public Control {
 
     bool _initialized;
     Vector2 _graph_size;
-    Vector2 _grid_spacing;
+    Vector2 _n_grid;
     Frame_t _window_info;
     Frame_t _display_frame_info;
+
+    Color _rgba(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+      return Color(r/255, g/255, b/255, a/2555);
+    };
+
+    Color GREY = Color(38/255,38/255,42/255,255/255);
+    Color GREY_GRID = Color(43/255,42/255,46/255,255/255);
+    Color BLACK_BACKGROUND = Color(17/255,17/255,22/255,255/255);
+    // Color WHITE_TEXT = _rgba(189, 189, 192, 255);
 
 };
 
