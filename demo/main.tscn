@@ -7,3 +7,18 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+
+[node name="Graph_2D" type="Graph_2D" parent="."]
+_background_color = Color(0.344752, 0.4835, 1, 1)
+layout_mode = 0
+offset_left = 107.0
+offset_top = 208.0
+offset_right = 365.0
+offset_bottom = 413.0
+
+[node name="Graph_2D2" type="Graph_2D" parent="."]
+layout_mode = 0
+offset_left = 443.0
+offset_top = 139.0
+offset_right = 627.0
+offset_bottom = 319.0

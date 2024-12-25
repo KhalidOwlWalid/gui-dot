@@ -1,7 +1,7 @@
 #include "register_types.h"
 
 #include "gdexample.h"
-#include "plot_2d.hpp"
+#include "graph_2d.hpp"
 
 #include <gdextension_interface.h>
 #include <godot_cpp/core/defs.hpp>
@@ -15,7 +15,7 @@ void initialize_example_module(ModuleInitializationLevel p_level) {
 	}
 
 	GDREGISTER_CLASS(GDExample);
-	GDREGISTER_CLASS(Plot_2D);
+	GDREGISTER_CLASS(Graph_2D);
 }
 
 void uninitialize_example_module(ModuleInitializationLevel p_level) {
