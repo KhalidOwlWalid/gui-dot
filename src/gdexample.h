@@ -13,6 +13,7 @@ private:
 	double amplitude;
 	double speed;
 	double time_emit;
+	double _test;
 
 protected:
 	static void _bind_methods();
@@ -26,6 +27,9 @@ public:
 	double get_amplitude() const;
 	void set_speed(const double p_speed);
 	double get_speed() const;
+
+	void set_test(const double test);
+	double get_test() const;
 };
 
 }

@@ -16,8 +16,10 @@ class Plot_2D : public Control {
     ~Plot_2D();
     // void _process(double delta) override;
 
-    void set_background_color(Color color);
-    Color get_background_color();
+    void set_background_color(const Color color);
+    Color get_background_color() const;
+    void set_amplitude(const double amplitude);
+    double get_amplitude() const;
 
     void _draw() override;
 
@@ -27,6 +29,7 @@ class Plot_2D : public Control {
   private:
     Vector2 _graph_size;
     Color _background_color;
+    double _amplitude;
 
 };
 
