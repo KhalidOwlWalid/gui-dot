@@ -19,8 +19,15 @@ class Graph_2D : public Control {
     ~Graph_2D();
 
     void _process(double delta) override;
-    void set_background_color(const Color color);
-    Color get_background_color() const;
+
+    void set_window_background_color(const Color color);
+    Color get_window_background_color() const;
+
+    void set_window_size(const Vector2 win_size);
+    Vector2 get_window_size() const;
+
+    void set_display_background_color(const Color color);
+    Color get_display_background_color() const;
 
     void _draw() override;
 
@@ -40,7 +47,6 @@ class Graph_2D : public Control {
 
     bool _initialized;
     Vector2 _graph_size;
-    Color _background_color;
     Vector2 _grid_spacing;
     Frame_t _window_info;
     Frame_t _display_frame_info;
