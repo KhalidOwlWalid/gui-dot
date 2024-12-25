@@ -13,6 +13,15 @@ void GDExample::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_test"), &GDExample::get_test);
 	ClassDB::bind_method(D_METHOD("set_test", "test"), &GDExample::set_test);
 
+  /*
+  Note: Please do not flip between setter methods and getter methods in the ADD_PROPERTY definition
+  Also, please make sure the function or variables are correctly spelled, if not Godot will detect this and output the following error
+
+  "Setter method 'Plot_2D::set_ampitude()' not found for property 'Plot_2D::_amplitude'.""
+
+  You can test this theory by mispelling set_amplitude as se_amplitude for instance, and you would see that the 
+  property would dissapear in Godot
+  */
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "amplitude"), "set_amplitude", "get_amplitude");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "speed", PROPERTY_HINT_RANGE, "0,20,0.01"), "set_speed", "get_speed");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "_test", PROPERTY_HINT_RANGE, "0,20,0.01"), "set_test", "get_test");
