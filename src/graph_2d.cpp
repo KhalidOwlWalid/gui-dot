@@ -41,6 +41,13 @@ Graph_2D::Graph_2D() {
 
   _n_grid = Vector2(10, 5);
 
+  Vector2 display_top_left = _display_frame_info.frame.get_position();
+  Vector2 display_size = _display_frame_info.frame.get_size();
+
+  // Calculate the amount of spacing required per pixel with n_grid
+  _grid_spacing.x = static_cast<uint>(_display_frame_info.frame.get_size().x / _n_grid.x);
+  _grid_spacing.y = static_cast<uint>(_display_frame_info.frame.get_size().y / _n_grid.y);
+
   _initialized = false;
 
   LOG("draw default values");
@@ -57,14 +64,17 @@ void Graph_2D::_init() {
 }
 
 void Graph_2D::_draw() {
-  // You need to always ensure that window is drawn on top of the display frame
   /* TODO: Draw lines and circles at the boundary to allow user to resize their window
   upon receiving inputs from mouse */
+
+  /* Drawing order is very important to avoid lines overlapping on top of each other 
+  (e.g. Drawing display frame before window would cause display frame to be hidden behind
+  the window) */
   _draw_window();
   _draw_display_frame();
   _draw_grids();
   _draw_axis();
-  // LOG("Drawing display frame");
+  _draw_ticks();
 }
 
 void Graph_2D::_process(double delta) {
@@ -98,6 +108,8 @@ void Graph_2D::set_display_background_color(const Color color) {
 }
 
 void Graph_2D::_draw_window() {
+  /* _draw() is called every frame, so this allows user to resize the 
+  window by controlling the Node bounding box */
   _window_info.frame.set_size(this->get_size());
   draw_rect(_window_info.frame, _window_info.color);
 }
@@ -120,19 +132,14 @@ void Graph_2D::_draw_grids() {
   Vector2 display_top_left = _display_frame_info.frame.get_position();
   Vector2 display_size = _display_frame_info.frame.get_size();
 
-  // Calculate the amount of spacing required per pixel with n_grid
-  uint x_spacing = static_cast<uint>(display_size.x / _n_grid.x);
-  uint y_spacing = static_cast<uint>(display_size.y / _n_grid.y);
-  // Vector2 grid_spacing = Vector2(x_spacing, y_spacing)
-
   Color grey_gridlines = Color(0.17, 0.17, 0.17, 1.0);
   float line_width = 2.0;
 
   // For column, we start with index 1 since we start drawing from the left, which will overlap with the y-axis
   for (size_t i = 1; i <= _n_grid.x; i++) {
     // Added offset before performing the spacing calculation due to the frame margin
-    Vector2 top_column_grid = Vector2(display_top_left.x + i * x_spacing, display_top_left.y);
-    Vector2 bottom_column_grid = Vector2(display_top_left.x + i * x_spacing, display_top_left.y + display_size.y);
+    Vector2 top_column_grid = Vector2(display_top_left.x + i * _grid_spacing.x, display_top_left.y);
+    Vector2 bottom_column_grid = Vector2(display_top_left.x + i * _grid_spacing.x, display_top_left.y + display_size.y);
     draw_line(top_column_grid, bottom_column_grid, grey_gridlines, line_width);
   }
 
@@ -141,25 +148,22 @@ void Graph_2D::_draw_grids() {
     // Added offset before performing the spacing calculation due to the frame margin
     // When dealing with the row grid, remember that we are drawing from the top to bottom
     // where top right corner is origin (0, 0)
-    Vector2 left_row_grid = Vector2(display_top_left.x, display_top_left.y + i * y_spacing);
-    Vector2 right_row_grid = Vector2(display_top_left.x + display_size.x, display_top_left.y + i * y_spacing);
+    Vector2 left_row_grid = Vector2(display_top_left.x, display_top_left.y + i * _grid_spacing.y);
+    Vector2 right_row_grid = Vector2(display_top_left.x + display_size.x, display_top_left.y + i * _grid_spacing.y);
     draw_line(left_row_grid, right_row_grid, grey_gridlines, line_width);
   }
 }
 
 void Graph_2D::_draw_axis() {
-  // Draw the axis for the plot
-  Vector2 display_top_left = _display_frame_info.frame.get_position();
-  Vector2 display_size = _display_frame_info.frame.get_size();
+  Vector2 display_bottom_left = Vector2(_display_frame_info.x(), _display_frame_info.y() + _display_frame_info.y_size());
+  Vector2 display_bottom_right = Vector2(_display_frame_info.x() + _display_frame_info.x_size(), _display_frame_info.y() + _display_frame_info.y_size());
 
-  Vector2 display_bottom_left = Vector2(display_top_left.x, display_top_left.y + display_size.y);
-  Vector2 display_bottom_right = Vector2(display_top_left.x + display_size.x, display_top_left.y + display_size.y);
-  
-  Color white_axis = Color(1.0, 1.0, 1.0, 1.0);
-  float line_width = 3.0;
-
-  // Drawing y-axis
-  draw_line(display_top_left, display_bottom_left, white_axis, line_width);
+  // y-axis
+  draw_line(_display_frame_info.top_left(), _display_frame_info.bottom_left(), _axis.color, _axis.width);
   // x-axis
-  draw_line(display_bottom_right, display_bottom_left, white_axis, line_width);
+  draw_line(_display_frame_info.bottom_left(), _display_frame_info.bottom_right(), _axis.color, _axis.width);
+}
+
+void Graph_2D::_draw_ticks() {
+
 }
