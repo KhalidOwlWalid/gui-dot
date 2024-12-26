@@ -29,6 +29,9 @@ class Graph_2D : public Control {
     void set_display_background_color(const Color color);
     Color get_display_background_color() const;
 
+    void set_grid_size(const Vector2 grid_size);
+    Vector2 get_grid_size() const;
+
     void _draw() override;
 
   protected:

@@ -14,10 +14,13 @@ void Graph_2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_display_background_color"), &Graph_2D::get_display_background_color);
 	ClassDB::bind_method(D_METHOD("set_display_background_color", "color"), &Graph_2D::set_display_background_color);
 
+	ClassDB::bind_method(D_METHOD("get_grid_size"), &Graph_2D::get_grid_size);
+	ClassDB::bind_method(D_METHOD("set_grid_size", "grid_size"), &Graph_2D::set_grid_size);
+
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "_window.color"), "set_window_background_color", "get_window_background_color");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "_window.frame.size"), "set_window_size", "get_window_size");
-
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "_display_frame.color"), "set_display_background_color", "get_display_background_color");
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "_n_grid"), "set_grid_size", "get_grid_size");
 }
 
 Graph_2D::Graph_2D() {
@@ -72,7 +75,7 @@ void Graph_2D::_draw() {
   _draw_window();
   _draw_display_frame();
   _draw_grids();
-  // _draw_axis();
+  _draw_axis();
   // _draw_ticks();
 }
 
@@ -104,6 +107,14 @@ Color Graph_2D::get_display_background_color() const {
 
 void Graph_2D::set_display_background_color(const Color color) {
   _display_frame.color = color;
+}
+
+Vector2 Graph_2D::get_grid_size() const {
+  return _n_grid;
+}
+
+void Graph_2D::set_grid_size(const Vector2 grid_size) {
+  _n_grid = grid_size;
 }
 
 void Graph_2D::_draw_window() {
