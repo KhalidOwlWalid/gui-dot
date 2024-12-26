@@ -40,6 +40,8 @@ class Graph_2D : public Control {
     void _draw_grids();
     void _draw_axis();
     void _draw_ticks();
+
+    void _calculate_grid_spacing();
     void _init();
 
     struct Frame_t {
@@ -77,32 +79,22 @@ class Graph_2D : public Control {
     };
 
     bool _initialized;
-    Vector2 _graph_size;
-    Vector2 _n_grid;
     Vector2 _grid_spacing;
+    Vector2 _n_grid {Vector2(10, 5)};
+    Vector2 _frame_margin {Vector2(30, 30)};
 
     // Frame related properties
-    Frame_t _window_info;
-    Frame_t _display_frame_info;
+    Frame_t _window;
+    Frame_t _display_frame;
 
+    // Line properties
+    Line_t _axis;
+    Line_t _grid;
+
+    // Color properties
     Color white = Color(1.0, 1.0, 1.0, 1.0);
     Color grey = Color(0.17, 0.17, 0.17, 1.0);
     Color black = Color(0.07, 0.07, 0.07, 1.0);
-
-    // Line properties
-    Line_t _axis {
-      .color = white,
-      .width = 3.0
-    };
-
-    Line_t _grid {
-      .color = grey,
-      .width = 1.5
-    };
-
-    Color BLACK_BACKGROUND = Color(17/255,17/255,22/255,255/255);
-
-    // Color WHITE_TEXT = _rgba(189, 189, 192, 255);
 
 };
 
