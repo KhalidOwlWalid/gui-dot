@@ -38,6 +38,7 @@ class Graph_2D : public Control {
     void _draw_window();
     void _draw_display_frame();
     void _draw_grids();
+    void _draw_axis();
     void _init();
 
     struct Frame_t {

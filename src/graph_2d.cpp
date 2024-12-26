@@ -63,7 +63,8 @@ void Graph_2D::_draw() {
   _draw_window();
   _draw_display_frame();
   _draw_grids();
-  LOG("Drawing display frame");
+  _draw_axis();
+  // LOG("Drawing display frame");
 }
 
 void Graph_2D::_process(double delta) {
@@ -83,8 +84,9 @@ Vector2 godot::Graph_2D::get_window_size() const {
 
 void godot::Graph_2D::set_window_size(const Vector2 win_size) {
   _window_info.frame.set_size(win_size);
+  // Update the size of the node bounding box
   this->set_size(win_size);
-  LOG("Set window size to ", String(_window_info.frame.size));
+  LOG("Using Inspector edit to resize window");
 }
 
 Color Graph_2D::get_display_background_color() const {
@@ -96,6 +98,7 @@ void Graph_2D::set_display_background_color(const Color color) {
 }
 
 void Graph_2D::_draw_window() {
+  _window_info.frame.set_size(this->get_size());
   draw_rect(_window_info.frame, _window_info.color);
 }
 
@@ -111,21 +114,6 @@ void Graph_2D::_draw_display_frame() {
   _display_frame_info.frame.set_position(margin);
   _display_frame_info.color = BLACK_BACKGROUND;
   draw_rect(_display_frame_info.frame, _display_frame_info.color);
-  
-  // Draw the axis for the plot
-  Vector2 display_top_left = _display_frame_info.frame.get_position();
-  Vector2 display_size = _display_frame_info.frame.get_size();
-
-  Vector2 display_bottom_left = Vector2(display_top_left.x, display_top_left.y + display_size.y);
-  Vector2 display_bottom_right = Vector2(display_top_left.x + display_size.x, display_top_left.y + display_size.y);
-  
-  Color white_axis = Color(1.0, 1.0, 1.0, 1.0);
-  float line_width = 3.0;
-
-  // Drawing y-axis
-  draw_line(display_top_left, display_bottom_left, white_axis, line_width);
-  // x-axis
-  draw_line(display_bottom_right, display_bottom_left, white_axis, line_width);
 }
 
 void Graph_2D::_draw_grids() {
@@ -157,4 +145,21 @@ void Graph_2D::_draw_grids() {
     Vector2 right_row_grid = Vector2(display_top_left.x + display_size.x, display_top_left.y + i * y_spacing);
     draw_line(left_row_grid, right_row_grid, grey_gridlines, line_width);
   }
+}
+
+void Graph_2D::_draw_axis() {
+  // Draw the axis for the plot
+  Vector2 display_top_left = _display_frame_info.frame.get_position();
+  Vector2 display_size = _display_frame_info.frame.get_size();
+
+  Vector2 display_bottom_left = Vector2(display_top_left.x, display_top_left.y + display_size.y);
+  Vector2 display_bottom_right = Vector2(display_top_left.x + display_size.x, display_top_left.y + display_size.y);
+  
+  Color white_axis = Color(1.0, 1.0, 1.0, 1.0);
+  float line_width = 3.0;
+
+  // Drawing y-axis
+  draw_line(display_top_left, display_bottom_left, white_axis, line_width);
+  // x-axis
+  draw_line(display_bottom_right, display_bottom_left, white_axis, line_width);
 }
