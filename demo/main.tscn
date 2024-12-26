@@ -9,7 +9,9 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Graph_2D" type="Graph_2D" parent="."]
-_window_info.frame.size = Vector2(800, 600)
+_window_info.frame.size = Vector2(800, 500)
 layout_mode = 0
-offset_right = 800.0
-offset_bottom = 600.0
+offset_left = 144.0
+offset_top = 87.0
+offset_right = 944.0
+offset_bottom = 587.0
