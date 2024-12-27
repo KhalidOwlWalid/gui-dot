@@ -9,9 +9,19 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Graph_2D2" type="Graph_2D" parent="."]
-_window.frame.size = Vector2(800, 800)
+_window.frame.size = Vector2(1154, 587)
+_n_grid = Vector2(30, 10)
 layout_mode = 0
-offset_left = 150.0
-offset_top = 24.0
-offset_right = 950.0
-offset_bottom = 824.0
+offset_left = 34.0
+offset_top = 27.0
+offset_right = 1188.0
+offset_bottom = 614.0
+
+[node name="Label" type="Label" parent="Graph_2D2"]
+layout_mode = 0
+offset_left = 222.0
+offset_top = 3.0
+offset_right = 304.0
+offset_bottom = 26.0
+text = "Some title"
+horizontal_alignment = 1
