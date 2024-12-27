@@ -19,7 +19,7 @@ void Graph_2D::_bind_methods() {
 
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "_window.color"), "set_window_background_color", "get_window_background_color");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "_window.frame.size"), "set_window_size", "get_window_size");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "_display_frame.color"), "set_display_background_color", "get_display_background_color");
+	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "_display.color"), "set_display_background_color", "get_display_background_color");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "_n_grid"), "set_grid_size", "get_grid_size");
 }
 
@@ -31,8 +31,8 @@ Graph_2D::Graph_2D() {
   // Ensure the Node Bounding Box is scaled according to the window during init
   this->set_size(_window.get_size());
 
-  _display_frame.frame = Rect2(Vector2(_frame_margin), Vector2(_window.get_size() - 2*_frame_margin));
-  _display_frame.color = black;
+  _display.frame = Rect2(Vector2(_frame_margin), Vector2(_window.get_size() - 2*_frame_margin));
+  _display.color = black;
 
   _grid.color = grey;
   _grid.width = 1.5;
@@ -44,6 +44,8 @@ Graph_2D::Graph_2D() {
 
   _initialized = false;
 
+  _axis.font = this->get_theme_default_font();
+
   LOG("draw default values");
 }
 
@@ -53,27 +55,25 @@ Graph_2D::~Graph_2D() {
 
 void Graph_2D::_init() {
   _draw_window();
-  _draw_display_frame();
+  _draw_display();
   _initialized = true;
 }
 
 void Graph_2D::_calculate_grid_spacing() {
   // Calculate the amount of spacing required per pixel with n_grid
-  _grid_spacing.x = static_cast<uint>(_display_frame.x_size() / _n_grid.x);
-  _grid_spacing.y = static_cast<uint>(_display_frame.y_size() / _n_grid.y);
+  _grid_spacing.x = static_cast<uint>(_display.x_size() / _n_grid.x);
+  _grid_spacing.y = static_cast<uint>(_display.y_size() / _n_grid.y);
 }
 
 void Graph_2D::_draw() {
   /* TODO: Draw lines and circles at the boundary to allow user to resize their window
   upon receiving inputs from mouse */
 
-  _calculate_grid_spacing();
-
   /* Drawing order is very important to avoid lines overlapping on top of each other 
   (e.g. Drawing display frame before window would cause display frame to be hidden behind
   the window) */
   _draw_window();
-  _draw_display_frame();
+  _draw_display();
   _draw_grids();
   _draw_axis();
   // _draw_ticks();
@@ -102,11 +102,11 @@ void godot::Graph_2D::set_window_size(const Vector2 win_size) {
 }
 
 Color Graph_2D::get_display_background_color() const {
-  return _display_frame.color;
+  return _display.color;
 }
 
 void Graph_2D::set_display_background_color(const Color color) {
-  _display_frame.color = color;
+  _display.color = color;
 }
 
 Vector2 Graph_2D::get_grid_size() const {
@@ -115,16 +115,18 @@ Vector2 Graph_2D::get_grid_size() const {
 
 void Graph_2D::set_grid_size(const Vector2 grid_size) {
   _n_grid = grid_size;
+  _window.set_size(this->get_size());
 }
 
 void Graph_2D::_draw_window() {
-  /* _draw() is called every frame, so this allows user to resize the 
+  /* _draw() is called every frame(?) or maybe when there is changes
+  to the canvas (need to double check), so this allows user to resize the 
   window by controlling the Node bounding box */
   _window.frame.set_size(this->get_size());
   draw_rect(_window.frame, _window.color);
 }
 
-void Graph_2D::_draw_display_frame() {
+void Graph_2D::_draw_display() {
   // Calculate the margins between the window and display frame
   Vector2 window_pos_top_left = _window.frame.get_position();
   Vector2 window_size = _window.frame.get_size();
@@ -132,25 +134,22 @@ void Graph_2D::_draw_display_frame() {
   Vector2 margin = Vector2(30, 30);
   /* 2x margin is required in order to compensate for the offset when using the 
   set_position method */
-  _display_frame.frame.set_size(window_size - 2*margin);
-  _display_frame.frame.set_position(margin);
-  _display_frame.color = black;
-  draw_rect(_display_frame.frame, _display_frame.color);
+  _display.frame.set_size(window_size - 2*margin);
+  _display.frame.set_position(margin);
+  _display.color = black;
+  draw_rect(_display.frame, _display.color);
 }
 
 void Graph_2D::_draw_grids() {
-  Vector2 display_top_left = _display_frame.frame.get_position();
-  Vector2 display_size = _display_frame.frame.get_size();
-
-  Color grey_gridlines = Color(0.17, 0.17, 0.17, 1.0);
-  float line_width = 2.0;
-
+  _calculate_grid_spacing();
+  int font_margin = 12;
   // For column, we start with index 1 since we start drawing from the left, which will overlap with the y-axis
   for (size_t i = 1; i <= _n_grid.x; i++) {
     // Added offset before performing the spacing calculation due to the frame margin
-    Vector2 top_column_grid = Vector2(_display_frame.x() + i * _grid_spacing.x, _display_frame.y());
-    Vector2 bottom_column_grid = Vector2(_display_frame.x() + i * _grid_spacing.x, _display_frame.y() + _display_frame.y_size());
+    Vector2 top_column_grid = Vector2(_display.x() + i * _grid_spacing.x, _display.y());
+    Vector2 bottom_column_grid = Vector2(_display.x() + i * _grid_spacing.x, _display.y() + _display.y_size());
     draw_line(top_column_grid, bottom_column_grid, _grid.color, _grid.width);
+    // draw_string(_axis.font, Vector2(bottom_column_grid.x, bottom_column_grid.y + font_margin), String::num(i), HORIZONTAL_ALIGNMENT_LEFT, (-1.0F), 8);
   }
 
   // For row, we start with index 0, since we start drawing from the top
@@ -158,20 +157,40 @@ void Graph_2D::_draw_grids() {
     // Added offset before performing the spacing calculation due to the frame margin
     // When dealing with the row grid, remember that we are drawing from the top to bottom
     // where top right corner is origin (0, 0)
-    Vector2 left_row_grid = Vector2(_display_frame.x(), _display_frame.y() + i * _grid_spacing.y);
-    Vector2 right_row_grid = Vector2(_display_frame.x() + _display_frame.x_size(), _display_frame.y() + i * _grid_spacing.y);
+    Vector2 left_row_grid = Vector2(_display.x(), _display.y() + i * _grid_spacing.y);
+    Vector2 right_row_grid = Vector2(_display.x() + _display.x_size(), _display.y() + i * _grid_spacing.y);
     draw_line(left_row_grid, right_row_grid, _grid.color, _grid.width);
+    // draw_string(_axis.font, Vector2(left_row_grid.x - font_margin, left_row_grid.y), String::num(i), HORIZONTAL_ALIGNMENT_LEFT, (-1.0F), 8);
   }
 }
 
 void Graph_2D::_draw_axis() {
-  Vector2 display_bottom_left = Vector2(_display_frame.x(), _display_frame.y() + _display_frame.y_size());
-  Vector2 display_bottom_right = Vector2(_display_frame.x() + _display_frame.x_size(), _display_frame.y() + _display_frame.y_size());
+  Vector2 display_bottom_left = Vector2(_display.x(), _display.y() + _display.y_size());
+  Vector2 display_bottom_right = Vector2(_display.x() + _display.x_size(), _display.y() + _display.y_size());
 
   // y-axis
-  draw_line(_display_frame.top_left(), _display_frame.bottom_left(), _axis.color, _axis.width);
+  draw_line(_display.top_left(), _display.bottom_left(), _axis.color, _axis.width);
   // x-axis
-  draw_line(_display_frame.bottom_left(), _display_frame.bottom_right(), _axis.color, _axis.width);
+  draw_line(_display.bottom_left(), _display.bottom_right(), _axis.color, _axis.width);
+
+  int font_size = 16;
+  int font_margin = font_size + 10;
+
+  for (size_t i = 0; i <= _n_grid.x; i++) {
+    // Added offset before performing the spacing calculation due to the frame margin
+    Vector2 font_pos = Vector2(_display.x() + i * _grid_spacing.x, _display.y() + _display.y_size());
+    draw_string(_axis.font, Vector2(font_pos.x, font_pos.y + font_margin), String::num(i), HORIZONTAL_ALIGNMENT_LEFT, (-1.0F), font_size);
+  }
+
+  // For row, we start with index 0, since we start drawing from the top
+  for (size_t i = 0; i <= _n_grid.y; i++) {
+    // Added offset before performing the spacing calculation due to the frame margin
+    // When dealing with the row grid, remember that we are drawing from the top to bottom
+    // where top right corner is origin (0, 0)
+    Vector2 font_pos = Vector2(_display.x(), _display.y() + i * _grid_spacing.y);
+    draw_string(_axis.font, Vector2(font_pos.x - font_margin, font_pos.y), String::num(_n_grid.y - i), HORIZONTAL_ALIGNMENT_LEFT, (-1.0F), font_size);
+    LOG(String::num(i));
+  }
 }
 
 void Graph_2D::_draw_ticks() {
