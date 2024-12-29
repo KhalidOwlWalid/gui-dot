@@ -11,12 +11,13 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Graph_2D" type="Graph_2D" parent="."]
-_window.frame.size = Vector2(147, 114)
+_window.color = Color(0.0705882, 0.0705882, 0.0705882, 1)
+_window.frame.size = Vector2(886, 547)
 layout_mode = 0
 offset_left = 8.0
 offset_top = 25.0
-offset_right = 155.0
-offset_bottom = 139.0
+offset_right = 894.0
+offset_bottom = 572.0
 script = ExtResource("1_fr6x7")
 
 [connection signal="mouse_entered" from="Graph_2D" to="Graph_2D" method="_on_mouse_entered"]
