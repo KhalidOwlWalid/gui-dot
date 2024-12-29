@@ -3,6 +3,7 @@
 
 #include <godot_cpp/classes/control.hpp>
 #include <godot_cpp/variant/vector2.hpp>
+#include <godot_cpp/core/math.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/font.hpp>
 
@@ -92,6 +93,8 @@ class Graph_2D : public Control {
 
     void _calculate_grid_spacing();
     void _init();
+    // TODO: Make this a template
+    String _format_string(const float &val, int dp);
 
     bool _initialized;
     Vector2 _grid_spacing;
