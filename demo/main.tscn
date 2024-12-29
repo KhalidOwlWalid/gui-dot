@@ -9,13 +9,13 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Graph_2D2" type="Graph_2D" parent="."]
-_window.frame.size = Vector2(1154, 587)
-_n_grid = Vector2(30, 10)
+_window.frame.size = Vector2(1118, 624)
+_n_grid = Vector2(25, 25)
 layout_mode = 0
 offset_left = 34.0
 offset_top = 27.0
-offset_right = 1188.0
-offset_bottom = 614.0
+offset_right = 1152.0
+offset_bottom = 651.0
 
 [node name="Label" type="Label" parent="Graph_2D2"]
 layout_mode = 0

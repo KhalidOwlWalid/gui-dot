@@ -145,11 +145,14 @@ void Graph_2D::_draw_grids() {
   int font_margin = 12;
   // For column, we start with index 1 since we start drawing from the left, which will overlap with the y-axis
   for (size_t i = 1; i <= _n_grid.x; i++) {
+
+    // Ensure every 5 rows, add some width to help distinguish visually
+    float line_width = (i % 5 == 0) ? _grid.width + 4.0 : _grid.width; 
+
     // Added offset before performing the spacing calculation due to the frame margin
     Vector2 top_column_grid = Vector2(_display.x() + i * _grid_spacing.x, _display.y());
     Vector2 bottom_column_grid = Vector2(_display.x() + i * _grid_spacing.x, _display.y() + _display.y_size());
-    draw_line(top_column_grid, bottom_column_grid, _grid.color, _grid.width);
-    // draw_string(_axis.font, Vector2(bottom_column_grid.x, bottom_column_grid.y + font_margin), String::num(i), HORIZONTAL_ALIGNMENT_LEFT, (-1.0F), 8);
+    draw_line(top_column_grid, bottom_column_grid, _grid.color, line_width);
   }
 
   // For row, we start with index 0, since we start drawing from the top
@@ -157,11 +160,24 @@ void Graph_2D::_draw_grids() {
     // Added offset before performing the spacing calculation due to the frame margin
     // When dealing with the row grid, remember that we are drawing from the top to bottom
     // where top right corner is origin (0, 0)
+    float line_width = (i % 5 == 0) ? _grid.width + 4.0 : _grid.width; 
     Vector2 left_row_grid = Vector2(_display.x(), _display.y() + i * _grid_spacing.y);
     Vector2 right_row_grid = Vector2(_display.x() + _display.x_size(), _display.y() + i * _grid_spacing.y);
-    draw_line(left_row_grid, right_row_grid, _grid.color, _grid.width);
-    // draw_string(_axis.font, Vector2(left_row_grid.x - font_margin, left_row_grid.y), String::num(i), HORIZONTAL_ALIGNMENT_LEFT, (-1.0F), 8);
+    draw_line(left_row_grid, right_row_grid, _grid.color, line_width);
   }
+}
+
+String Graph_2D::_format_string(const float &val, int dp = 1) {
+  String fmt_str(String::num(val, dp));
+
+  if (not fmt_str.contains(".")) {
+    fmt_str = fmt_str + ".";
+    for (size_t i = 0; i < dp; i++) {
+      fmt_str = fmt_str + "0";
+    }
+  }
+
+  return fmt_str;
 }
 
 void Graph_2D::_draw_axis() {
@@ -176,10 +192,22 @@ void Graph_2D::_draw_axis() {
   int font_size = 16;
   int font_margin = font_size + 10;
 
+  float x_min = 10.0;
+  float x_max = 20.0;
+  float x_diff = x_max - x_min;
+  float x_inc = x_diff / _n_grid.x;
+
+  float y_min = 0.0;
+  float y_max = 15.0;
+  float y_diff = y_max - y_min;
+  float y_inc = y_diff / _n_grid.y;
+
   for (size_t i = 0; i <= _n_grid.x; i++) {
     // Added offset before performing the spacing calculation due to the frame margin
     Vector2 font_pos = Vector2(_display.x() + i * _grid_spacing.x, _display.y() + _display.y_size());
-    draw_string(_axis.font, Vector2(font_pos.x, font_pos.y + font_margin), String::num(i), HORIZONTAL_ALIGNMENT_LEFT, (-1.0F), font_size);
+    float x = i * x_inc;
+    String fmt_x_str = _format_string(x);
+    draw_string(_axis.font, Vector2(font_pos.x - 10, font_pos.y + font_margin), fmt_x_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
   }
 
   // For row, we start with index 0, since we start drawing from the top
@@ -188,8 +216,9 @@ void Graph_2D::_draw_axis() {
     // When dealing with the row grid, remember that we are drawing from the top to bottom
     // where top right corner is origin (0, 0)
     Vector2 font_pos = Vector2(_display.x(), _display.y() + i * _grid_spacing.y);
-    draw_string(_axis.font, Vector2(font_pos.x - font_margin, font_pos.y), String::num(_n_grid.y - i), HORIZONTAL_ALIGNMENT_LEFT, (-1.0F), font_size);
-    LOG(String::num(i));
+    float y = (_n_grid.y - i) * y_inc;
+    String fmt_y_str = _format_string(y);
+    draw_string(_axis.font, Vector2(font_pos.x - font_margin, font_pos.y), fmt_y_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
   }
 }
 
