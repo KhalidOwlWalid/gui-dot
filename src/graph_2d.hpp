@@ -156,7 +156,7 @@ class Graph_2D : public Control {
 
     void _calculate_grid_spacing();
     void _init();
-    void _pixel_to_coordinates(const Vector2 pix_pos);
+    PackedVector2Array _coordinate_to_pixel(const PackedVector2Array &coords);
 
     // TODO: Make this a template
     String _format_string(const float &val, int dp);
@@ -181,6 +181,7 @@ class Graph_2D : public Control {
     Color white = Color(1.0, 1.0, 1.0, 1.0);
     Color grey = Color(0.17, 0.17, 0.17, 1.0);
     Color black = Color(0.07, 0.07, 0.07, 1.0);
+    Color red = Color(1.0, 0.07, 0.07, 1.0);
 
 };
 

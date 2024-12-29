@@ -46,11 +46,13 @@ Graph_2D::Graph_2D() {
 
   _axis.font = this->get_theme_default_font();
 
-  // Temp
+  // // Temp
   for (size_t i = 0; i < 5; i++) {
     _data1.packed_v2_data.append(Vector2(i, i));
   }
   _data1.set_range();
+  _data1.color = red;
+  _data1.width = 2.0;
 
   LOG("draw default values");
 }
@@ -81,9 +83,9 @@ void Graph_2D::_draw() {
   _draw_window();
   _draw_display();
   _draw_grids();
+  _draw_plot();
   _draw_axis();
   _draw_ticks();
-  _draw_plot();
 }
 
 void Graph_2D::_process(double delta) {
@@ -224,5 +226,25 @@ void Graph_2D::_draw_axis() {
 void Graph_2D::_draw_ticks() {
 }
 
+PackedVector2Array Graph_2D::_coordinate_to_pixel(const PackedVector2Array &data) {
+  PackedVector2Array data_pixel_pos;
+  for (size_t i = 0; i < data.size(); i++) {
+    double x_pixel = UtilityFunctions::remap(data[i].x, _data1.x_range[0], _data1.x_range[1], _display.bottom_left().x, _display.x() + _display.x_size());
+    double y_pixel = UtilityFunctions::remap(data[i].y, _data1.y_range[0], _data1.y_range[1], _display.bottom_left().y, _display.bottom_left().y - _display.y_size());
+    data_pixel_pos.append(Vector2(x_pixel, y_pixel));
+    LOG("Coordinate: ", data[i], " Pixel: ", Vector2(x_pixel, y_pixel));
+  }
+  return data_pixel_pos;
+}
+
 void Graph_2D::_draw_plot() {
+  if (_data1.packed_v2_data.is_empty()) {
+    return;
+  }
+
+  // TODO: Optimize this so that it does not do it multiple times every drawing frame
+  LOG("Draw plot");
+  PackedVector2Array data = _coordinate_to_pixel(_data1.packed_v2_data);
+  draw_polyline(data, _data1.color, _data1.width);
+  LOG(data);
 }
