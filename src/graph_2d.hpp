@@ -7,6 +7,8 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/font.hpp>
 
+#include <algorithm>
+
 #include "logger.hpp"
 
 namespace godot {
@@ -36,24 +38,84 @@ class Frame_t {
 };
 
 class Line_t {
-  public:
-    Color color;
-    float width;
-    Ref<Font> font;
 
+  friend class Axis_t;
+  friend class Graph_2D;
+
+  Color color;
+  float width;
+  Ref<Font> font;
+
+  public:
     inline Color get_color() const {return color;}
     inline void set_color(const Color new_color) {color = new_color;}
 
     inline float get_width() const {return width;}
     inline void set_width(const float new_width) {width = new_width;}
+
+};
+
+class Axis_t : public Line_t {
+  String x_label;
+  String y_label;
 };
 
 class Data_t : public Line_t {
+
+  const String __class__ = "Data_t";
+
   public:
     Vector2 x_range;
     Vector2 y_range;
-    Vector2 data;
-    Vector2 norm_data;
+    PackedVector2Array packed_v2_data;
+    PackedVector2Array packed_v2_norm_data;
+
+    // TODO: Create an assertion to ensure x_max is always bigger than x_min
+    template <typename T> void set_x_max(const T val) {
+      x_range[1] = val;
+    };
+
+    template <typename T> void set_x_min(const T val) {
+      x_range[0] = val;
+    }
+
+    template <typename T> void set_y_max(const T val) {
+      y_range[1] = val;
+    }
+
+    template <typename T> void set_y_min(const T val) {
+      y_range[0] = val;
+    }
+
+    template <typename T> T get_x_diff() {
+      T diff = x_range[1] - x_range[0];
+      return diff;
+    }
+
+    template <typename T> T get_y_diff() const {
+      T diff = y_range[1] - y_range[0];
+      return diff;
+    }
+
+    void set_range() {
+      // TODO: Only allow for specific time window maybe?
+      // If data is large, it will be really slow, so implementing
+      // time window here would improve the speed but it would not process every data
+
+      Vector2 min_xy = *std::min_element(packed_v2_data.begin(), packed_v2_data.end(), 
+      [](const Vector2 &a, const Vector2 &b) {
+        return a.x < b.x;
+      });
+
+      Vector2 max_xy = *std::min_element(packed_v2_data.begin(), packed_v2_data.end(), 
+      [](const Vector2 &a, const Vector2 &b) {
+        return a.x > b.x;
+      });
+
+      x_range = Vector2(min_xy[0], max_xy[0]);
+      y_range = Vector2(min_xy[1], max_xy[1]);
+    }
+
 };
 
 class Graph_2D : public Control {
@@ -90,16 +152,19 @@ class Graph_2D : public Control {
     void _draw_grids();
     void _draw_axis();
     void _draw_ticks();
+    void _draw_plot();
 
     void _calculate_grid_spacing();
     void _init();
+    void _pixel_to_coordinates(const Vector2 pix_pos);
+
     // TODO: Make this a template
     String _format_string(const float &val, int dp);
 
     bool _initialized;
     Vector2 _grid_spacing;
     Vector2 _n_grid {Vector2(10, 5)};
-    Vector2 _frame_margin {Vector2(30, 30)};
+    Vector2 _frame_margin {Vector2(100, 100)};
 
     // Frame related properties
     Frame_t _window;
@@ -110,7 +175,7 @@ class Graph_2D : public Control {
     Line_t _grid;
 
     // Create data class
-    Data_t some_data;
+    Data_t _data1;
 
     // Color properties
     Color white = Color(1.0, 1.0, 1.0, 1.0);
