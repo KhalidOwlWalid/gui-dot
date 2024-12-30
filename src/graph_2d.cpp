@@ -17,10 +17,14 @@ void Graph_2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_grid_size"), &Graph_2D::get_grid_size);
 	ClassDB::bind_method(D_METHOD("set_grid_size", "grid_size"), &Graph_2D::set_grid_size);
 
+	ClassDB::bind_method(D_METHOD("get_data"), &Graph_2D::get_data);
+	ClassDB::bind_method(D_METHOD("set_data", "data"), &Graph_2D::set_data);
+
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "_window.color"), "set_window_background_color", "get_window_background_color");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "_window.frame.size"), "set_window_size", "get_window_size");
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "_display.color"), "set_display_background_color", "get_display_background_color");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "_n_grid"), "set_grid_size", "get_grid_size");
+	ADD_PROPERTY(PropertyInfo(Variant::PACKED_VECTOR2_ARRAY, "_data1.packed_v2_data"), "set_data", "get_data");
 }
 
 Graph_2D::Graph_2D() {
@@ -47,20 +51,16 @@ Graph_2D::Graph_2D() {
   _axis.font = this->get_theme_default_font();
 
   // // Temp
-  for (size_t i = 0; i < 10; i++) {
-    float x = UtilityFunctions::randf_range(0, 100);
-    float y = UtilityFunctions::randf_range(0, 10);
-    _data1.packed_v2_data.append(Vector2(i, y));
-  }
-  _data1.set_range();
+  // for (size_t i = 0; i < 10; i++) {
+  //   float x = UtilityFunctions::randf_range(0, 100);
+  //   float y = UtilityFunctions::randf_range(0, 10);
+  //   _data1.packed_v2_data.append(Vector2(i, y));
+  // }
   _data1.color = red;
   _data1.width = 3.0;
-
-  LOG("draw default values");
 }
 
 Graph_2D::~Graph_2D() {
-  LOG("Cleaning Graph_2D construct");
 }
 
 void Graph_2D::_init() {
@@ -85,9 +85,14 @@ void Graph_2D::_draw() {
   _draw_window();
   _draw_display();
   _draw_grids();
-  _draw_plot();
+
+  if (not _data1.packed_v2_data.is_empty()) {
+    // Only draw when it is not empty
+    _draw_plot();
+  }
+
   _draw_axis();
-  _draw_ticks();
+  _draw_ticks();;
 }
 
 void Graph_2D::_process(double delta) {
@@ -109,7 +114,6 @@ void godot::Graph_2D::set_window_size(const Vector2 win_size) {
   _window.frame.set_size(win_size);
   // Update the size of the node bounding box
   this->set_size(win_size);
-  LOG("Using Inspector edit to resize window");
 }
 
 Color Graph_2D::get_display_background_color() const {
@@ -127,6 +131,16 @@ Vector2 Graph_2D::get_grid_size() const {
 void Graph_2D::set_grid_size(const Vector2 grid_size) {
   _n_grid = grid_size;
   _window.set_size(this->get_size());
+}
+
+PackedVector2Array Graph_2D::get_data() const {
+  return _data1.packed_v2_data;
+}
+
+void Graph_2D::set_data(const PackedVector2Array data) {
+  _data1.packed_v2_data = data;
+  // _data1.set_range();
+  LOG(_data1.packed_v2_data);
 }
 
 void Graph_2D::_draw_window() {
@@ -190,9 +204,6 @@ String Graph_2D::_format_string(const float &val, int dp = 1) {
 }
 
 void Graph_2D::_draw_axis() {
-  Vector2 display_bottom_left = Vector2(_display.x(), _display.y() + _display.y_size());
-  Vector2 display_bottom_right = Vector2(_display.x() + _display.x_size(), _display.y() + _display.y_size());
-
   // y-axis
   draw_line(_display.top_left(), _display.bottom_left(), _axis.color, _axis.width);
   // x-axis
@@ -201,13 +212,19 @@ void Graph_2D::_draw_axis() {
   int font_size = 16;
   int font_margin = font_size + 10;
 
-  float x_inc = _data1.get_x_diff<float>() / _n_grid.x;
-  float y_inc = _data1.get_y_diff<float>() / _n_grid.y;
+  float x_step = _data1.get_x_diff<float>() / _n_grid.x;
+  float y_step = _data1.get_y_diff<float>() / _n_grid.y;
+
+  LOG("------ _draw_axis() START ------")
+  LOG(x_step, " ", y_step);
+  LOG(_data1.x_min(), " ", _data1.x_max());
+  LOG(_data1.y_min(), " ", _data1.y_max());
 
   for (size_t i = 0; i <= _n_grid.x; i++) {
     // Added offset before performing the spacing calculation due to the frame margin
     Vector2 font_pos = Vector2(_display.x() + i * _grid_spacing.x, _display.y() + _display.y_size());
-    float x = i * x_inc;
+    // Add minimum to offset the axis label
+    float x = _data1.x_min() + i * x_step;
     String fmt_x_str = _format_string(x);
     // Added offset here (hardcoded for now) to prettify formatting
     draw_string(_axis.font, Vector2(font_pos.x - 10, font_pos.y + font_margin), fmt_x_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
@@ -219,10 +236,11 @@ void Graph_2D::_draw_axis() {
     // When dealing with the row grid, remember that we are drawing from the top to bottom
     // where top right corner is origin (0, 0)
     Vector2 font_pos = Vector2(_display.x(), _display.y() + i * _grid_spacing.y);
-    float y = (_n_grid.y - i) * y_inc;
+    float y = _data1.y_min() + (_n_grid.y - i) * y_step;
     String fmt_y_str = _format_string(y);
     draw_string(_axis.font, Vector2(font_pos.x - font_margin, font_pos.y), fmt_y_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
   }
+  LOG("------ _draw_axis() END ------")
 }
 
 void Graph_2D::_draw_ticks() {
@@ -230,30 +248,27 @@ void Graph_2D::_draw_ticks() {
 
 PackedVector2Array Graph_2D::_coordinate_to_pixel(const PackedVector2Array &data) {
   PackedVector2Array data_pixel_pos;
-  LOG("x_min: ", _data1.x_min(), " x_max: ", _data1.x_max());
-  LOG("y_min: ", _data1.y_min(), " y_max: ", _data1.y_max());
   for (size_t i = 0; i < data.size(); i++) {
     double x_pixel = UtilityFunctions::remap(data[i].x, _data1.x_min(), _data1.x_max(), _display.bottom_left().x, _display.x() + _display.x_size());
-    double y_pixel = UtilityFunctions::remap(data[i].y, _data1.y_min(), _data1.y_max(), _display.bottom_left().y - _display.y_size(), _display.bottom_left().y);
-    LOG(data[i].y, " ", _data1.y_min(), " ", _data1.y_max(), " ", _display.bottom_left().y - _display.y_size(), " ", _display.bottom_left().y);
+    double y_pixel = UtilityFunctions::remap(data[i].y, _data1.y_min(), _data1.y_max(), _display.bottom_left().y, _display.bottom_left().y - _display.y_size());
     data_pixel_pos.append(Vector2(x_pixel, y_pixel));
-    // LOG("Coordinate: ", data[i], " Pixel: ", Vector2(x_pixel, y_pixel));
+    LOG("Coordinate: ", data[i], " Pixel: ", Vector2(x_pixel, y_pixel));
   }
   return data_pixel_pos;
 }
 
 void Graph_2D::_draw_plot() {
+  // Ensure the range in the display frame is within range
+  _data1.set_range();
   if (_data1.packed_v2_data.is_empty()) {
     return;
   }
   // TODO: Optimize this so that it does not do it multiple times every drawing frame
-  LOG("Draw plot");
   PackedVector2Array data = _coordinate_to_pixel(_data1.packed_v2_data);
   // Enable anti-aliasing for better resolution
   // Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
   // TODO: Allow anti-aliasing to be toggled on and off during runtime
   draw_polyline(data, _data1.color, _data1.width, true);
-  LOG(data);
   for (size_t i = 0; i < data.size(); i++) {
     draw_circle(data[i], 5.0, _data1.color);
   }
