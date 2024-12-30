@@ -63,6 +63,7 @@ class Axis_t : public Line_t {
 class Data_t : public Line_t {
 
   const String __class__ = "Data_t";
+  friend class Graph_2D;
 
   public:
     Vector2 x_range;
@@ -87,6 +88,11 @@ class Data_t : public Line_t {
       y_range[0] = val;
     }
 
+    double x_max() {return x_range[1]; }
+    double x_min() {return x_range[0]; }
+    double y_max() {return y_range[1]; }
+    double y_min() {return y_range[0]; }
+
     template <typename T> T get_x_diff() {
       T diff = x_range[1] - x_range[0];
       return diff;
@@ -98,23 +104,40 @@ class Data_t : public Line_t {
     }
 
     void set_range() {
-      // TODO: Only allow for specific time window maybe?
-      // If data is large, it will be really slow, so implementing
-      // time window here would improve the speed but it would not process every data
-
-      Vector2 min_xy = *std::min_element(packed_v2_data.begin(), packed_v2_data.end(), 
-      [](const Vector2 &a, const Vector2 &b) {
-        return a.x < b.x;
-      });
-
-      Vector2 max_xy = *std::min_element(packed_v2_data.begin(), packed_v2_data.end(), 
-      [](const Vector2 &a, const Vector2 &b) {
-        return a.x > b.x;
-      });
-
-      x_range = Vector2(min_xy[0], max_xy[0]);
-      y_range = Vector2(min_xy[1], max_xy[1]);
+      Vector2 min = packed_v2_data[0];
+      Vector2 max = packed_v2_data[0];
+      for (size_t i = 0; i < packed_v2_data.size(); i++) {
+        min.x = std::min(min.x, packed_v2_data[i].x);
+        min.y = std::min(min.y, packed_v2_data[i].y);
+        max.x = std::max(max.x, packed_v2_data[i].x);
+        max.y = std::max(max.y, packed_v2_data[i].y);
+      }
+      x_range = Vector2(min.x, max.x);
+      y_range = Vector2(min.y, max.y);
     }
+
+    // void set_range() {
+    //   // TODO: Only allow for specific time window maybe?
+    //   // If data is large, it will be really slow, so implementing
+    //   // time window here would improve the speed but it would not process every data
+
+    //   LOG("Inside packed_v2_data:  ", packed_v2_data);
+
+    //   Vector2 min_xy = *std::min_element(packed_v2_data.begin(), packed_v2_data.end(), 
+    //   [](const Vector2 &a, const Vector2 &b) {
+    //     // Warning: This calculation is wrong as it takes the min x value and then stores that pair instead
+    //     return a.x < b.x;
+    //   });
+
+    //   Vector2 max_xy = *std::min_element(packed_v2_data.begin(), packed_v2_data.end(), 
+    //   [](const Vector2 &a, const Vector2 &b) {
+    //     return a.y > b.y;
+    //   });
+
+    //   x_range = Vector2(min_xy[0], max_xy[0]);
+    //   y_range = Vector2(min_xy[1], max_xy[1]);
+    //   LOG("x_range: ", x_range, " ", "y_range: ", y_range);
+    // }
 
 };
 
