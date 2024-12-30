@@ -116,29 +116,6 @@ class Data_t : public Line_t {
       y_range = Vector2(min.y, max.y);
     }
 
-    // void set_range() {
-    //   // TODO: Only allow for specific time window maybe?
-    //   // If data is large, it will be really slow, so implementing
-    //   // time window here would improve the speed but it would not process every data
-
-    //   LOG("Inside packed_v2_data:  ", packed_v2_data);
-
-    //   Vector2 min_xy = *std::min_element(packed_v2_data.begin(), packed_v2_data.end(), 
-    //   [](const Vector2 &a, const Vector2 &b) {
-    //     // Warning: This calculation is wrong as it takes the min x value and then stores that pair instead
-    //     return a.x < b.x;
-    //   });
-
-    //   Vector2 max_xy = *std::min_element(packed_v2_data.begin(), packed_v2_data.end(), 
-    //   [](const Vector2 &a, const Vector2 &b) {
-    //     return a.y > b.y;
-    //   });
-
-    //   x_range = Vector2(min_xy[0], max_xy[0]);
-    //   y_range = Vector2(min_xy[1], max_xy[1]);
-    //   LOG("x_range: ", x_range, " ", "y_range: ", y_range);
-    // }
-
 };
 
 class Graph_2D : public Control {
@@ -163,6 +140,9 @@ class Graph_2D : public Control {
 
     void set_grid_size(const Vector2 grid_size);
     Vector2 get_grid_size() const;
+
+    void set_data(const PackedVector2Array data);
+    PackedVector2Array get_data() const;
 
     void _draw() override;
 
