@@ -47,12 +47,14 @@ Graph_2D::Graph_2D() {
   _axis.font = this->get_theme_default_font();
 
   // // Temp
-  for (size_t i = 0; i < 5; i++) {
-    _data1.packed_v2_data.append(Vector2(i, i));
+  for (size_t i = 0; i < 10; i++) {
+    float x = UtilityFunctions::randf_range(0, 100);
+    float y = UtilityFunctions::randf_range(0, 10);
+    _data1.packed_v2_data.append(Vector2(i, y));
   }
   _data1.set_range();
   _data1.color = red;
-  _data1.width = 2.0;
+  _data1.width = 3.0;
 
   LOG("draw default values");
 }
@@ -228,11 +230,14 @@ void Graph_2D::_draw_ticks() {
 
 PackedVector2Array Graph_2D::_coordinate_to_pixel(const PackedVector2Array &data) {
   PackedVector2Array data_pixel_pos;
+  LOG("x_min: ", _data1.x_min(), " x_max: ", _data1.x_max());
+  LOG("y_min: ", _data1.y_min(), " y_max: ", _data1.y_max());
   for (size_t i = 0; i < data.size(); i++) {
-    double x_pixel = UtilityFunctions::remap(data[i].x, _data1.x_range[0], _data1.x_range[1], _display.bottom_left().x, _display.x() + _display.x_size());
-    double y_pixel = UtilityFunctions::remap(data[i].y, _data1.y_range[0], _data1.y_range[1], _display.bottom_left().y, _display.bottom_left().y - _display.y_size());
+    double x_pixel = UtilityFunctions::remap(data[i].x, _data1.x_min(), _data1.x_max(), _display.bottom_left().x, _display.x() + _display.x_size());
+    double y_pixel = UtilityFunctions::remap(data[i].y, _data1.y_min(), _data1.y_max(), _display.bottom_left().y - _display.y_size(), _display.bottom_left().y);
+    LOG(data[i].y, " ", _data1.y_min(), " ", _data1.y_max(), " ", _display.bottom_left().y - _display.y_size(), " ", _display.bottom_left().y);
     data_pixel_pos.append(Vector2(x_pixel, y_pixel));
-    LOG("Coordinate: ", data[i], " Pixel: ", Vector2(x_pixel, y_pixel));
+    // LOG("Coordinate: ", data[i], " Pixel: ", Vector2(x_pixel, y_pixel));
   }
   return data_pixel_pos;
 }
@@ -241,10 +246,15 @@ void Graph_2D::_draw_plot() {
   if (_data1.packed_v2_data.is_empty()) {
     return;
   }
-
   // TODO: Optimize this so that it does not do it multiple times every drawing frame
   LOG("Draw plot");
   PackedVector2Array data = _coordinate_to_pixel(_data1.packed_v2_data);
-  draw_polyline(data, _data1.color, _data1.width);
+  // Enable anti-aliasing for better resolution
+  // Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
+  // TODO: Allow anti-aliasing to be toggled on and off during runtime
+  draw_polyline(data, _data1.color, _data1.width, true);
   LOG(data);
+  for (size_t i = 0; i < data.size(); i++) {
+    draw_circle(data[i], 5.0, _data1.color);
+  }
 }
