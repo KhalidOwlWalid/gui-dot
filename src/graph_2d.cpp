@@ -52,12 +52,15 @@ Graph_2D::Graph_2D() {
 
   // // Temp
   // for (size_t i = 0; i < 10; i++) {
-  //   float x = UtilityFunctions::randf_range(0, 100);
+    // float x = UtilityFunctions::randf_range(0, 100);
   //   float y = UtilityFunctions::randf_range(0, 10);
   //   _data1.packed_v2_data.append(Vector2(i, y));
   // }
   _data1.color = red;
-  _data1.width = 3.0;
+  _data1.width = 5.0;
+
+  ticks = Time::get_singleton()->get_ticks_usec();
+  last_update_ticks = ticks;
 }
 
 Graph_2D::~Graph_2D() {
@@ -96,6 +99,12 @@ void Graph_2D::_draw() {
 }
 
 void Graph_2D::_process(double delta) {
+  // ticks = Time::get_singleton()->get_ticks_usec();
+  // if (ticks - last_update_ticks > 1e6) {
+  //   last_update_ticks = Time::get_singleton()->get_ticks_usec();
+  //   _data1.packed_v2_data.append(Vector2(ticks, uf::randf_range(0, 10)));
+  //   queue_redraw();
+  // }
 }
 
 Color Graph_2D::get_window_background_color() const {
@@ -236,6 +245,7 @@ void Graph_2D::_draw_axis() {
     // When dealing with the row grid, remember that we are drawing from the top to bottom
     // where top right corner is origin (0, 0)
     Vector2 font_pos = Vector2(_display.x(), _display.y() + i * _grid_spacing.y);
+    // 0.1 * y_min is to allow some spacing between the lower and upper boundary of the y-axis
     float y = _data1.y_min() + (_n_grid.y - i) * y_step;
     String fmt_y_str = _format_string(y);
     draw_string(_axis.font, Vector2(font_pos.x - font_margin, font_pos.y), fmt_y_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
@@ -258,6 +268,9 @@ PackedVector2Array Graph_2D::_coordinate_to_pixel(const PackedVector2Array &data
 }
 
 void Graph_2D::_draw_plot() {
+  // Bug: When plotting a constant value over time, the whole axis will be that constant value
+  // For instance, if you're plotting 1 at the y-axis constantly, it will be 1 to 1
+
   // Ensure the range in the display frame is within range
   _data1.set_range();
   if (_data1.packed_v2_data.is_empty()) {
@@ -268,7 +281,10 @@ void Graph_2D::_draw_plot() {
   // Enable anti-aliasing for better resolution
   // Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
   // TODO: Allow anti-aliasing to be toggled on and off during runtime
-  draw_polyline(data, _data1.color, _data1.width, true);
+  for (size_t i = 0; i < data.size() - 1; i++) {
+    draw_line(data[i], data[i + 1], _data1.color, _data1.width, true);
+  }
+  // draw_polyline(data, _data1.color, _data1.width, true);
   for (size_t i = 0; i < data.size(); i++) {
     draw_circle(data[i], 5.0, _data1.color);
   }

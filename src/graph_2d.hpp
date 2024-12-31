@@ -6,12 +6,15 @@
 #include <godot_cpp/core/math.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/font.hpp>
+#include <godot_cpp/classes/time.hpp>
 
 #include <algorithm>
 
 #include "logger.hpp"
 
 namespace godot {
+
+using uf = UtilityFunctions;
 
 class Frame_t {
   public:
@@ -179,6 +182,9 @@ class Graph_2D : public Control {
 
     // Create data class
     Data_t _data1;
+
+    uint64_t ticks;
+    uint64_t last_update_ticks;
 
     // Color properties
     Color white = Color(1.0, 1.0, 1.0, 1.0);
