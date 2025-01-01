@@ -9,6 +9,7 @@
 #include <godot_cpp/classes/time.hpp>
 
 #include <algorithm>
+#include <vector>
 
 #include "logger.hpp"
 #include "util.hpp"
@@ -133,20 +134,23 @@ class Graph_2D : public Control {
 
     void _process(double delta) override;
 
-    void set_window_background_color(const Color color);
+    void set_window_background_color(const Color &color);
     Color get_window_background_color() const;
 
-    void set_window_size(const Vector2 win_size);
+    void set_window_size(const Vector2 &win_size);
     Vector2 get_window_size() const;
 
-    void set_display_background_color(const Color color);
+    void set_display_background_color(const Color &color);
     Color get_display_background_color() const;
 
-    void set_grid_size(const Vector2 grid_size);
+    void set_grid_size(const Vector2 &grid_size);
     Vector2 get_grid_size() const;
 
-    void set_data(const PackedVector2Array data);
+    void set_data(const PackedVector2Array &data);
     PackedVector2Array get_data() const;
+
+    void set_data_vector(const PackedVector2Array &data, const int n);
+    PackedVector2Array get_data_vector(const int n) const;
 
     void _draw() override;
 
@@ -184,6 +188,9 @@ class Graph_2D : public Control {
 
     // Create data class
     Data_t _data;
+
+    Data_t test_data;
+    std::vector<Data_t> data_vector;
 
     uint64_t ticks;
     uint64_t last_update_ticks;

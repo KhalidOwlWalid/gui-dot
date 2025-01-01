@@ -4,7 +4,7 @@
 using namespace godot;
 
 void Graph_2D::_bind_methods() {
-  // TODO: draw a macro to make this process faster?
+
 	ClassDB::bind_method(D_METHOD("get_window_background_color"), &Graph_2D::get_window_background_color);
 	ClassDB::bind_method(D_METHOD("set_window_background_color", "color"), &Graph_2D::set_window_background_color);
 
@@ -20,16 +20,23 @@ void Graph_2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_data"), &Graph_2D::get_data);
 	ClassDB::bind_method(D_METHOD("set_data", "data"), &Graph_2D::set_data);
 
-  // TODO: Make the property a lot more readable, avoid using underscores etc.
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "_window.color"), "set_window_background_color", "get_window_background_color");
-	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "_window.frame.size"), "set_window_size", "get_window_size");
-	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "_display.color"), "set_display_background_color", "get_display_background_color");
-	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "_n_grid"), "set_grid_size", "get_grid_size");
-	ADD_PROPERTY(PropertyInfo(Variant::PACKED_VECTOR2_ARRAY, "_data.packed_v2_data"), "set_data", "get_data");
+	ClassDB::bind_method(D_METHOD("get_data_vector", "n"), &Graph_2D::get_data_vector);
+	ClassDB::bind_method(D_METHOD("set_data_vector", "data", "n"), &Graph_2D::set_data_vector);
+
+	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "window_color"), "set_window_background_color", "get_window_background_color");
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "Window Frame Size"), "set_window_size", "get_window_size");
+	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "Display Color"), "set_display_background_color", "get_display_background_color");
+	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "Grid Size"), "set_grid_size", "get_grid_size");
 }
 
 Graph_2D::Graph_2D() {
+  _init();
+}
 
+Graph_2D::~Graph_2D() {
+}
+
+void Graph_2D::_init() {
   _window.frame = Rect2(Vector2(0, 0), Vector2(600, 400));
   _window.color = black;
 
@@ -47,23 +54,17 @@ Graph_2D::Graph_2D() {
 
   _calculate_grid_spacing();
 
-  _initialized = false;
-
   _axis.font = this->get_theme_default_font();
 
   _data.color = red;
   _data.width = 5.0;
 
+  test_data.color = red;
+  test_data.width = 5.0;
+  data_vector.push_back(test_data);
+
   ticks = Time::get_singleton()->get_ticks_usec();
   last_update_ticks = ticks;
-
-}
-
-Graph_2D::~Graph_2D() {
-}
-
-void Graph_2D::_init() {
-  LOG(INFO, "Graph_2D initialized!");
   _initialized = true;
 }
 
@@ -72,7 +73,7 @@ void Graph_2D::_notification(const int p_what) {
 
     case NOTIFICATION_ENTER_TREE: {
       LOG(INFO, "NOTIFICATION_ENTER_TREE");
-      _init();
+      // _init();
       break;
     }
 
@@ -121,7 +122,7 @@ Color Graph_2D::get_window_background_color() const {
   return _window.color;
 }
 
-void Graph_2D::set_window_background_color(const Color color) {
+void Graph_2D::set_window_background_color(const Color &color) {
   _window.color = color;
   queue_redraw();
 }
@@ -130,7 +131,7 @@ Vector2 godot::Graph_2D::get_window_size() const {
   return _window.frame.size;
 }
 
-void godot::Graph_2D::set_window_size(const Vector2 win_size) {
+void godot::Graph_2D::set_window_size(const Vector2 &win_size) {
   _window.frame.set_size(win_size);
   // Update the size of the node bounding box
   this->set_size(win_size);
@@ -141,7 +142,7 @@ Color Graph_2D::get_display_background_color() const {
   return _display.color;
 }
 
-void Graph_2D::set_display_background_color(const Color color) {
+void Graph_2D::set_display_background_color(const Color &color) {
   _display.color = color;
   LOG(DEBUG, "Setting display color to ", String(color));
   queue_redraw();
@@ -151,7 +152,7 @@ Vector2 Graph_2D::get_grid_size() const {
   return _n_grid;
 }
 
-void Graph_2D::set_grid_size(const Vector2 grid_size) {
+void Graph_2D::set_grid_size(const Vector2 &grid_size) {
   _n_grid = grid_size;
   _window.set_size(this->get_size());
   queue_redraw();
@@ -161,8 +162,18 @@ PackedVector2Array Graph_2D::get_data() const {
   return _data.packed_v2_data;
 }
 
-void Graph_2D::set_data(const PackedVector2Array data) {
+void Graph_2D::set_data(const PackedVector2Array &data) {
   _data.packed_v2_data = data;
+}
+
+PackedVector2Array Graph_2D::get_data_vector(const int n) const {
+  // TODO: Assert that n is not out of bound
+  return data_vector[n].packed_v2_data;
+}
+
+void Graph_2D::set_data_vector(const PackedVector2Array &data, const int n) {
+  // TODO: Ensure that n is not out of bound
+  data_vector[n].packed_v2_data = data;
 }
 
 void Graph_2D::_draw_window() {
