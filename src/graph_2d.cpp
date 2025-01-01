@@ -1,5 +1,6 @@
 #include "graph_2d.hpp"
 #include <godot_cpp/core/class_db.hpp>
+#include <cassert>
 
 using namespace godot;
 
@@ -51,12 +52,6 @@ Graph_2D::Graph_2D() {
 
   _axis.font = this->get_theme_default_font();
 
-  // // Temp
-  // for (size_t i = 0; i < 10; i++) {
-    // float x = UtilityFunctions::randf_range(0, 100);
-  //   float y = UtilityFunctions::randf_range(0, 10);
-  //   _data.packed_v2_data.append(Vector2(i, y));
-  // }
   _data.color = red;
   _data.width = 5.0;
 
@@ -133,7 +128,6 @@ Color Graph_2D::get_display_background_color() const {
 }
 
 void Graph_2D::set_display_background_color(const Color color) {
-  LOG("Color: ", color);
   _display.color = color;
   queue_redraw();
 }
@@ -153,8 +147,6 @@ PackedVector2Array Graph_2D::get_data() const {
 
 void Graph_2D::set_data(const PackedVector2Array data) {
   _data.packed_v2_data = data;
-  // _data.set_range();
-  // LOG(_data.packed_v2_data);
 }
 
 void Graph_2D::_draw_window() {
@@ -229,11 +221,6 @@ void Graph_2D::_draw_axis() {
   float x_step = _data.get_x_diff<float>() / _n_grid.x;
   float y_step = _data.get_y_diff<float>() / _n_grid.y;
 
-  // LOG("------ _draw_axis() START ------")
-  // LOG(x_step, " ", y_step);
-  // LOG(_data.x_min(), " ", _data.x_max());
-  // LOG(_data.y_min(), " ", _data.y_max());
-
   for (size_t i = 0; i <= _n_grid.x; i++) {
     // Added offset before performing the spacing calculation due to the frame margin
     Vector2 font_pos = Vector2(_display.x() + i * _grid_spacing.x, _display.y() + _display.y_size());
@@ -255,7 +242,6 @@ void Graph_2D::_draw_axis() {
     String fmt_y_str = _format_string(y);
     draw_string(_axis.font, Vector2(font_pos.x - font_margin, font_pos.y), fmt_y_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
   }
-  // LOG("------ _draw_axis() END ------")
 }
 
 void Graph_2D::_draw_ticks() {
@@ -267,7 +253,6 @@ PackedVector2Array Graph_2D::_coordinate_to_pixel(const PackedVector2Array &data
     double x_pixel = UtilityFunctions::remap(data[i].x, _data.x_min(), _data.x_max(), _display.bottom_left().x, _display.x() + _display.x_size());
     double y_pixel = UtilityFunctions::remap(data[i].y, _data.y_min(), _data.y_max(), _display.bottom_left().y, _display.bottom_left().y - _display.y_size());
     data_pixel_pos.append(Vector2(x_pixel, y_pixel));
-    // LOG("Coordinate: ", data[i], " Pixel: ", Vector2(x_pixel, y_pixel));
   }
   return data_pixel_pos;
 }

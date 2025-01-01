@@ -2,6 +2,7 @@
 #define GDEXAMPLE_H
 
 #include <godot_cpp/classes/sprite2d.hpp>
+#include "logger.hpp"
 
 namespace godot {
 
