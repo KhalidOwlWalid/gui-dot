@@ -10,22 +10,26 @@ enum class LogLevel {
   ERROR,
 };
 
-constexpr LogLevel DEBUG = LogLevel::DEBUG;
-constexpr LogLevel INFO = LogLevel::INFO;
-constexpr LogLevel WARNING = LogLevel::WARNING;
-constexpr LogLevel ERROR = LogLevel::ERROR;
+static const LogLevel DEBUG = LogLevel::DEBUG;
+static const LogLevel INFO = LogLevel::INFO;
+static const LogLevel WARNING = LogLevel::WARNING;
+static const LogLevel ERROR = LogLevel::ERROR;
 
 #define LOG(level, ...)                                                                                                       \
   do {                                                                                                                        \
     switch (level) {                                                                                                          \
       case LogLevel::DEBUG:                                                                                                   \
         UtilityFunctions::print("[DEBUG] ", "(class: ", __class__, ")", "(func: ", __func__, ") - ", __VA_ARGS__);            \
+        break;                                                                                                                \
       case LogLevel::INFO:                                                                                                    \
         UtilityFunctions::print("[INFO] ", "(class: ", __class__, ")", "(func: ", __func__, ") - ", __VA_ARGS__);             \
+        break;                                                                                                                \
       case LogLevel::WARNING:                                                                                                 \
         UtilityFunctions::push_warning("(class: ", __class__, ")", "(func: ", __func__, ") - ", __VA_ARGS__);                 \
+        break;                                                                                                                \
       case LogLevel::ERROR:                                                                                                   \
         UtilityFunctions::push_error("(class: ", __class__, ")", "(func: ", __func__, ") - ", __VA_ARGS__);                   \
+        break;                                                                                                                \
     }                                                                                                                         \
   } while (0)                                         
 
