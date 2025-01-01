@@ -1,6 +1,5 @@
 #include "graph_2d.hpp"
 #include <godot_cpp/core/class_db.hpp>
-#include <cassert>
 
 using namespace godot;
 
@@ -57,15 +56,36 @@ Graph_2D::Graph_2D() {
 
   ticks = Time::get_singleton()->get_ticks_usec();
   last_update_ticks = ticks;
+
 }
 
 Graph_2D::~Graph_2D() {
 }
 
 void Graph_2D::_init() {
-  _draw_window();
-  _draw_display();
+  LOG(INFO, "Graph_2D initialized!");
   _initialized = true;
+}
+
+void Graph_2D::_notification(const int p_what) {
+  switch (p_what) {
+
+    case NOTIFICATION_ENTER_TREE: {
+      LOG(INFO, "NOTIFICATION_ENTER_TREE");
+      _init();
+      break;
+    }
+
+    case NOTIFICATION_READY: {
+      LOG(INFO, "NOTIFICATION_READY");
+      break;
+    }
+
+    case NOTIFICATION_EXIT_TREE: {
+      LOG(INFO, "NOTIFICATION_EXIT_TREE");
+      break;
+    }
+  }
 }
 
 void Graph_2D::_calculate_grid_spacing() {
@@ -95,12 +115,6 @@ void Graph_2D::_draw() {
 }
 
 void Graph_2D::_process(double delta) {
-  // ticks = Time::get_singleton()->get_ticks_usec();
-  // if (ticks - last_update_ticks > 1e6) {
-  //   last_update_ticks = Time::get_singleton()->get_ticks_usec();
-  //   _data.packed_v2_data.append(Vector2(ticks, uf::randf_range(0, 10)));
-  //   queue_redraw();
-  // }
 }
 
 Color Graph_2D::get_window_background_color() const {
@@ -129,6 +143,7 @@ Color Graph_2D::get_display_background_color() const {
 
 void Graph_2D::set_display_background_color(const Color color) {
   _display.color = color;
+  LOG(DEBUG, "Setting display color to ", String(color));
   queue_redraw();
 }
 
@@ -139,6 +154,7 @@ Vector2 Graph_2D::get_grid_size() const {
 void Graph_2D::set_grid_size(const Vector2 grid_size) {
   _n_grid = grid_size;
   _window.set_size(this->get_size());
+  queue_redraw();
 }
 
 PackedVector2Array Graph_2D::get_data() const {
@@ -167,7 +183,6 @@ void Graph_2D::_draw_display() {
   set_position method */
   _display.frame.set_size(window_size - 2*margin);
   _display.frame.set_position(margin);
-  _display.color = black;
   draw_rect(_display.frame, _display.color);
 }
 
