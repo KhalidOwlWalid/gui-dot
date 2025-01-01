@@ -11,6 +11,7 @@
 #include <algorithm>
 
 #include "logger.hpp"
+#include "util.hpp"
 
 namespace godot {
 
@@ -151,6 +152,7 @@ class Graph_2D : public Control {
 
   protected:
     static void _bind_methods();
+    void _notification(const int p_what);
 
   private:
     void _draw_window();
@@ -167,7 +169,7 @@ class Graph_2D : public Control {
     // TODO: Make this a template
     String _format_string(const float &val, int dp);
 
-    bool _initialized;
+    bool _initialized {false};
     Vector2 _grid_spacing;
     Vector2 _n_grid {Vector2(10, 5)};
     Vector2 _frame_margin {Vector2(100, 100)};

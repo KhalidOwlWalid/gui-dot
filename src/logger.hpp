@@ -10,10 +10,10 @@ enum class LogLevel {
   ERROR,
 };
 
-static const LogLevel DEBUG = LogLevel::DEBUG;
-static const LogLevel INFO = LogLevel::INFO;
-static const LogLevel WARNING = LogLevel::WARNING;
-static const LogLevel ERROR = LogLevel::ERROR;
+constexpr LogLevel DEBUG = LogLevel::DEBUG;
+constexpr LogLevel INFO = LogLevel::INFO;
+constexpr LogLevel WARNING = LogLevel::WARNING;
+constexpr LogLevel ERROR = LogLevel::ERROR;
 
 #define LOG(level, ...)                                                                                                       \
   do {                                                                                                                        \
