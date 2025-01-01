@@ -181,7 +181,7 @@ class Graph_2D : public Control {
     Line_t _grid;
 
     // Create data class
-    Data_t _data1;
+    Data_t _data;
 
     uint64_t ticks;
     uint64_t last_update_ticks;
@@ -191,6 +191,9 @@ class Graph_2D : public Control {
     Color grey = Color(0.17, 0.17, 0.17, 1.0);
     Color black = Color(0.07, 0.07, 0.07, 1.0);
     Color red = Color(1.0, 0.07, 0.07, 1.0);
+    Color gd_grey = Color::hex(0x363d4a);
+    Color gd_blue = Color::hex(0x252b34);
+    Color green = Color::hex(0x469d5a);
 
 };
 

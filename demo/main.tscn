@@ -1,8 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://dq88i4qb7d2gj"]
+[gd_scene load_steps=3 format=3 uid="uid://dq88i4qb7d2gj"]
 
-[ext_resource type="Script" path="res://demo/test.gd" id="1_fr6x7"]
+[ext_resource type="Script" path="res://gdscript/graph_control.gd" id="1_3fdkq"]
+[ext_resource type="Script" path="res://gdscript/button.gd" id="2_dr7ux"]
 
-[node name="Control" type="Control"]
+[node name="main" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -10,14 +11,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Graph_2D" type="Graph_2D" parent="."]
-_window.color = Color(0.0705882, 0.0705882, 0.0705882, 1)
-_window.frame.size = Vector2(886, 547)
+[node name="demo_graph" type="Graph_2D" parent="."]
+_window.frame.size = Vector2(1153, 664)
 layout_mode = 0
-offset_left = 8.0
-offset_top = 25.0
-offset_right = 894.0
-offset_bottom = 572.0
-script = ExtResource("1_fr6x7")
+offset_right = 1153.0
+offset_bottom = 664.0
+script = ExtResource("1_3fdkq")
 
-[connection signal="mouse_entered" from="Graph_2D" to="Graph_2D" method="_on_mouse_entered"]
+[node name="Button" type="Button" parent="."]
+layout_mode = 0
+offset_left = 1188.0
+offset_top = 29.0
+offset_right = 1431.0
+offset_bottom = 110.0
+text = "Create new plot"
+script = ExtResource("2_dr7ux")
