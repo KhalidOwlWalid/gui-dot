@@ -74,7 +74,8 @@ class Data_t : public Line_t {
     Vector2 x_range;
     Vector2 y_range;
     PackedVector2Array packed_v2_data;
-    PackedVector2Array packed_v2_norm_data;
+    PackedVector2Array cached_pixel_v2_data;
+    bool use_antialiased;
 
     // TODO: Create an assertion to ensure x_max is always bigger than x_min
     template <typename T> void set_x_max(const T val) {
@@ -93,10 +94,10 @@ class Data_t : public Line_t {
       y_range[0] = val;
     }
 
-    double x_max() {return x_range[1]; }
-    double x_min() {return x_range[0]; }
-    double y_max() {return y_range[1]; }
-    double y_min() {return y_range[0]; }
+    inline double x_max() {return x_range[1]; }
+    inline double x_min() {return x_range[0]; }
+    inline double y_max() {return y_range[1]; }
+    inline double y_min() {return y_range[0]; }
 
     template <typename T> T get_x_diff() {
       T diff = x_range[1] - x_range[0];
@@ -111,6 +112,7 @@ class Data_t : public Line_t {
     void set_range() {
       Vector2 min = packed_v2_data[0];
       Vector2 max = packed_v2_data[0];
+      // TODO: Find a better optimized way to do this
       for (size_t i = 0; i < packed_v2_data.size(); i++) {
         min.x = std::min(min.x, packed_v2_data[i].x);
         min.y = std::min(min.y, packed_v2_data[i].y);
@@ -169,6 +171,7 @@ class Graph_2D : public Control {
     void _calculate_grid_spacing();
     void _init();
     PackedVector2Array _coordinate_to_pixel(const PackedVector2Array &coords);
+    PackedVector2Array _coordinate_to_pixel(const PackedVector2Array &data, const Vector2 &x_range, const Vector2 &y_range);
 
     // TODO: Make this a template
     String _format_string(const float &val, int dp);
@@ -189,7 +192,8 @@ class Graph_2D : public Control {
     // Create data class
     Data_t _data;
 
-    Data_t test_data;
+    Data_t test1;
+    Data_t test2;
     std::vector<Data_t> data_vector;
 
     uint64_t ticks;

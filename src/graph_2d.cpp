@@ -57,11 +57,18 @@ void Graph_2D::_init() {
   _axis.font = this->get_theme_default_font();
 
   _data.color = red;
-  _data.width = 5.0;
+  _data.width = 1.0;
 
-  test_data.color = red;
-  test_data.width = 5.0;
-  data_vector.push_back(test_data);
+  test1.color = red;
+  test1.width = 1.0;
+
+  test2.color = white;
+  test2.width = 1.0;
+  
+  // For now, im letting data_vector to only be of size 2
+  data_vector.resize(2);
+  data_vector.push_back(test1);
+  data_vector.push_back(test2);
 
   ticks = Time::get_singleton()->get_ticks_usec();
   last_update_ticks = ticks;
@@ -106,16 +113,31 @@ void Graph_2D::_draw() {
   _draw_display();
   _draw_grids();
 
-  if (not _data.packed_v2_data.is_empty()) {
-    // Only draw when it is not empty
-    _draw_plot();
-  }
+  // if (not _data.packed_v2_data.is_empty()) {
+  //   // Only draw when it is not empty
+  //   _draw_plot();
+  // }
 
-  _draw_axis();
-  _draw_ticks();;
+  _draw_plot();
+  // _draw_axis();
+  // _draw_ticks();;
 }
 
 void Graph_2D::_process(double delta) {
+  ticks = Time::get_singleton()->get_ticks_usec();
+  if (ticks - last_update_ticks >= 0.1e6) {
+    for (size_t i = 0; i <= 1; i++) {
+      uint64_t curr_tick = Time::get_singleton()->get_ticks_usec();
+      data_vector.at(i).packed_v2_data.append(Vector2(curr_tick * 1e-6, uf::randf_range(-10, 10)));
+      // LOG(DEBUG, data_vector.at(i).packed_v2_data);
+
+      if (data_vector.at(i).packed_v2_data.size() > 100) {
+        data_vector.at(i).packed_v2_data.remove_at(0);
+      }
+    }
+    queue_redraw();
+    last_update_ticks = Time::get_singleton()->get_ticks_usec();
+  }
 }
 
 Color Graph_2D::get_window_background_color() const {
@@ -173,7 +195,8 @@ PackedVector2Array Graph_2D::get_data_vector(const int n) const {
 
 void Graph_2D::set_data_vector(const PackedVector2Array &data, const int n) {
   // TODO: Ensure that n is not out of bound
-  data_vector[n].packed_v2_data = data;
+  data_vector.at(n).packed_v2_data = data;
+  queue_redraw();
 }
 
 void Graph_2D::_draw_window() {
@@ -276,8 +299,28 @@ void Graph_2D::_draw_ticks() {
 PackedVector2Array Graph_2D::_coordinate_to_pixel(const PackedVector2Array &data) {
   PackedVector2Array data_pixel_pos;
   for (size_t i = 0; i < data.size(); i++) {
+    // TODO: Optimize this by pre-computing the remap position outside the for loop
+    // Use of inline may optimize it to some extent, but calling it every loop is super f**king stupid
     double x_pixel = UtilityFunctions::remap(data[i].x, _data.x_min(), _data.x_max(), _display.bottom_left().x, _display.x() + _display.x_size());
     double y_pixel = UtilityFunctions::remap(data[i].y, _data.y_min(), _data.y_max(), _display.bottom_left().y, _display.bottom_left().y - _display.y_size());
+    data_pixel_pos.append(Vector2(x_pixel, y_pixel));
+  }
+  return data_pixel_pos;
+}
+
+PackedVector2Array Graph_2D::_coordinate_to_pixel(const PackedVector2Array &data, const Vector2 &x_range, const Vector2 &y_range) {
+  PackedVector2Array data_pixel_pos;
+
+  float x_min = x_range[0];
+  float x_max = x_range[1];
+  float y_min = y_range[0];
+  float y_max = y_range[1];
+
+  for (size_t i = 0; i < data.size(); i++) {
+    // TODO: Optimize this by pre-computing the remap position outside the for loop
+    // Use of inline may optimize it to some extent, but calling it every loop is super f**king stupid
+    double x_pixel = UtilityFunctions::remap(data[i].x, x_min, x_max, _display.bottom_left().x, _display.x() + _display.x_size());
+    double y_pixel = UtilityFunctions::remap(data[i].y, y_min, y_max, _display.bottom_left().y, _display.bottom_left().y - _display.y_size());
     data_pixel_pos.append(Vector2(x_pixel, y_pixel));
   }
   return data_pixel_pos;
@@ -288,22 +331,58 @@ void Graph_2D::_draw_plot() {
   // For instance, if you're plotting 1 at the y-axis constantly, it will be 1 to 1
 
   // Ensure the range in the display frame is within range
-  _data.set_range();
-  if (_data.packed_v2_data.is_empty()) {
+  // _data.set_range();
+  // if (_data.packed_v2_data.is_empty()) {
+  //   return;
+  // }
+
+  // // TODO: Optimize this by caching it, so it does not do it multiple times every drawing frame
+  // PackedVector2Array data = _coordinate_to_pixel(_data.packed_v2_data);
+
+  // // Enable anti-aliasing for better resolution
+  // // Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
+  // // TODO: Allow anti-aliasing to be toggled on and off during runtime
+  // // This will help in optimizing the performance when we are drawing multiple lines at once
+  // for (size_t i = 0; i < data.size() - 1; i++) {
+  //   draw_line(data[i], data[i + 1], _data.color, _data.width, true);
+  // }
+
+  // for (size_t i = 0; i < data.size(); i++) {
+  //   draw_circle(data[i], 2.0, _data.color);
+  // }
+
+  // TEST IMPLEMENTATION
+  LOG(DEBUG, "Inside drawing plot");
+  if (data_vector.at(0).packed_v2_data.is_empty()) {
+    LOG(DEBUG, "I am here");
     return;
   }
-  // TODO: Optimize this so that it does not do it multiple times every drawing frame
-  PackedVector2Array data = _coordinate_to_pixel(_data.packed_v2_data);
-  // Enable anti-aliasing for better resolution
-  // Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
-  // TODO: Allow anti-aliasing to be toggled on and off during runtime
-  for (size_t i = 0; i < data.size() - 1; i++) {
-    draw_line(data[i], data[i + 1], _data.color, _data.width, true);
+
+  data_vector.at(0).set_range();
+  data_vector.at(1).set_range();
+
+  for (size_t n = 0; n < data_vector.size(); n++) {
+    
+    Data_t tmp = data_vector.at(n); 
+
+    if (tmp.packed_v2_data.is_empty()) {
+      return;
+    }
+
+    LOG(DEBUG, tmp.x_min(), " ", tmp.x_max());
+    LOG(DEBUG, tmp.y_min(), " ", tmp.y_max());
+    tmp.cached_pixel_v2_data = _coordinate_to_pixel(tmp.packed_v2_data, tmp.x_range, tmp.y_range);
+    Color curr_color;
+    if (n == 0) {
+      curr_color = red;
+    } else {
+      curr_color = white;
+    }
+    for (size_t i = 0; i < tmp.cached_pixel_v2_data.size() - 1; i++) {
+      draw_line(tmp.cached_pixel_v2_data[i], tmp.cached_pixel_v2_data[i + 1], curr_color, 1.0, true);
+      // draw_line(Vector2(uf::randf_range(30, 50), uf::randf_range(30, 50)), Vector2(uf::randf_range(100, 800), uf::randf_range(100, 500)), red, 3.0, true);
+      // draw_circle(tmp.cached_pixel_v2_data[i], 2.0, tmp.color);
+    }
   }
 
-  // draw_multiline(data, _data.color, _data.width, true);
-  // draw_polyline(data, _data.color, _data.width, true);
-  for (size_t i = 0; i < data.size(); i++) {
-    draw_circle(data[i], 5.0, _data.color);
-  }
 }
