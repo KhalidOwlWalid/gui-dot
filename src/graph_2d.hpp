@@ -148,9 +148,6 @@ class Graph_2D : public Control {
     void set_grid_size(const Vector2 &grid_size);
     Vector2 get_grid_size() const;
 
-    void set_data(const PackedVector2Array &data);
-    PackedVector2Array get_data() const;
-
     void set_data_vector(const PackedVector2Array &data, const int n);
     PackedVector2Array get_data_vector(const int n) const;
 
@@ -173,7 +170,6 @@ class Graph_2D : public Control {
 
     void _calculate_grid_spacing();
     void _init();
-    PackedVector2Array _coordinate_to_pixel(const PackedVector2Array &coords);
     PackedVector2Array _coordinate_to_pixel(const PackedVector2Array &data, const Vector2 &x_range, const Vector2 &y_range);
 
     // TODO: Make this a template
@@ -193,8 +189,6 @@ class Graph_2D : public Control {
     Line_t _grid;
 
     // Create data class
-    Data_t _data;
-
     Data_t test1;
     Data_t test2;
     std::vector<Data_t> data_vector;
