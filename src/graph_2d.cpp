@@ -330,58 +330,29 @@ void Graph_2D::_draw_plot() {
   // Bug: When plotting a constant value over time, the whole axis will be that constant value
   // For instance, if you're plotting 1 at the y-axis constantly, it will be 1 to 1
 
-  // Ensure the range in the display frame is within range
-  // _data.set_range();
-  // if (_data.packed_v2_data.is_empty()) {
-  //   return;
-  // }
-
-  // // TODO: Optimize this by caching it, so it does not do it multiple times every drawing frame
-  // PackedVector2Array data = _coordinate_to_pixel(_data.packed_v2_data);
-
-  // // Enable anti-aliasing for better resolution
-  // // Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
-  // // TODO: Allow anti-aliasing to be toggled on and off during runtime
-  // // This will help in optimizing the performance when we are drawing multiple lines at once
-  // for (size_t i = 0; i < data.size() - 1; i++) {
-  //   draw_line(data[i], data[i + 1], _data.color, _data.width, true);
-  // }
-
-  // for (size_t i = 0; i < data.size(); i++) {
-  //   draw_circle(data[i], 2.0, _data.color);
-  // }
-
   // TEST IMPLEMENTATION
-  LOG(DEBUG, "Inside drawing plot");
-  if (data_vector.at(0).packed_v2_data.is_empty()) {
-    LOG(DEBUG, "I am here");
-    return;
-  }
-
-  data_vector.at(0).set_range();
-  data_vector.at(1).set_range();
-
   for (size_t n = 0; n < data_vector.size(); n++) {
-    
-    Data_t tmp = data_vector.at(n); 
 
-    if (tmp.packed_v2_data.is_empty()) {
-      return;
+    Data_t &curr_data = data_vector.at(n);
+
+    if (curr_data.packed_v2_data.is_empty()) {
+      continue;
     }
+    curr_data.set_range();
 
-    LOG(DEBUG, tmp.x_min(), " ", tmp.x_max());
-    LOG(DEBUG, tmp.y_min(), " ", tmp.y_max());
-    tmp.cached_pixel_v2_data = _coordinate_to_pixel(tmp.packed_v2_data, tmp.x_range, tmp.y_range);
+    curr_data.cached_pixel_v2_data = _coordinate_to_pixel(curr_data.packed_v2_data, curr_data.x_range, curr_data.y_range);
     Color curr_color;
     if (n == 0) {
       curr_color = red;
     } else {
       curr_color = white;
     }
-    for (size_t i = 0; i < tmp.cached_pixel_v2_data.size() - 1; i++) {
-      draw_line(tmp.cached_pixel_v2_data[i], tmp.cached_pixel_v2_data[i + 1], curr_color, 1.0, true);
-      // draw_line(Vector2(uf::randf_range(30, 50), uf::randf_range(30, 50)), Vector2(uf::randf_range(100, 800), uf::randf_range(100, 500)), red, 3.0, true);
-      // draw_circle(tmp.cached_pixel_v2_data[i], 2.0, tmp.color);
+    for (size_t i = 0; i < curr_data.cached_pixel_v2_data.size() - 1; i++) {
+      // Enable anti-aliasing for better resolution
+      // Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
+      // TODO: Allow anti-aliasing to be toggled on and off during runtime
+      // This will help in optimizing the performance when we are drawing multiple lines at once
+      draw_line(curr_data.cached_pixel_v2_data[i], curr_data.cached_pixel_v2_data[i + 1], curr_color, 1.0, true);
     }
   }
 
