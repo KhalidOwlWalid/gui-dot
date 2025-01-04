@@ -17,9 +17,6 @@ void Graph_2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_grid_size"), &Graph_2D::get_grid_size);
 	ClassDB::bind_method(D_METHOD("set_grid_size", "grid_size"), &Graph_2D::set_grid_size);
 
-	ClassDB::bind_method(D_METHOD("get_data"), &Graph_2D::get_data);
-	ClassDB::bind_method(D_METHOD("set_data", "data"), &Graph_2D::set_data);
-
 	ClassDB::bind_method(D_METHOD("get_data_vector", "n"), &Graph_2D::get_data_vector);
 	ClassDB::bind_method(D_METHOD("set_data_vector", "data", "n"), &Graph_2D::set_data_vector);
 
@@ -58,9 +55,6 @@ void Graph_2D::_init() {
   _calculate_grid_spacing();
 
   _axis.font = this->get_theme_default_font();
-
-  _data.color = red;
-  _data.width = 1.0;
 
   test1.width = 1.0;
 
@@ -106,24 +100,14 @@ void Graph_2D::_calculate_grid_spacing() {
 }
 
 void Graph_2D::_draw() {
-  /* TODO: Draw lines and circles at the boundary to allow user to resize their window
-  upon receiving inputs from mouse */
-
   /* Drawing order is very important to avoid lines overlapping on top of each other 
   (e.g. Drawing display frame before window would cause display frame to be hidden behind
   the window) */
   _draw_window();
   _draw_display();
   _draw_grids();
-
-  // if (not _data.packed_v2_data.is_empty()) {
-  //   // Only draw when it is not empty
-  //   _draw_plot();
-  // }
-
   _draw_plot();
   _draw_axis();
-  // _draw_ticks();;
 }
 
 void Graph_2D::_process(double delta) {
@@ -158,7 +142,7 @@ Vector2 godot::Graph_2D::get_window_size() const {
 void godot::Graph_2D::set_window_size(const Vector2 &win_size) {
   _window.frame.set_size(win_size);
   // Update the size of the node bounding box
-  this->set_size(win_size);
+  set_size(win_size);
   queue_redraw();
 }
 
@@ -168,7 +152,6 @@ Color Graph_2D::get_display_background_color() const {
 
 void Graph_2D::set_display_background_color(const Color &color) {
   _display.color = color;
-  LOG(DEBUG, "Setting display color to ", String(color));
   queue_redraw();
 }
 
@@ -180,14 +163,6 @@ void Graph_2D::set_grid_size(const Vector2 &grid_size) {
   _n_grid = grid_size;
   _window.set_size(this->get_size());
   queue_redraw();
-}
-
-PackedVector2Array Graph_2D::get_data() const {
-  return _data.packed_v2_data;
-}
-
-void Graph_2D::set_data(const PackedVector2Array &data) {
-  _data.packed_v2_data = data;
 }
 
 PackedVector2Array Graph_2D::get_data_vector(const int n) const {
@@ -308,18 +283,6 @@ void Graph_2D::_draw_axis() {
 }
 
 void Graph_2D::_draw_ticks() {
-}
-
-PackedVector2Array Graph_2D::_coordinate_to_pixel(const PackedVector2Array &data) {
-  PackedVector2Array data_pixel_pos;
-  for (size_t i = 0; i < data.size(); i++) {
-    // TODO: Optimize this by pre-computing the remap position outside the for loop
-    // Use of inline may optimize it to some extent, but calling it every loop is super f**king stupid
-    double x_pixel = UtilityFunctions::remap(data[i].x, _data.x_min(), _data.x_max(), _display.bottom_left().x, _display.x() + _display.x_size());
-    double y_pixel = UtilityFunctions::remap(data[i].y, _data.y_min(), _data.y_max(), _display.bottom_left().y, _display.bottom_left().y - _display.y_size());
-    data_pixel_pos.append(Vector2(x_pixel, y_pixel));
-  }
-  return data_pixel_pos;
 }
 
 PackedVector2Array Graph_2D::_coordinate_to_pixel(const PackedVector2Array &data, const Vector2 &x_range, const Vector2 &y_range) {
