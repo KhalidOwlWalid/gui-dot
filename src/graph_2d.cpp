@@ -23,6 +23,9 @@ void Graph_2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_data_vector", "n"), &Graph_2D::get_data_vector);
 	ClassDB::bind_method(D_METHOD("set_data_vector", "data", "n"), &Graph_2D::set_data_vector);
 
+	ClassDB::bind_method(D_METHOD("get_data_line_color", "n"), &Graph_2D::get_data_line_color);
+	ClassDB::bind_method(D_METHOD("set_data_line_color", "color", "n"), &Graph_2D::set_data_line_color);
+
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "window_color"), "set_window_background_color", "get_window_background_color");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "Window Frame Size"), "set_window_size", "get_window_size");
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "Display Color"), "set_display_background_color", "get_display_background_color");
@@ -59,16 +62,16 @@ void Graph_2D::_init() {
   _data.color = red;
   _data.width = 1.0;
 
-  test1.color = red;
   test1.width = 1.0;
 
-  test2.color = white;
   test2.width = 1.0;
   
   // For now, im letting data_vector to only be of size 2
   data_vector.resize(2);
   data_vector.push_back(test1);
   data_vector.push_back(test2);
+  set_data_line_color(red, 0);
+  set_data_line_color(white, 1);
 
   ticks = Time::get_singleton()->get_ticks_usec();
   last_update_ticks = ticks;
@@ -197,6 +200,14 @@ void Graph_2D::set_data_vector(const PackedVector2Array &data, const int n) {
   // TODO: Ensure that n is not out of bound
   data_vector.at(n).packed_v2_data = data;
   queue_redraw();
+}
+
+Color Graph_2D::get_data_line_color(const int n) const {
+  return data_vector.at(n).color;
+}
+
+void Graph_2D::set_data_line_color(const Color &color, const int n) {
+  data_vector.at(n).color = color;
 }
 
 void Graph_2D::_draw_window() {
@@ -341,18 +352,18 @@ void Graph_2D::_draw_plot() {
     curr_data.set_range();
 
     curr_data.cached_pixel_v2_data = _coordinate_to_pixel(curr_data.packed_v2_data, curr_data.x_range, curr_data.y_range);
-    Color curr_color;
-    if (n == 0) {
-      curr_color = red;
-    } else {
-      curr_color = white;
-    }
+    // Color curr_color;
+    // if (n == 0) {
+    //   curr_color = red;
+    // } else {
+    //   curr_color = white;
+    // }
     for (size_t i = 0; i < curr_data.cached_pixel_v2_data.size() - 1; i++) {
       // Enable anti-aliasing for better resolution
       // Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
       // TODO: Allow anti-aliasing to be toggled on and off during runtime
       // This will help in optimizing the performance when we are drawing multiple lines at once
-      draw_line(curr_data.cached_pixel_v2_data[i], curr_data.cached_pixel_v2_data[i + 1], curr_color, 1.0, true);
+      draw_line(curr_data.cached_pixel_v2_data[i], curr_data.cached_pixel_v2_data[i + 1], curr_data.color, 1.0, true);
     }
   }
 

@@ -154,6 +154,9 @@ class Graph_2D : public Control {
     void set_data_vector(const PackedVector2Array &data, const int n);
     PackedVector2Array get_data_vector(const int n) const;
 
+    void set_data_line_color(const Color &color, const int n);
+    Color get_data_line_color(const int n) const;
+
     void _draw() override;
 
   protected:
