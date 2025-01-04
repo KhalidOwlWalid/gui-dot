@@ -122,7 +122,7 @@ void Graph_2D::_draw() {
   // }
 
   _draw_plot();
-  // _draw_axis();
+  _draw_axis();
   // _draw_ticks();;
 }
 
@@ -132,7 +132,6 @@ void Graph_2D::_process(double delta) {
     for (size_t i = 0; i <= 1; i++) {
       uint64_t curr_tick = Time::get_singleton()->get_ticks_usec();
       data_vector.at(i).packed_v2_data.append(Vector2(curr_tick * 1e-6, uf::randf_range(-10, 10)));
-      // LOG(DEBUG, data_vector.at(i).packed_v2_data);
 
       if (data_vector.at(i).packed_v2_data.size() > 100) {
         data_vector.at(i).packed_v2_data.remove_at(0);
@@ -278,14 +277,18 @@ void Graph_2D::_draw_axis() {
   int font_size = 16;
   int font_margin = font_size + 10;
 
-  float x_step = _data.get_x_diff<float>() / _n_grid.x;
-  float y_step = _data.get_y_diff<float>() / _n_grid.y;
+  /* HACK: This shouldnt be left in production, for now, only use one of the data struct to set the axis
+  The graph should be able to support multiple axis */
+  Data_t curr_data = data_vector.at(0);
+
+  float x_step = curr_data.get_x_diff<float>() / _n_grid.x;
+  float y_step = curr_data.get_y_diff<float>() / _n_grid.y;
 
   for (size_t i = 0; i <= _n_grid.x; i++) {
     // Added offset before performing the spacing calculation due to the frame margin
     Vector2 font_pos = Vector2(_display.x() + i * _grid_spacing.x, _display.y() + _display.y_size());
     // Add minimum to offset the axis label
-    float x = _data.x_min() + i * x_step;
+    float x = curr_data.x_min() + i * x_step;
     String fmt_x_str = _format_string(x);
     // Added offset here (hardcoded for now) to prettify formatting
     draw_string(_axis.font, Vector2(font_pos.x - 10, font_pos.y + font_margin), fmt_x_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
@@ -293,12 +296,12 @@ void Graph_2D::_draw_axis() {
 
   // For row, we start with index 0, since we start drawing from the top
   for (size_t i = 0; i <= _n_grid.y; i++) {
-    // Added offset before performing the spacing calculation due to the frame margin
+    /* Added offset before performing the spacing calculation due to the frame margin
     // When dealing with the row grid, remember that we are drawing from the top to bottom
-    // where top right corner is origin (0, 0)
+    // where top right corner is origin (0, 0) */
     Vector2 font_pos = Vector2(_display.x(), _display.y() + i * _grid_spacing.y);
     // 0.1 * y_min is to allow some spacing between the lower and upper boundary of the y-axis
-    float y = _data.y_min() + (_n_grid.y - i) * y_step;
+    float y = curr_data.y_min() + (_n_grid.y - i) * y_step;
     String fmt_y_str = _format_string(y);
     draw_string(_axis.font, Vector2(font_pos.x - font_margin, font_pos.y), fmt_y_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
   }
@@ -343,21 +346,12 @@ void Graph_2D::_draw_plot() {
 
   // TEST IMPLEMENTATION
   for (size_t n = 0; n < data_vector.size(); n++) {
-
     Data_t &curr_data = data_vector.at(n);
-
     if (curr_data.packed_v2_data.is_empty()) {
       continue;
     }
     curr_data.set_range();
-
     curr_data.cached_pixel_v2_data = _coordinate_to_pixel(curr_data.packed_v2_data, curr_data.x_range, curr_data.y_range);
-    // Color curr_color;
-    // if (n == 0) {
-    //   curr_color = red;
-    // } else {
-    //   curr_color = white;
-    // }
     for (size_t i = 0; i < curr_data.cached_pixel_v2_data.size() - 1; i++) {
       // Enable anti-aliasing for better resolution
       // Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
