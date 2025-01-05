@@ -221,7 +221,6 @@ void Graph_2D::_draw_display() {
 }
 
 void Graph_2D::_draw_grids() {
-  LOG(DEBUG, "Draw grids");
   _calculate_grid_spacing();
   int font_margin = 12;
   // For column, we start with index 1 since we start drawing from the left, which will overlap with the y-axis
@@ -266,6 +265,7 @@ void Graph_2D::_draw_axis() {
   const int dp = 2;
   const int font_margin = font_size + 20;
 
+  // Draw multiple y-axis
   for (size_t n = 0; n < n_data; n++) {
     const Vector2 offset = Vector2(n*(_axis.width + font_size + font_margin), 0);
     // y-axis
@@ -275,9 +275,10 @@ void Graph_2D::_draw_axis() {
     
     Data_t curr_data = data_vector.at(n);
 
-    float y_step = curr_data.get_y_diff<float>() / _n_grid.y;
+    const int tmp = _n_grid.y;
+    float y_step = curr_data.get_y_diff<float>() / tmp;
 
-    for (size_t i = _n_grid.y; i != 0; i--) {
+    for (size_t i = 0; i <= tmp; i++) {
       /* NOTE: Added offset before performing the spacing calculation due to the frame margin
       When dealing with the row grid, remember that we are drawing from the bottom to top
       where top right corner is origin (0, 0) */
@@ -285,8 +286,8 @@ void Graph_2D::_draw_axis() {
       Figure out a way to parametrize all of the below parameters or magic number. At the moment, this formatting works
       for 1 dp or 2 dp, as sson as 3dp and above is used, it becomes really horrible to read. I'd assume, no one would
       really use 3 dp, but sometimes, you have to take that into consideration. */
-      Vector2 font_pos = Vector2(_display.x() - (n + 1) * font_margin - n * (_axis.width + 5) - (n+1) * font_size/2, _display.y() + i * _grid_spacing.y + font_size/2);
-      float y = curr_data.y_min() + (_n_grid.y - i) * y_step;
+      Vector2 font_pos = Vector2(_display.x() - (n + 1) * font_margin - n * (_axis.width + 5) - (n+1) * font_size/2, _display.y() + (tmp - i) * _grid_spacing.y + font_size/2);
+      float y = curr_data.y_min() + (i) * y_step;
       String fmt_y_str = _format_string(y, dp);
       draw_string(_axis.font, Vector2(font_pos.x, font_pos.y), fmt_y_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
     }
@@ -337,7 +338,6 @@ void Graph_2D::_draw_plot() {
   // For instance, if you're plotting 1 at the y-axis constantly, it will be 1 to 1
 
   // TEST IMPLEMENTATION
-  LOG(DEBUG, "Draw plot");
   for (size_t n = 0; n < data_vector.size(); n++) {
     Data_t &curr_data = data_vector.at(n);
     if (curr_data.packed_v2_data.is_empty()) {
@@ -351,6 +351,7 @@ void Graph_2D::_draw_plot() {
       // TODO: Allow anti-aliasing to be toggled on and off during runtime
       // This will help in optimizing the performance when we are drawing multiple lines at once
       draw_line(curr_data.cached_pixel_v2_data[i], curr_data.cached_pixel_v2_data[i + 1], curr_data.color, 1.0, true);
+      draw_circle(curr_data.cached_pixel_v2_data[i + 1], 5.0, curr_data.color);
     }
   }
 }
