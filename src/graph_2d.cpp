@@ -260,12 +260,11 @@ String Graph_2D::_format_string(const float &val, int dp = 1) {
 }
 
 void Graph_2D::_draw_axis() {
-
-  LOG(DEBUG, "Draw axis");
   // Get the size of the available data vector
   const int n_data = data_vector.size();
   const int font_size = 16;
-  const int font_margin = font_size + 15;
+  const int dp = 2;
+  const int font_margin = font_size + 20;
 
   for (size_t n = 0; n < n_data; n++) {
     const Vector2 offset = Vector2(n*(_axis.width + font_size + font_margin), 0);
@@ -276,25 +275,26 @@ void Graph_2D::_draw_axis() {
     
     Data_t curr_data = data_vector.at(n);
 
-    const int n_grid_line_y = _n_grid.y;
-    float y_step = curr_data.get_y_diff<float>() / n_grid_line_y;
+    float y_step = curr_data.get_y_diff<float>() / _n_grid.y;
 
-    // For row, we start with index 0, since we start drawing from the top
-    for (size_t i = n_grid_line_y; i != 0; i--) {
-      /* Added offset before performing the spacing calculation due to the frame margin
-      // When dealing with the row grid, remember that we are drawing from the top to bottom
-      // where top right corner is origin (0, 0) */
-      Vector2 font_pos = Vector2(_display.x(), _display.y() + i * _grid_spacing.y);
-      // 0.1 * y_min is to allow some spacing between the lower and upper boundary of the y-axis
-      float y = curr_data.y_min() + (n_grid_line_y - i) * y_step;
-      String fmt_y_str = _format_string(y, 2);
-      draw_string(_axis.font, Vector2(font_pos.x - (n + 1) * font_margin - n * (font_margin + _axis.width), font_pos.y), fmt_y_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
+    for (size_t i = _n_grid.y; i != 0; i--) {
+      /* NOTE: Added offset before performing the spacing calculation due to the frame margin
+      When dealing with the row grid, remember that we are drawing from the bottom to top
+      where top right corner is origin (0, 0) */
+      /* HACK: For now, this formatting works for multiple y-axis but this is a really terrible hack.
+      Figure out a way to parametrize all of the below parameters or magic number. At the moment, this formatting works
+      for 1 dp or 2 dp, as sson as 3dp and above is used, it becomes really horrible to read. I'd assume, no one would
+      really use 3 dp, but sometimes, you have to take that into consideration. */
+      Vector2 font_pos = Vector2(_display.x() - (n + 1) * font_margin - n * (_axis.width + 5) - (n+1) * font_size/2, _display.y() + i * _grid_spacing.y + font_size/2);
+      float y = curr_data.y_min() + (_n_grid.y - i) * y_step;
+      String fmt_y_str = _format_string(y, dp);
+      draw_string(_axis.font, Vector2(font_pos.x, font_pos.y), fmt_y_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
     }
 
   }
 
-  /* HACK: This shouldnt be left in production, for now, only use one of the data struct to set the axis
-  The graph should be able to support multiple axis */
+  /* HACK: This shouldnt be left in production, for now, only use one of the data struct to set the x-axis
+  The graph should be able to support multiple axis. This will cause issues if data vector 1 is empty. */
   Data_t curr_data = data_vector.at(0);
 
   float x_step = curr_data.get_x_diff<float>() / _n_grid.x;
@@ -307,20 +307,8 @@ void Graph_2D::_draw_axis() {
     float x = curr_data.x_min() + i * x_step;
     String fmt_x_str = _format_string(x);
     // Added offset here (hardcoded for now) to prettify formatting
-    draw_string(_axis.font, Vector2(font_pos.x - 10, font_pos.y + font_margin), fmt_x_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
+    draw_string(_axis.font, Vector2(font_pos.x - font_size/2, font_pos.y + font_margin/2), fmt_x_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
   }
-
-  // // For row, we start with index 0, since we start drawing from the top
-  // for (size_t i = 0; i <= _n_grid.y; i++) {
-  //   /* Added offset before performing the spacing calculation due to the frame margin
-  //   // When dealing with the row grid, remember that we are drawing from the top to bottom
-  //   // where top right corner is origin (0, 0) */
-  //   Vector2 font_pos = Vector2(_display.x(), _display.y() + i * _grid_spacing.y);
-  //   // 0.1 * y_min is to allow some spacing between the lower and upper boundary of the y-axis
-  //   float y = curr_data.y_min() + (_n_grid.y - i) * y_step;
-  //   String fmt_y_str = _format_string(y);
-  //   draw_string(_axis.font, Vector2(font_pos.x - font_margin, font_pos.y), fmt_y_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
-  // }
 }
 
 void Graph_2D::_draw_ticks() {
