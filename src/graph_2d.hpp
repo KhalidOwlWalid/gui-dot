@@ -70,12 +70,13 @@ class Data_t : public Line_t {
   const String __class__ = "Data_t";
   friend class Graph_2D;
 
+  Vector2 x_range;
+  Vector2 y_range;
+  PackedVector2Array packed_v2_data;
+  PackedVector2Array cached_pixel_v2_data;
+  bool use_antialiased;
+
   public:
-    Vector2 x_range;
-    Vector2 y_range;
-    PackedVector2Array packed_v2_data;
-    PackedVector2Array cached_pixel_v2_data;
-    bool use_antialiased;
 
     // TODO: Create an assertion to ensure x_max is always bigger than x_min
     template <typename T> void set_x_max(const T val) {

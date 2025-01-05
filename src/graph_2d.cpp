@@ -57,11 +57,9 @@ void Graph_2D::_init() {
   _axis.font = this->get_theme_default_font();
 
   test1.width = 1.0;
-
   test2.width = 1.0;
   
   // For now, im letting data_vector to only be of size 2
-  data_vector.resize(2);
   data_vector.push_back(test1);
   data_vector.push_back(test2);
   set_data_line_color(red, 0);
@@ -197,11 +195,21 @@ void Graph_2D::_draw_display() {
   Vector2 window_pos_top_left = _window.frame.get_position();
   Vector2 window_size = _window.frame.get_size();
 
-  Vector2 margin = Vector2(30, 30);
+  // Get the size of the available data vector
+  const int n_data = data_vector.size();
+  const int font_size = 16;
+  const int font_margin = font_size + 10;
+
+  // Resize the display to accomodate for the number of expected data type plotted
+  const int display_margin = n_data * (_axis.width + font_size);
+  _display.set_size(window_size - Vector2(display_margin + 30, 60));
+  _display.frame.set_position(Vector2(display_margin, 30));
+
+  // Vector2 margin = Vector2(30, 30);
   /* 2x margin is required in order to compensate for the offset when using the 
   set_position method */
-  _display.frame.set_size(window_size - 2*margin);
-  _display.frame.set_position(margin);
+  // _display.frame.set_size(window_size - 2*margin);
+  // _display.frame.set_position(margin);
   draw_rect(_display.frame, _display.color);
 }
 
@@ -244,13 +252,19 @@ String Graph_2D::_format_string(const float &val, int dp = 1) {
 }
 
 void Graph_2D::_draw_axis() {
-  // y-axis
-  draw_line(_display.top_left(), _display.bottom_left(), _axis.color, _axis.width);
-  // x-axis
-  draw_line(_display.bottom_left(), _display.bottom_right(), _axis.color, _axis.width);
 
-  int font_size = 16;
-  int font_margin = font_size + 10;
+  // Get the size of the available data vector
+  const int n_data = data_vector.size();
+  const int font_size = 16;
+  const int font_margin = font_size + 10;
+
+  for (size_t n = 0; n < n_data; n++) {
+    const Vector2 offset = Vector2(n*(_axis.width + font_size), 0);
+    // y-axis
+    draw_line(_display.top_left() - offset, _display.bottom_left() - offset, _axis.color, _axis.width);
+    // x-axis
+    draw_line(_display.bottom_left(), _display.bottom_right(), _axis.color, _axis.width);
+  }
 
   /* HACK: This shouldnt be left in production, for now, only use one of the data struct to set the axis
   The graph should be able to support multiple axis */
@@ -304,7 +318,7 @@ PackedVector2Array Graph_2D::_coordinate_to_pixel(const PackedVector2Array &data
 }
 
 void Graph_2D::_draw_plot() {
-  // Bug: When plotting a constant value over time, the whole axis will be that constant value
+  // FIXME: When plotting a constant value over time, the whole axis will be that constant value
   // For instance, if you're plotting 1 at the y-axis constantly, it will be 1 to 1
 
   // TEST IMPLEMENTATION
@@ -323,5 +337,4 @@ void Graph_2D::_draw_plot() {
       draw_line(curr_data.cached_pixel_v2_data[i], curr_data.cached_pixel_v2_data[i + 1], curr_data.color, 1.0, true);
     }
   }
-
 }
