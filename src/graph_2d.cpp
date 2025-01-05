@@ -109,19 +109,19 @@ void Graph_2D::_draw() {
 }
 
 void Graph_2D::_process(double delta) {
-  ticks = Time::get_singleton()->get_ticks_usec();
-  if (ticks - last_update_ticks >= 0.1e6) {
-    for (size_t i = 0; i <= 1; i++) {
-      uint64_t curr_tick = Time::get_singleton()->get_ticks_usec();
-      data_vector.at(i).packed_v2_data.append(Vector2(curr_tick * 1e-6, uf::randf_range(-10, 10)));
+  // ticks = Time::get_singleton()->get_ticks_usec();
+  // if (ticks - last_update_ticks >= 0.1e6) {
+  //   for (size_t i = 0; i <= 1; i++) {
+  //     uint64_t curr_tick = Time::get_singleton()->get_ticks_usec();
+  //     data_vector.at(i).packed_v2_data.append(Vector2(curr_tick * 1e-6, uf::randf_range(-10, 10)));
 
-      if (data_vector.at(i).packed_v2_data.size() > 100) {
-        data_vector.at(i).packed_v2_data.remove_at(0);
-      }
-    }
-    queue_redraw();
-    last_update_ticks = Time::get_singleton()->get_ticks_usec();
-  }
+  //     if (data_vector.at(i).packed_v2_data.size() > 100) {
+  //       data_vector.at(i).packed_v2_data.remove_at(0);
+  //     }
+  //   }
+  //   queue_redraw();
+  //   last_update_ticks = Time::get_singleton()->get_ticks_usec();
+  // }
 }
 
 Color Graph_2D::get_window_background_color() const {
@@ -195,13 +195,14 @@ void Graph_2D::_draw_display() {
   Vector2 window_pos_top_left = _window.frame.get_position();
   Vector2 window_size = _window.frame.get_size();
 
-  // Get the size of the available data vector
+  // HACK: This operation is done twice in both draw axis and display which may cause future bugs 
+  // if not done properly. Get the size of the available data vector
   const int n_data = data_vector.size();
   const int font_size = 16;
-  const int font_margin = font_size + 10;
+  const int font_margin = font_size + 15;
 
   // Resize the display to accomodate for the number of expected data type plotted
-  const int display_margin = n_data * (_axis.width + font_size);
+  const int display_margin = n_data * (_axis.width + font_size + font_margin);
   _display.set_size(window_size - Vector2(display_margin + 30, 60));
   _display.frame.set_position(Vector2(display_margin, 30));
 
@@ -214,6 +215,7 @@ void Graph_2D::_draw_display() {
 }
 
 void Graph_2D::_draw_grids() {
+  LOG(DEBUG, "Draw grids");
   _calculate_grid_spacing();
   int font_margin = 12;
   // For column, we start with index 1 since we start drawing from the left, which will overlap with the y-axis
@@ -253,17 +255,35 @@ String Graph_2D::_format_string(const float &val, int dp = 1) {
 
 void Graph_2D::_draw_axis() {
 
+  LOG(DEBUG, "Draw axis");
   // Get the size of the available data vector
   const int n_data = data_vector.size();
   const int font_size = 16;
-  const int font_margin = font_size + 10;
+  const int font_margin = font_size + 15;
 
   for (size_t n = 0; n < n_data; n++) {
-    const Vector2 offset = Vector2(n*(_axis.width + font_size), 0);
+    const Vector2 offset = Vector2(n*(_axis.width + font_size + font_margin), 0);
     // y-axis
     draw_line(_display.top_left() - offset, _display.bottom_left() - offset, _axis.color, _axis.width);
     // x-axis
     draw_line(_display.bottom_left(), _display.bottom_right(), _axis.color, _axis.width);
+    
+    Data_t curr_data = data_vector.at(n);
+
+    float y_step = curr_data.get_y_diff<float>() / _n_grid.y;
+
+    // For row, we start with index 0, since we start drawing from the top
+    for (size_t i = 0; i <= _n_grid.y; i++) {
+      /* Added offset before performing the spacing calculation due to the frame margin
+      // When dealing with the row grid, remember that we are drawing from the top to bottom
+      // where top right corner is origin (0, 0) */
+      Vector2 font_pos = Vector2(_display.x(), _display.y() + i * _grid_spacing.y);
+      // 0.1 * y_min is to allow some spacing between the lower and upper boundary of the y-axis
+      float y = curr_data.y_min() + (_n_grid.y - i) * y_step;
+      String fmt_y_str = _format_string(y, 3);
+      draw_string(_axis.font, Vector2(font_pos.x - (n + 1) * font_margin - n * (font_margin + _axis.width), font_pos.y), fmt_y_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
+    }
+
   }
 
   /* HACK: This shouldnt be left in production, for now, only use one of the data struct to set the axis
@@ -271,7 +291,7 @@ void Graph_2D::_draw_axis() {
   Data_t curr_data = data_vector.at(0);
 
   float x_step = curr_data.get_x_diff<float>() / _n_grid.x;
-  float y_step = curr_data.get_y_diff<float>() / _n_grid.y;
+  // float y_step = curr_data.get_y_diff<float>() / _n_grid.y;
 
   for (size_t i = 0; i <= _n_grid.x; i++) {
     // Added offset before performing the spacing calculation due to the frame margin
@@ -283,17 +303,17 @@ void Graph_2D::_draw_axis() {
     draw_string(_axis.font, Vector2(font_pos.x - 10, font_pos.y + font_margin), fmt_x_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
   }
 
-  // For row, we start with index 0, since we start drawing from the top
-  for (size_t i = 0; i <= _n_grid.y; i++) {
-    /* Added offset before performing the spacing calculation due to the frame margin
-    // When dealing with the row grid, remember that we are drawing from the top to bottom
-    // where top right corner is origin (0, 0) */
-    Vector2 font_pos = Vector2(_display.x(), _display.y() + i * _grid_spacing.y);
-    // 0.1 * y_min is to allow some spacing between the lower and upper boundary of the y-axis
-    float y = curr_data.y_min() + (_n_grid.y - i) * y_step;
-    String fmt_y_str = _format_string(y);
-    draw_string(_axis.font, Vector2(font_pos.x - font_margin, font_pos.y), fmt_y_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
-  }
+  // // For row, we start with index 0, since we start drawing from the top
+  // for (size_t i = 0; i <= _n_grid.y; i++) {
+  //   /* Added offset before performing the spacing calculation due to the frame margin
+  //   // When dealing with the row grid, remember that we are drawing from the top to bottom
+  //   // where top right corner is origin (0, 0) */
+  //   Vector2 font_pos = Vector2(_display.x(), _display.y() + i * _grid_spacing.y);
+  //   // 0.1 * y_min is to allow some spacing between the lower and upper boundary of the y-axis
+  //   float y = curr_data.y_min() + (_n_grid.y - i) * y_step;
+  //   String fmt_y_str = _format_string(y);
+  //   draw_string(_axis.font, Vector2(font_pos.x - font_margin, font_pos.y), fmt_y_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
+  // }
 }
 
 void Graph_2D::_draw_ticks() {
@@ -322,6 +342,7 @@ void Graph_2D::_draw_plot() {
   // For instance, if you're plotting 1 at the y-axis constantly, it will be 1 to 1
 
   // TEST IMPLEMENTATION
+  LOG(DEBUG, "Draw plot");
   for (size_t n = 0; n < data_vector.size(); n++) {
     Data_t &curr_data = data_vector.at(n);
     if (curr_data.packed_v2_data.is_empty()) {

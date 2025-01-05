@@ -75,6 +75,7 @@ class Data_t : public Line_t {
   PackedVector2Array packed_v2_data;
   PackedVector2Array cached_pixel_v2_data;
   bool use_antialiased;
+  String name;
 
   public:
 
