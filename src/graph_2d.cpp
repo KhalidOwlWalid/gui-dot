@@ -58,12 +58,18 @@ void Graph_2D::_init() {
 
   test1.width = 1.0;
   test2.width = 1.0;
+  test3.width = 1.0;
+  test4.width = 1.0;
   
   // For now, im letting data_vector to only be of size 2
   data_vector.push_back(test1);
   data_vector.push_back(test2);
+  data_vector.push_back(test3);
+  data_vector.push_back(test4);
   set_data_line_color(red, 0);
   set_data_line_color(white, 1);
+  set_data_line_color(white, 2);
+  set_data_line_color(red, 3);
 
   ticks = Time::get_singleton()->get_ticks_usec();
   last_update_ticks = ticks;
@@ -109,19 +115,19 @@ void Graph_2D::_draw() {
 }
 
 void Graph_2D::_process(double delta) {
-  // ticks = Time::get_singleton()->get_ticks_usec();
-  // if (ticks - last_update_ticks >= 0.1e6) {
-  //   for (size_t i = 0; i <= 1; i++) {
-  //     uint64_t curr_tick = Time::get_singleton()->get_ticks_usec();
-  //     data_vector.at(i).packed_v2_data.append(Vector2(curr_tick * 1e-6, uf::randf_range(-10, 10)));
+  ticks = Time::get_singleton()->get_ticks_usec();
+  if (ticks - last_update_ticks >= 0.1e6) {
+    for (size_t i = 0; i < data_vector.size(); i++) {
+      uint64_t curr_tick = Time::get_singleton()->get_ticks_usec();
+      data_vector.at(i).packed_v2_data.append(Vector2(curr_tick * 1e-6, uf::randf_range(-10, 10)));
 
-  //     if (data_vector.at(i).packed_v2_data.size() > 100) {
-  //       data_vector.at(i).packed_v2_data.remove_at(0);
-  //     }
-  //   }
-  //   queue_redraw();
-  //   last_update_ticks = Time::get_singleton()->get_ticks_usec();
-  // }
+      if (data_vector.at(i).packed_v2_data.size() > 100) {
+        data_vector.at(i).packed_v2_data.remove_at(0);
+      }
+    }
+    queue_redraw();
+    last_update_ticks = Time::get_singleton()->get_ticks_usec();
+  }
 }
 
 Color Graph_2D::get_window_background_color() const {
@@ -273,14 +279,14 @@ void Graph_2D::_draw_axis() {
     float y_step = curr_data.get_y_diff<float>() / _n_grid.y;
 
     // For row, we start with index 0, since we start drawing from the top
-    for (size_t i = 0; i <= _n_grid.y; i++) {
+    for (size_t i = _n_grid.y; i != 0; i--) {
       /* Added offset before performing the spacing calculation due to the frame margin
       // When dealing with the row grid, remember that we are drawing from the top to bottom
       // where top right corner is origin (0, 0) */
       Vector2 font_pos = Vector2(_display.x(), _display.y() + i * _grid_spacing.y);
       // 0.1 * y_min is to allow some spacing between the lower and upper boundary of the y-axis
       float y = curr_data.y_min() + (_n_grid.y - i) * y_step;
-      String fmt_y_str = _format_string(y, 3);
+      String fmt_y_str = _format_string(y, 2);
       draw_string(_axis.font, Vector2(font_pos.x - (n + 1) * font_margin - n * (font_margin + _axis.width), font_pos.y), fmt_y_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
     }
 
