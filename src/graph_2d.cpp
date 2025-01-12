@@ -5,6 +5,9 @@ using namespace godot;
 
 void Graph_2D::_bind_methods() {
 
+  BIND_ENUM_CONSTANT(FAIL);
+  BIND_ENUM_CONSTANT(SUCCESS);
+
 	ClassDB::bind_method(D_METHOD("get_window_background_color"), &Graph_2D::get_window_background_color);
 	ClassDB::bind_method(D_METHOD("set_window_background_color", "color"), &Graph_2D::set_window_background_color);
 
@@ -17,8 +20,12 @@ void Graph_2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_grid_size"), &Graph_2D::get_grid_size);
 	ClassDB::bind_method(D_METHOD("set_grid_size", "grid_size"), &Graph_2D::set_grid_size);
 
-	ClassDB::bind_method(D_METHOD("get_data_vector", "n"), &Graph_2D::get_data_vector);
-	ClassDB::bind_method(D_METHOD("set_data_vector", "data", "n"), &Graph_2D::set_data_vector);
+	ClassDB::bind_method(D_METHOD("get_data", "n"), &Graph_2D::get_data);
+	ClassDB::bind_method(D_METHOD("set_data", "data", "n"), &Graph_2D::set_data);
+
+  ClassDB::bind_method(D_METHOD("add_data_with_keyword", "data", "keyword"), &Graph_2D::add_new_data_with_keyword);
+  ClassDB::bind_method(D_METHOD("update_data_with_keyword", "data", "keyword"), &Graph_2D::update_data_with_keyword);
+  ClassDB::bind_method(D_METHOD("get_data_with_keyword", "keyword"), &Graph_2D::get_data_with_keyword);
 
 	ClassDB::bind_method(D_METHOD("get_data_line_color", "n"), &Graph_2D::get_data_line_color);
 	ClassDB::bind_method(D_METHOD("set_data_line_color", "color", "n"), &Graph_2D::set_data_line_color);
@@ -57,17 +64,15 @@ void Graph_2D::_init() {
   _axis.font = this->get_theme_default_font();
 
   test1.width = 1.0;
-  test2.width = 1.0;
-  test3.width = 1.0;
-  test4.width = 1.0;
+  // test2.width = 1.0;
   
   // For now, im letting data_vector to only be of size 2
-  data_vector.push_back(test1);
-  data_vector.push_back(test2);
+  // data_vector.push_back(test1);
+  // data_vector.push_back(test2);
   // data_vector.push_back(test3);
   // data_vector.push_back(test4);
-  set_data_line_color(red, 0);
-  set_data_line_color(white, 1);
+  // set_data_line_color(red, 0);
+  // set_data_line_color(white, 1);
   // set_data_line_color(white, 2);
   // set_data_line_color(red, 3);
 
@@ -110,8 +115,10 @@ void Graph_2D::_draw() {
   _draw_window();
   _draw_display();
   _draw_grids();
-  _draw_plot();
-  _draw_axis();
+  if (not data_vector.empty()) {
+    _draw_plot();
+    _draw_axis();
+  }
 }
 
 void Graph_2D::_process(double delta) {
@@ -120,7 +127,6 @@ void Graph_2D::_process(double delta) {
   //   for (size_t i = 0; i < data_vector.size(); i++) {
   //     uint64_t curr_tick = Time::get_singleton()->get_ticks_usec();
   //     data_vector.at(i).packed_v2_data.append(Vector2(curr_tick * 1e-6, uf::randf_range(-10, 10)));
-
   //     if (data_vector.at(i).packed_v2_data.size() > 100) {
   //       data_vector.at(i).packed_v2_data.remove_at(0);
   //     }
@@ -139,11 +145,11 @@ void Graph_2D::set_window_background_color(const Color &color) {
   queue_redraw();
 }
 
-Vector2 godot::Graph_2D::get_window_size() const {
+Vector2 Graph_2D::get_window_size() const {
   return _window.frame.size;
 }
 
-void godot::Graph_2D::set_window_size(const Vector2 &win_size) {
+void Graph_2D::set_window_size(const Vector2 &win_size) {
   _window.frame.set_size(win_size);
   // Update the size of the node bounding box
   set_size(win_size);
@@ -169,12 +175,12 @@ void Graph_2D::set_grid_size(const Vector2 &grid_size) {
   queue_redraw();
 }
 
-PackedVector2Array Graph_2D::get_data_vector(const int n) const {
+PackedVector2Array Graph_2D::get_data(const int n) const {
   // TODO: Assert that n is not out of bound
   return data_vector[n].packed_v2_data;
 }
 
-void Graph_2D::set_data_vector(const PackedVector2Array &data, const int n) {
+void Graph_2D::set_data(const PackedVector2Array &data, const int n) {
   // TODO: Ensure that n is not out of bound
   data_vector.at(n).packed_v2_data = data;
   queue_redraw();
@@ -186,6 +192,52 @@ Color Graph_2D::get_data_line_color(const int n) const {
 
 void Graph_2D::set_data_line_color(const Color &color, const int n) {
   data_vector.at(n).color = color;
+}
+
+Graph_2D::Status Graph_2D::add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data) {
+  Data_t new_data;
+  new_data.packed_v2_data = data;
+  new_data.keyword = keyword;
+  data_vector.push_back(new_data);
+  // TODO: Check if the current keyword exist or not before placing the data
+  // TODO: Do some assertion by checking if the new keyword is updated in the vector or not
+  return SUCCESS;
+}
+
+Graph_2D::Status Graph_2D::update_data_with_keyword(const String &keyword, const PackedVector2Array &data) {
+  if (data_vector.empty()) {
+    LOG(INFO, "No data available to be updated");
+    return SUCCESS;
+  }
+  for (size_t i = 0; i < data_vector.size(); i++) {
+    Data_t curr_data = data_vector.at(i);
+    if (curr_data.keyword.casecmp_to(keyword) == 0) {
+      LOG(DEBUG, "Updating ", keyword, " with new data: ", curr_data.packed_v2_data);
+      curr_data.packed_v2_data = data;
+      return SUCCESS;
+    } else {
+      LOG(INFO, "No data with keyword (", keyword, ") found.");
+    }
+  }
+  return FAIL;
+}
+
+PackedVector2Array Graph_2D::get_data_with_keyword(const String &keyword) const {
+  if (data_vector.empty()) {
+    LOG(INFO, "No data available to get");
+    return PackedVector2Array();
+  }
+  for (size_t i = 0; i < data_vector.size(); i++) {
+    Data_t curr_data = data_vector.at(i);
+    if (curr_data.keyword.casecmp_to(keyword) == 0) {
+      LOG(DEBUG, "Data with (", keyword, ") found");
+      return curr_data.packed_v2_data;
+    } else {
+      LOG(INFO, "No data with keyword (", keyword, ") found.");
+    }
+  }
+  // If no such keyword is found, then return an empty vector array
+  return PackedVector2Array();
 }
 
 void Graph_2D::_draw_window() {
@@ -203,7 +255,14 @@ void Graph_2D::_draw_display() {
 
   // HACK: This operation is done twice in both draw axis and display which may cause future bugs 
   // if not done properly. Get the size of the available data vector
-  const int n_data = data_vector.size();
+  int n_data;
+  if (data_vector.empty()) {
+    // Force 1 to ensure that the display is correctly drawn
+    n_data = 1;
+  } else {
+    n_data = data_vector.size();
+  }
+
   const int font_size = 16;
   const int font_margin = font_size + 15;
 
@@ -212,11 +271,6 @@ void Graph_2D::_draw_display() {
   _display.set_size(window_size - Vector2(display_margin + 30, 60));
   _display.frame.set_position(Vector2(display_margin, 30));
 
-  // Vector2 margin = Vector2(30, 30);
-  /* 2x margin is required in order to compensate for the offset when using the 
-  set_position method */
-  // _display.frame.set_size(window_size - 2*margin);
-  // _display.frame.set_position(margin);
   draw_rect(_display.frame, _display.color);
 }
 
@@ -260,7 +314,17 @@ String Graph_2D::_format_string(const float &val, int dp = 1) {
 
 void Graph_2D::_draw_axis() {
   // Get the size of the available data vector
-  const int n_data = data_vector.size();
+  int n_data;
+  LOG(DEBUG, "Going to fail here");
+  
+  // Ensure that axis is still drawn eventhough data vector is still empty
+  if (data_vector.empty()) {
+    n_data = 1;
+  LOG(DEBUG, "Going to fail here2");
+  } else {
+    n_data = data_vector.size();
+  }
+
   const int font_size = 16;
   const int dp = 2;
   const int font_margin = font_size + 20;
@@ -338,6 +402,11 @@ void Graph_2D::_draw_plot() {
   // For instance, if you're plotting 1 at the y-axis constantly, it will be 1 to 1
 
   // TEST IMPLEMENTATION
+  if (data_vector.empty()) {
+    LOG(DEBUG, "Data vector is empty. Plot will not be drawn.");
+    return;
+  }
+
   for (size_t n = 0; n < data_vector.size(); n++) {
     Data_t &curr_data = data_vector.at(n);
     if (curr_data.packed_v2_data.is_empty()) {
