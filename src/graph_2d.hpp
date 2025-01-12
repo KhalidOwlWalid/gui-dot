@@ -204,11 +204,6 @@ class Graph_2D : public Control {
     Line_t _axis;
     Line_t _grid;
 
-    // Create data class
-    Data_t test1;
-    Data_t test2;
-    Data_t test3;
-    Data_t test4;
     std::vector<Data_t> data_vector;
 
     uint64_t ticks;

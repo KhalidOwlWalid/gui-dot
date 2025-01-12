@@ -20,9 +20,6 @@ void Graph_2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_grid_size"), &Graph_2D::get_grid_size);
 	ClassDB::bind_method(D_METHOD("set_grid_size", "grid_size"), &Graph_2D::set_grid_size);
 
-	ClassDB::bind_method(D_METHOD("get_data", "n"), &Graph_2D::get_data);
-	ClassDB::bind_method(D_METHOD("set_data", "data", "n"), &Graph_2D::set_data);
-
   ClassDB::bind_method(D_METHOD("add_data_with_keyword", "data", "keyword"), &Graph_2D::add_new_data_with_keyword);
   ClassDB::bind_method(D_METHOD("update_data_with_keyword", "data", "keyword"), &Graph_2D::update_data_with_keyword);
   ClassDB::bind_method(D_METHOD("get_data_with_keyword", "keyword"), &Graph_2D::get_data_with_keyword);
@@ -62,19 +59,6 @@ void Graph_2D::_init() {
   _calculate_grid_spacing();
 
   _axis.font = this->get_theme_default_font();
-
-  test1.width = 1.0;
-  // test2.width = 1.0;
-  
-  // For now, im letting data_vector to only be of size 2
-  // data_vector.push_back(test1);
-  // data_vector.push_back(test2);
-  // data_vector.push_back(test3);
-  // data_vector.push_back(test4);
-  // set_data_line_color(red, 0);
-  // set_data_line_color(white, 1);
-  // set_data_line_color(white, 2);
-  // set_data_line_color(red, 3);
 
   ticks = Time::get_singleton()->get_ticks_usec();
   last_update_ticks = ticks;
@@ -175,17 +159,6 @@ void Graph_2D::set_grid_size(const Vector2 &grid_size) {
   queue_redraw();
 }
 
-PackedVector2Array Graph_2D::get_data(const int n) const {
-  // TODO: Assert that n is not out of bound
-  return data_vector[n].packed_v2_data;
-}
-
-void Graph_2D::set_data(const PackedVector2Array &data, const int n) {
-  // TODO: Ensure that n is not out of bound
-  data_vector.at(n).packed_v2_data = data;
-  queue_redraw();
-}
-
 Color Graph_2D::get_data_line_color(const int n) const {
   return data_vector.at(n).color;
 }
@@ -196,12 +169,12 @@ void Graph_2D::set_data_line_color(const Color &color, const int n) {
 
 Graph_2D::Status Graph_2D::add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data, const Color line_color) {
   Data_t new_data;
+  // TODO: Check if the current keyword exist or not before placing the data
+  // TODO: Do some assertion by checking if the new keyword is updated in the vector or not
   new_data.packed_v2_data = data;
   new_data.keyword = keyword;
   new_data.color = line_color;
   data_vector.push_back(new_data);
-  // TODO: Check if the current keyword exist or not before placing the data
-  // TODO: Do some assertion by checking if the new keyword is updated in the vector or not
   return SUCCESS;
 }
 
@@ -214,7 +187,6 @@ Graph_2D::Status Graph_2D::update_data_with_keyword(const String &keyword, const
     Data_t &curr_data = data_vector.at(i);
     if (curr_data.keyword.casecmp_to(keyword) == 0) {
       curr_data.packed_v2_data = data;
-      LOG(INFO, "Keyword: ", curr_data.keyword, " - Current V2 data: ", curr_data.packed_v2_data);
       return SUCCESS;
     } else {
       LOG(INFO, "No data with keyword (", keyword, ") found.");
@@ -231,7 +203,6 @@ PackedVector2Array Graph_2D::get_data_with_keyword(const String &keyword) const 
   for (size_t i = 0; i < data_vector.size(); i++) {
     Data_t curr_data = data_vector.at(i);
     if (curr_data.keyword.casecmp_to(keyword) == 0) {
-      LOG(INFO, "Keyword: ", curr_data.keyword, " - Current V2 data: ", curr_data.packed_v2_data);
       return curr_data.packed_v2_data;
     } else {
       LOG(INFO, "No data with keyword (", keyword, ") found.");
