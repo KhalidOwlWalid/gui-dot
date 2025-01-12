@@ -194,10 +194,11 @@ void Graph_2D::set_data_line_color(const Color &color, const int n) {
   data_vector.at(n).color = color;
 }
 
-Graph_2D::Status Graph_2D::add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data) {
+Graph_2D::Status Graph_2D::add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data, const Color line_color) {
   Data_t new_data;
   new_data.packed_v2_data = data;
   new_data.keyword = keyword;
+  new_data.color = line_color;
   data_vector.push_back(new_data);
   // TODO: Check if the current keyword exist or not before placing the data
   // TODO: Do some assertion by checking if the new keyword is updated in the vector or not
@@ -210,10 +211,10 @@ Graph_2D::Status Graph_2D::update_data_with_keyword(const String &keyword, const
     return SUCCESS;
   }
   for (size_t i = 0; i < data_vector.size(); i++) {
-    Data_t curr_data = data_vector.at(i);
+    Data_t &curr_data = data_vector.at(i);
     if (curr_data.keyword.casecmp_to(keyword) == 0) {
-      LOG(DEBUG, "Updating ", keyword, " with new data: ", curr_data.packed_v2_data);
       curr_data.packed_v2_data = data;
+      LOG(INFO, "Keyword: ", curr_data.keyword, " - Current V2 data: ", curr_data.packed_v2_data);
       return SUCCESS;
     } else {
       LOG(INFO, "No data with keyword (", keyword, ") found.");
@@ -230,7 +231,7 @@ PackedVector2Array Graph_2D::get_data_with_keyword(const String &keyword) const 
   for (size_t i = 0; i < data_vector.size(); i++) {
     Data_t curr_data = data_vector.at(i);
     if (curr_data.keyword.casecmp_to(keyword) == 0) {
-      LOG(DEBUG, "Data with (", keyword, ") found");
+      LOG(INFO, "Keyword: ", curr_data.keyword, " - Current V2 data: ", curr_data.packed_v2_data);
       return curr_data.packed_v2_data;
     } else {
       LOG(INFO, "No data with keyword (", keyword, ") found.");
@@ -315,12 +316,10 @@ String Graph_2D::_format_string(const float &val, int dp = 1) {
 void Graph_2D::_draw_axis() {
   // Get the size of the available data vector
   int n_data;
-  LOG(DEBUG, "Going to fail here");
   
   // Ensure that axis is still drawn eventhough data vector is still empty
   if (data_vector.empty()) {
     n_data = 1;
-  LOG(DEBUG, "Going to fail here2");
   } else {
     n_data = data_vector.size();
   }
@@ -376,9 +375,6 @@ void Graph_2D::_draw_axis() {
   }
 }
 
-void Graph_2D::_draw_ticks() {
-}
-
 PackedVector2Array Graph_2D::_coordinate_to_pixel(const PackedVector2Array &data, const Vector2 &x_range, const Vector2 &y_range) {
   PackedVector2Array data_pixel_pos;
 
@@ -409,6 +405,7 @@ void Graph_2D::_draw_plot() {
 
   for (size_t n = 0; n < data_vector.size(); n++) {
     Data_t &curr_data = data_vector.at(n);
+    LOG(INFO, "Keyword: ", curr_data.keyword, " - Current V2 data: ", curr_data.packed_v2_data);
     if (curr_data.packed_v2_data.is_empty()) {
       continue;
     }
