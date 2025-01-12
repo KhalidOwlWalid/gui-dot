@@ -125,6 +125,10 @@ class Data_t : public Line_t {
       y_range = Vector2(min.y, max.y);
     }
 
+    void info() const {
+      LOG(INFO, "Keyword: ", keyword, " - Current V2 data: ", packed_v2_data);
+    }
+
 };
 
 class Graph_2D : public Control {
@@ -159,7 +163,7 @@ class Graph_2D : public Control {
     void set_data(const PackedVector2Array &data, const int n);
     PackedVector2Array get_data(const int n) const;
 
-    Status add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data);
+    Status add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data, const Color color);
     Status update_data_with_keyword(const String &keyword, const PackedVector2Array &data);
     PackedVector2Array get_data_with_keyword(const String &keyword) const;
 

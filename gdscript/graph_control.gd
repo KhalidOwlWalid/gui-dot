@@ -3,6 +3,7 @@ extends Graph_2D
 var last_tick = Time.get_ticks_usec()
 var graph_node: Node
 var data: PackedVector2Array
+var data1: PackedVector2Array
 var prev_data_size: int
 var is_randomize: bool
 
@@ -11,9 +12,11 @@ func _ready() -> void:
 	var node_name = self.name
 	graph_node = get_node(NodePath("/root/main/" + node_name))
 	data = PackedVector2Array()
-	data.append(Vector2(1,1))
+	data1 = PackedVector2Array()
+	#data.append(Vector2(1,1))
 	is_randomize = true
-	graph_node.add_data_with_keyword("Test", data)
+	graph_node.add_data_with_keyword("Test", data, Color.RED)
+	graph_node.add_data_with_keyword("Hello", data, Color.WHITE)
 	#print(graph_node.get_data_with_keyword("Test"))
 	#var screen_size = DisplayServer.screen_get_size()
 	#graph_node.set_size(screen_size)
@@ -21,9 +24,10 @@ func _ready() -> void:
 func randomize_data():
 	var tick = Time.get_ticks_usec()
 	if (tick - last_tick > 0.001e6):
-		data.push_back(Vector2(tick * 1e-6, randf_range(-10, 10)))
-		#print(data)
+		data.append(Vector2(tick * 1e-6, randf_range(-10, 10)))
+		data1.append(Vector2(tick * 1e-6, randf_range(-5, 5)))
 		graph_node.update_data_with_keyword("Test", data)
+		graph_node.update_data_with_keyword("Hello", data1)
 		last_tick = Time.get_ticks_usec()
 		queue_redraw()
 
