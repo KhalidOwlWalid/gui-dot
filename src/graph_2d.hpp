@@ -14,7 +14,7 @@
 #include "logger.hpp"
 #include "util.hpp"
 
-namespace godot {
+using namespace godot;
 
 using uf = UtilityFunctions;
 
@@ -75,7 +75,7 @@ class Data_t : public Line_t {
   PackedVector2Array packed_v2_data;
   PackedVector2Array cached_pixel_v2_data;
   bool use_antialiased;
-  String name;
+  String keyword;
 
   public:
 
@@ -133,6 +133,12 @@ class Graph_2D : public Control {
   const String __class__ = "Graph_2D";
 
   public:
+
+    enum Status {
+      FAIL,
+      SUCCESS
+    };
+
     Graph_2D();
     ~Graph_2D();
 
@@ -150,8 +156,12 @@ class Graph_2D : public Control {
     void set_grid_size(const Vector2 &grid_size);
     Vector2 get_grid_size() const;
 
-    void set_data_vector(const PackedVector2Array &data, const int n);
-    PackedVector2Array get_data_vector(const int n) const;
+    void set_data(const PackedVector2Array &data, const int n);
+    PackedVector2Array get_data(const int n) const;
+
+    Status add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data);
+    Status update_data_with_keyword(const String &keyword, const PackedVector2Array &data);
+    PackedVector2Array get_data_with_keyword(const String &keyword) const;
 
     void set_data_line_color(const Color &color, const int n);
     Color get_data_line_color(const int n) const;
@@ -211,6 +221,6 @@ class Graph_2D : public Control {
 
 };
 
-}
+VARIANT_ENUM_CAST(Graph_2D::Status);
 
 #endif
