@@ -60,6 +60,8 @@ void Graph_2D::_init() {
 
   _axis.font = this->get_theme_default_font();
 
+  add_new_data_with_keyword("Test", test_data, red);
+
   ticks = Time::get_singleton()->get_ticks_usec();
   last_update_ticks = ticks;
   _initialized = true;
@@ -67,6 +69,12 @@ void Graph_2D::_init() {
 
 void Graph_2D::_notification(const int p_what) {
   switch (p_what) {
+
+    case NOTIFICATION_POSTINITIALIZE: {
+      LOG(INFO, "NOTIFICATION_POSTINITIALIZE");
+      // _build_label_container();
+      break;
+    }
 
     case NOTIFICATION_ENTER_TREE: {
       LOG(INFO, "NOTIFICATION_ENTER_TREE");
@@ -83,7 +91,29 @@ void Graph_2D::_notification(const int p_what) {
       LOG(INFO, "NOTIFICATION_EXIT_TREE");
       break;
     }
+
+    case NOTIFICATION_PREDELETE: {
+      LOG(INFO, "NOTIFICATION_PREDELETE");
+      // _destroy_label_container();
+      break;
+    }
   }
+}
+
+void Graph_2D::_build_label_container() {
+  _label_parent = memnew(Node2D);
+  _label_parent->set_name("Labels");
+  add_child(_label_parent, true);
+}
+
+void Graph_2D::_destroy_label_container() {
+  Array labels = _label_parent->get_children();
+	LOG(DEBUG, "Destroying ", labels.size(), " region labels");
+	for (int i = 0; i < labels.size(); i++) {
+		Node *label = cast_to<Node>(labels[i]);
+		memdelete(label);
+	}
+  memdelete(_label_parent);
 }
 
 void Graph_2D::_calculate_grid_spacing() {
@@ -106,18 +136,18 @@ void Graph_2D::_draw() {
 }
 
 void Graph_2D::_process(double delta) {
-  // ticks = Time::get_singleton()->get_ticks_usec();
-  // if (ticks - last_update_ticks >= 0.1e6) {
-  //   for (size_t i = 0; i < data_vector.size(); i++) {
-  //     uint64_t curr_tick = Time::get_singleton()->get_ticks_usec();
-  //     data_vector.at(i).packed_v2_data.append(Vector2(curr_tick * 1e-6, uf::randf_range(-10, 10)));
-  //     if (data_vector.at(i).packed_v2_data.size() > 100) {
-  //       data_vector.at(i).packed_v2_data.remove_at(0);
-  //     }
-  //   }
-  //   queue_redraw();
-  //   last_update_ticks = Time::get_singleton()->get_ticks_usec();
-  // }
+  ticks = Time::get_singleton()->get_ticks_usec();
+  if (ticks - last_update_ticks >= 0.1e6) {
+    for (size_t i = 0; i < data_vector.size(); i++) {
+      uint64_t curr_tick = Time::get_singleton()->get_ticks_usec();
+      data_vector.at(i).packed_v2_data.append(Vector2(curr_tick * 1e-6, uf::randf_range(-10, 10000)));
+      if (data_vector.at(i).packed_v2_data.size() > 100) {
+        data_vector.at(i).packed_v2_data.remove_at(0);
+      }
+    }
+    queue_redraw();
+    last_update_ticks = Time::get_singleton()->get_ticks_usec();
+  }
 }
 
 Color Graph_2D::get_window_background_color() const {
@@ -237,9 +267,10 @@ void Graph_2D::_draw_display() {
 
   const int font_size = 16;
   const int font_margin = font_size + 15;
+  const int label_margin = 20;
 
   // Resize the display to accomodate for the number of expected data type plotted
-  const int display_margin = n_data * (_axis.width + font_size + font_margin);
+  const int display_margin = n_data * (_axis.width + font_size + font_margin + label_margin);
   _display.set_size(window_size - Vector2(display_margin + 30, 60));
   _display.frame.set_position(Vector2(display_margin, 30));
 
@@ -274,13 +305,34 @@ void Graph_2D::_draw_grids() {
 }
 
 String Graph_2D::_format_string(const float &val, int dp = 1) {
+  // TODO: Allow formatting to be dynamic
   String fmt_str(String::num(val, dp));
-  if (not fmt_str.contains(".")) {
+  
+  // Note: Checks if the value has decimal or not, if not add
+  // To ensure consistency, we first check that the value has decimal
+  // Then, determine the number of characters there before the decimal
+  // We should probably return this to allow for dynamic font formatting when drawing the axis
+
+  // Check if decimals exist on the value, a value of 2 means that there is the number
+  // before and after the decimal
+  if (fmt_str.get_slice_count(".") < 2) {
     fmt_str = fmt_str + ".";
     for (size_t i = 0; i < dp; i++) {
       fmt_str = fmt_str + "0";
     }
   }
+
+  // Although we have already padded zeros in the above implementation
+  // This is to catch if there is any unpadded zeros for labels that already
+  // have decimals but is less than the set number of dp
+  int num_digits_after_delim = fmt_str.get_slice(".", 1).length();
+  if (num_digits_after_delim != dp) {
+    int zeros_to_pad = abs(num_digits_after_delim - dp);
+    for (size_t i = 0; i < zeros_to_pad; i++) {
+      fmt_str = fmt_str + "0";
+    }
+  }
+
   return fmt_str;
 }
 
@@ -301,7 +353,7 @@ void Graph_2D::_draw_axis() {
 
   // Draw multiple y-axis
   for (size_t n = 0; n < n_data; n++) {
-    const Vector2 offset = Vector2(n*(_axis.width + font_size + font_margin), 0);
+    const Vector2 offset = Vector2(n*(_axis.width + font_size + font_margin + 20), 0);
     // y-axis
     draw_line(_display.top_left() - offset, _display.bottom_left() - offset, _axis.color, _axis.width);
     // x-axis
@@ -320,12 +372,17 @@ void Graph_2D::_draw_axis() {
       Figure out a way to parametrize all of the below parameters or magic number. At the moment, this formatting works
       for 1 dp or 2 dp, as sson as 3dp and above is used, it becomes really horrible to read. I'd assume, no one would
       really use 3 dp, but sometimes, you have to take that into consideration. */
-      Vector2 font_pos = Vector2(_display.x() - (n + 1) * font_margin - n * (_axis.width + 5) - (n+1) * font_size/2, _display.y() + (tmp - i) * _grid_spacing.y + font_size/2);
       float y = curr_data.y_min() + (i) * y_step;
       String fmt_y_str = _format_string(y, dp);
-      draw_string(_axis.font, Vector2(font_pos.x, font_pos.y), fmt_y_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
-    }
-
+      int n_digit = fmt_y_str.contains("-") == true ? fmt_y_str.length() - 1 : fmt_y_str.length();
+      Vector2 font_pos = Vector2(_display.x() - n_digit * font_size/1.5 - n * (_axis.width + 5) - (n+1), _display.y() + (tmp - i) * _grid_spacing.y + font_size/2);
+      draw_string(_axis.font, font_pos, fmt_y_str, HORIZONTAL_ALIGNMENT_LEFT, (-1.0F), font_size);
+    } 
+    // Orient this in 90 degree clockwise
+    draw_set_transform(Vector2(0, 0), -Math_PI/2);
+    draw_string(_axis.font, Vector2(-(_display.top_left().y + _display.y_size()/2), 10), curr_data.keyword, HORIZONTAL_ALIGNMENT_LEFT, -1, 16);
+    // WARNING: This transform needs to be reset if not it will affect all drawings that comes after!
+    draw_set_transform(Vector2(0, 0), 0);
   }
 
   /* HACK: This shouldnt be left in production, for now, only use one of the data struct to set the x-axis
@@ -376,7 +433,7 @@ void Graph_2D::_draw_plot() {
 
   for (size_t n = 0; n < data_vector.size(); n++) {
     Data_t &curr_data = data_vector.at(n);
-    LOG(INFO, "Keyword: ", curr_data.keyword, " - Current V2 data: ", curr_data.packed_v2_data);
+    // LOG(DEBUG, "Keyword: ", curr_data.keyword, " - Current V2 data: ", curr_data.packed_v2_data);
     if (curr_data.packed_v2_data.is_empty()) {
       continue;
     }
