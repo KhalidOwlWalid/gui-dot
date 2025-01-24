@@ -61,7 +61,7 @@ void Graph_2D::_init() {
   _axis.font = this->get_theme_default_font();
   _init_font();
 
-  add_new_data_with_keyword("Test", test_data, red);
+  add_new_data_with_keyword("Drone speed (m/s)", test_data, red);
 
   ticks = Time::get_singleton()->get_ticks_usec();
   last_update_ticks = ticks;
@@ -73,13 +73,11 @@ void Graph_2D::_notification(const int p_what) {
 
     case NOTIFICATION_POSTINITIALIZE: {
       LOG(INFO, "NOTIFICATION_POSTINITIALIZE");
-      // _build_label_container();
       break;
     }
 
     case NOTIFICATION_ENTER_TREE: {
       LOG(INFO, "NOTIFICATION_ENTER_TREE");
-      // _init();
       break;
     }
 
@@ -95,7 +93,6 @@ void Graph_2D::_notification(const int p_what) {
 
     case NOTIFICATION_PREDELETE: {
       LOG(INFO, "NOTIFICATION_PREDELETE");
-      // _destroy_label_container();
       break;
     }
   }
@@ -272,10 +269,9 @@ void Graph_2D::_draw_display() {
     for (size_t i = 0; i < max_digit_size; i++) {
       tmp = tmp + "0";
     }
-    display_margin = data_vector.size() * (_axis.width + _font_manager->get_string_size(tmp).x + _axis.width + 20);
-    LOG(DEBUG, _font_manager->get_string_size(tmp));
+    // NOTE: +40 added on Vector2.y to pretify format
+    display_margin = data_vector.size() * (_axis.width + _font_manager->get_string_size(tmp).x + _axis.width + 40);
   }
-  LOG(DEBUG, display_margin);
 
   _display.set_size(window_size - Vector2(display_margin, 60));
   _display.frame.set_position(Vector2(display_margin, 30));
@@ -387,7 +383,7 @@ void Graph_2D::_draw_axis() {
     } 
     // Orient this in 90 degree clockwise
     draw_set_transform(Vector2(0, 0), -Math_PI/2);
-    draw_string(_axis.font, Vector2(-(_display.top_left().y + _display.y_size()/2), 10), curr_data.keyword, HORIZONTAL_ALIGNMENT_LEFT, -1, 16);
+    draw_string(_font_manager, Vector2(-(_window.bottom_left().y - _window.y_size()/2 + _font_manager->get_string_size(curr_data.keyword).x/2), 15), curr_data.keyword);
     // WARNING: This transform needs to be reset if not it will affect all drawings that comes after!
     draw_set_transform(Vector2(0, 0), 0);
   }
@@ -440,7 +436,6 @@ void Graph_2D::_draw_plot() {
 
   for (size_t n = 0; n < data_vector.size(); n++) {
     Data_t &curr_data = data_vector.at(n);
-    // LOG(DEBUG, "Keyword: ", curr_data.keyword, " - Current V2 data: ", curr_data.packed_v2_data);
     if (curr_data.packed_v2_data.is_empty()) {
       continue;
     }
