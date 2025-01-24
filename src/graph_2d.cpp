@@ -59,6 +59,7 @@ void Graph_2D::_init() {
   _calculate_grid_spacing();
 
   _axis.font = this->get_theme_default_font();
+  _init_font();
 
   add_new_data_with_keyword("Test", test_data, red);
 
@@ -129,9 +130,9 @@ void Graph_2D::_draw() {
   _draw_window();
   _draw_display();
   _draw_grids();
+  _draw_axis();
   if (not data_vector.empty()) {
     _draw_plot();
-    _draw_axis();
   }
 }
 
@@ -140,7 +141,7 @@ void Graph_2D::_process(double delta) {
   if (ticks - last_update_ticks >= 0.1e6) {
     for (size_t i = 0; i < data_vector.size(); i++) {
       uint64_t curr_tick = Time::get_singleton()->get_ticks_usec();
-      data_vector.at(i).packed_v2_data.append(Vector2(curr_tick * 1e-6, uf::randf_range(-10, 10000)));
+      data_vector.at(i).packed_v2_data.append(Vector2(curr_tick * 1e-6, uf::randf_range(-10000, 10000)));
       if (data_vector.at(i).packed_v2_data.size() > 100) {
         data_vector.at(i).packed_v2_data.remove_at(0);
       }
@@ -148,6 +149,10 @@ void Graph_2D::_process(double delta) {
     queue_redraw();
     last_update_ticks = Time::get_singleton()->get_ticks_usec();
   }
+}
+
+void Graph_2D::_init_font() {
+  _font_manager = get_theme_default_font();
 }
 
 Color Graph_2D::get_window_background_color() const {
@@ -257,21 +262,22 @@ void Graph_2D::_draw_display() {
 
   // HACK: This operation is done twice in both draw axis and display which may cause future bugs 
   // if not done properly. Get the size of the available data vector
-  int n_data;
+  int display_margin;
   if (data_vector.empty()) {
     // Force 1 to ensure that the display is correctly drawn
-    n_data = 1;
+    // Resize the display to accomodate for the number of expected data type plotted
+    display_margin = (_axis.width + font_size + font_margin + label_margin);
   } else {
-    n_data = data_vector.size();
+    String tmp;
+    for (size_t i = 0; i < max_digit_size; i++) {
+      tmp = tmp + "0";
+    }
+    display_margin = data_vector.size() * (_axis.width + _font_manager->get_string_size(tmp).x + _axis.width + 20);
+    LOG(DEBUG, _font_manager->get_string_size(tmp));
   }
+  LOG(DEBUG, display_margin);
 
-  const int font_size = 16;
-  const int font_margin = font_size + 15;
-  const int label_margin = 20;
-
-  // Resize the display to accomodate for the number of expected data type plotted
-  const int display_margin = n_data * (_axis.width + font_size + font_margin + label_margin);
-  _display.set_size(window_size - Vector2(display_margin + 30, 60));
+  _display.set_size(window_size - Vector2(display_margin, 60));
   _display.frame.set_position(Vector2(display_margin, 30));
 
   draw_rect(_display.frame, _display.color);
@@ -304,7 +310,11 @@ void Graph_2D::_draw_grids() {
   }
 }
 
-String Graph_2D::_format_string(const float &val, int dp = 1) {
+String Graph_2D::_format_axis_label(const float &val, int dp = 1) {
+
+  // Reset count
+  // max_digit_size = 0;
+
   // TODO: Allow formatting to be dynamic
   String fmt_str(String::num(val, dp));
   
@@ -333,26 +343,23 @@ String Graph_2D::_format_string(const float &val, int dp = 1) {
     }
   }
 
+  max_digit_size = fmt_str.length() > max_digit_size ? fmt_str.length() : max_digit_size;
+
   return fmt_str;
 }
 
-void Graph_2D::_draw_axis() {
-  // Get the size of the available data vector
-  int n_data;
-  
+void Graph_2D::_draw_axis() { 
   // Ensure that axis is still drawn eventhough data vector is still empty
   if (data_vector.empty()) {
-    n_data = 1;
-  } else {
-    n_data = data_vector.size();
+    // Just draw the axis line
+    draw_line(_display.top_left(), _display.bottom_left(), _axis.color, _axis.width);
+    // x-axis
+    draw_line(_display.bottom_left(), _display.bottom_right(), _axis.color, _axis.width);
+    return;
   }
 
-  const int font_size = 16;
-  const int dp = 2;
-  const int font_margin = font_size + 20;
-
   // Draw multiple y-axis
-  for (size_t n = 0; n < n_data; n++) {
+  for (size_t n = 0; n < data_vector.size(); n++) {
     const Vector2 offset = Vector2(n*(_axis.width + font_size + font_margin + 20), 0);
     // y-axis
     draw_line(_display.top_left() - offset, _display.bottom_left() - offset, _axis.color, _axis.width);
@@ -373,10 +380,10 @@ void Graph_2D::_draw_axis() {
       for 1 dp or 2 dp, as sson as 3dp and above is used, it becomes really horrible to read. I'd assume, no one would
       really use 3 dp, but sometimes, you have to take that into consideration. */
       float y = curr_data.y_min() + (i) * y_step;
-      String fmt_y_str = _format_string(y, dp);
-      int n_digit = fmt_y_str.contains("-") == true ? fmt_y_str.length() - 1 : fmt_y_str.length();
-      Vector2 font_pos = Vector2(_display.x() - n_digit * font_size/1.5 - n * (_axis.width + 5) - (n+1), _display.y() + (tmp - i) * _grid_spacing.y + font_size/2);
-      draw_string(_axis.font, font_pos, fmt_y_str, HORIZONTAL_ALIGNMENT_LEFT, (-1.0F), font_size);
+      String fmt_y_str = _format_axis_label(y, dp);
+      // NOTE: +10 to x font pos to prettify tick labels position
+      Vector2 font_pos = Vector2(_window.x() + 20, _display.y() + (tmp - i) * _grid_spacing.y + _font_manager->get_string_size(fmt_y_str).y - 20);
+      draw_string(_font_manager, font_pos, fmt_y_str, HORIZONTAL_ALIGNMENT_LEFT, (-1.0F), font_size);
     } 
     // Orient this in 90 degree clockwise
     draw_set_transform(Vector2(0, 0), -Math_PI/2);
@@ -397,7 +404,7 @@ void Graph_2D::_draw_axis() {
     Vector2 font_pos = Vector2(_display.x() + i * _grid_spacing.x, _display.y() + _display.y_size());
     // Add minimum to offset the axis label
     float x = curr_data.x_min() + i * x_step;
-    String fmt_x_str = _format_string(x);
+    String fmt_x_str = _format_axis_label(x);
     // Added offset here (hardcoded for now) to prettify formatting
     draw_string(_axis.font, Vector2(font_pos.x - font_size/2, font_pos.y + font_margin/2), fmt_x_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
   }
@@ -438,14 +445,14 @@ void Graph_2D::_draw_plot() {
       continue;
     }
     curr_data.set_range();
-    curr_data.cached_pixel_v2_data = _coordinate_to_pixel(curr_data.packed_v2_data, curr_data.x_range, curr_data.y_range);
-    for (size_t i = 0; i < curr_data.cached_pixel_v2_data.size() - 1; i++) {
+    curr_data.pixel_pos_v2_data = _coordinate_to_pixel(curr_data.packed_v2_data, curr_data.x_range, curr_data.y_range);
+    for (size_t i = 0; i < curr_data.pixel_pos_v2_data.size() - 1; i++) {
       // Enable anti-aliasing for better resolution
       // Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
       // TODO: Allow anti-aliasing to be toggled on and off during runtime
       // This will help in optimizing the performance when we are drawing multiple lines at once
-      draw_line(curr_data.cached_pixel_v2_data[i], curr_data.cached_pixel_v2_data[i + 1], curr_data.color, 1.0, true);
-      draw_circle(curr_data.cached_pixel_v2_data[i + 1], 5.0, curr_data.color);
+      draw_line(curr_data.pixel_pos_v2_data[i], curr_data.pixel_pos_v2_data[i + 1], curr_data.color, 1.0, true);
+      draw_circle(curr_data.pixel_pos_v2_data[i + 1], 5.0, curr_data.color);
     }
   }
 }

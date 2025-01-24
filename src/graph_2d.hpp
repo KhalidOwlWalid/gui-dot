@@ -7,6 +7,8 @@
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/font.hpp>
 #include <godot_cpp/classes/time.hpp>
+#include <godot_cpp/classes/label.hpp>
+#include <godot_cpp/classes/node2d.hpp>
 
 #include <algorithm>
 #include <vector>
@@ -73,9 +75,10 @@ class Data_t : public Line_t {
   Vector2 x_range;
   Vector2 y_range;
   PackedVector2Array packed_v2_data;
-  PackedVector2Array cached_pixel_v2_data;
+  PackedVector2Array pixel_pos_v2_data;
   bool use_antialiased;
   String keyword;
+  String unit;
 
   public:
 
@@ -170,6 +173,10 @@ class Graph_2D : public Control {
     void set_data_line_color(const Color &color, const int n);
     Color get_data_line_color(const int n) const;
 
+    // TODO: Populate this
+    void get_font();
+    Ref<Font> set_font();
+
     void _draw() override;
 
   protected:
@@ -183,18 +190,23 @@ class Graph_2D : public Control {
     void _draw_axis();
     void _draw_ticks();
     void _draw_plot();
+    void _init_font();
+
+    void _build_label_container();
+    void _destroy_label_container();
 
     void _calculate_grid_spacing();
     void _init();
     PackedVector2Array _coordinate_to_pixel(const PackedVector2Array &data, const Vector2 &x_range, const Vector2 &y_range);
 
     // TODO: Make this a template
-    String _format_string(const float &val, int dp);
+    String _format_axis_label(const float &val, int dp);
 
     bool _initialized {false};
     Vector2 _grid_spacing;
     Vector2 _n_grid {Vector2(10, 5)};
     Vector2 _frame_margin {Vector2(100, 100)};
+    Ref<Font> _font_manager;
 
     // Frame related properties
     Frame_t _window;
@@ -205,9 +217,12 @@ class Graph_2D : public Control {
     Line_t _grid;
 
     std::vector<Data_t> data_vector;
+    PackedVector2Array test_data;
 
     uint64_t ticks;
     uint64_t last_update_ticks;
+
+    Node2D *_label_parent;
 
     // Color properties
     Color white = Color(1.0, 1.0, 1.0, 1.0);
@@ -217,6 +232,13 @@ class Graph_2D : public Control {
     Color gd_grey = Color::hex(0x363d4a);
     Color gd_blue = Color::hex(0x252b34);
     Color green = Color::hex(0x469d5a);
+
+    // Temporary constant use
+    const int font_size = 16;
+    const int font_margin = font_size + 20;
+    const int label_margin = 20;
+    const int dp = 2;
+    int max_digit_size = 1;
 
 };
 
