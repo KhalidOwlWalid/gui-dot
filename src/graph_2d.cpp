@@ -271,7 +271,8 @@ void Graph_2D::_draw_display() {
     display_margin = data_vector.size() * (_axis.width + _font_manager->get_string_size(tmp).x + _axis.width + 20);
   }
 
-  _display.set_size(window_size - Vector2(display_margin, 60));
+  // NOTE: +50 added on top of display_margin to contain the display within the borders of window frame
+  _display.set_size(window_size - Vector2(display_margin + 50, 60));
   _display.frame.set_position(Vector2(display_margin, 30));
 
   draw_rect(_display.frame, _display.color);
@@ -306,9 +307,6 @@ void Graph_2D::_draw_grids() {
 
 String Graph_2D::_format_axis_label(const float &val, int dp = 1) {
 
-  // Reset count
-  // max_digit_size = 0;
-
   // TODO: Allow formatting to be dynamic
   String fmt_str(String::num(val, dp));
   
@@ -337,6 +335,11 @@ String Graph_2D::_format_axis_label(const float &val, int dp = 1) {
     }
   }
 
+  /* BUGFIX: This is just a temporary solution, the function is called for both x and y axis
+  So the way y tick labels are drawn is affected by the string size of x.
+  Example: if x-tick label is 10 digit long, and y-tick label is less than that, the margins
+  created on the y-tick labels are based on the x-tick label (which is not what it is supposed
+  to be doing)*/ 
   max_digit_size = fmt_str.length() > max_digit_size ? fmt_str.length() : max_digit_size;
 
   return fmt_str;
