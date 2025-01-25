@@ -61,7 +61,7 @@ void Graph_2D::_init() {
   _axis.font = this->get_theme_default_font();
   _init_font();
 
-  add_new_data_with_keyword("Drone speed (m/s)", test_data, red);
+  // add_new_data_with_keyword("Drone speed (m/s)", test_data, red);
 
   ticks = Time::get_singleton()->get_ticks_usec();
   last_update_ticks = ticks;
@@ -134,18 +134,18 @@ void Graph_2D::_draw() {
 }
 
 void Graph_2D::_process(double delta) {
-  ticks = Time::get_singleton()->get_ticks_usec();
-  if (ticks - last_update_ticks >= 0.1e6) {
-    for (size_t i = 0; i < data_vector.size(); i++) {
-      uint64_t curr_tick = Time::get_singleton()->get_ticks_usec();
-      data_vector.at(i).packed_v2_data.append(Vector2(curr_tick * 1e-6, uf::randf_range(-10000, 10000)));
-      if (data_vector.at(i).packed_v2_data.size() > 100) {
-        data_vector.at(i).packed_v2_data.remove_at(0);
-      }
-    }
-    queue_redraw();
-    last_update_ticks = Time::get_singleton()->get_ticks_usec();
-  }
+  // ticks = Time::get_singleton()->get_ticks_usec();
+  // if (ticks - last_update_ticks >= 0.1e6) {
+  //   for (size_t i = 0; i < data_vector.size(); i++) {
+  //     uint64_t curr_tick = Time::get_singleton()->get_ticks_usec();
+  //     data_vector.at(i).packed_v2_data.append(Vector2(curr_tick * 1e-6, uf::randf_range(-10000, 10000)));
+  //     if (data_vector.at(i).packed_v2_data.size() > 100) {
+  //       data_vector.at(i).packed_v2_data.remove_at(0);
+  //     }
+  //   }
+  //   queue_redraw();
+  //   last_update_ticks = Time::get_singleton()->get_ticks_usec();
+  // }
 }
 
 void Graph_2D::_init_font() {
@@ -211,14 +211,11 @@ Graph_2D::Status Graph_2D::add_new_data_with_keyword(const String &keyword, cons
 }
 
 Graph_2D::Status Graph_2D::update_data_with_keyword(const String &keyword, const PackedVector2Array &data) {
-  if (data_vector.empty()) {
-    LOG(INFO, "No data available to be updated");
-    return SUCCESS;
-  }
   for (size_t i = 0; i < data_vector.size(); i++) {
     Data_t &curr_data = data_vector.at(i);
     if (curr_data.keyword.casecmp_to(keyword) == 0) {
       curr_data.packed_v2_data = data;
+      queue_redraw();
       return SUCCESS;
     } else {
       LOG(INFO, "No data with keyword (", keyword, ") found.");
@@ -265,12 +262,13 @@ void Graph_2D::_draw_display() {
     // Resize the display to accomodate for the number of expected data type plotted
     display_margin = (_axis.width + font_size + font_margin + label_margin);
   } else {
+    // TODO: Refactor this code, this is a temporary hack to gauge the size of the tick labels
     String tmp;
     for (size_t i = 0; i < max_digit_size; i++) {
       tmp = tmp + "0";
     }
     // NOTE: +40 added on Vector2.y to pretify format
-    display_margin = data_vector.size() * (_axis.width + _font_manager->get_string_size(tmp).x + _axis.width + 40);
+    display_margin = data_vector.size() * (_axis.width + _font_manager->get_string_size(tmp).x + _axis.width + 20);
   }
 
   _display.set_size(window_size - Vector2(display_margin, 60));
@@ -377,8 +375,8 @@ void Graph_2D::_draw_axis() {
       really use 3 dp, but sometimes, you have to take that into consideration. */
       float y = curr_data.y_min() + (i) * y_step;
       String fmt_y_str = _format_axis_label(y, dp);
-      // NOTE: +10 to x font pos to prettify tick labels position
-      Vector2 font_pos = Vector2(_window.x() + 20, _display.y() + (tmp - i) * _grid_spacing.y + _font_manager->get_string_size(fmt_y_str).y - 20);
+      // NOTE: +30 to x font pos to prettify tick labels position
+      Vector2 font_pos = Vector2(_window.x() + 30, _display.y() + (tmp - i) * _grid_spacing.y + _font_manager->get_string_size(fmt_y_str).y - 20);
       draw_string(_font_manager, font_pos, fmt_y_str, HORIZONTAL_ALIGNMENT_LEFT, (-1.0F), font_size);
     } 
     // Orient this in 90 degree clockwise
