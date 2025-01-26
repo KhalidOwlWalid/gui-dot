@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://dq88i4qb7d2gj"]
+[gd_scene load_steps=4 format=3 uid="uid://dq88i4qb7d2gj"]
 
 [ext_resource type="Script" path="res://gdscript/graph_control.gd" id="1_3fdkq"]
-[ext_resource type="Script" path="res://gdscript/button.gd" id="2_dr7ux"]
+[ext_resource type="Texture2D" uid="uid://c5a3a7gkfhwjr" path="res://icon.svg" id="3_mfy13"]
+[ext_resource type="Script" path="res://gdscript/graph_settings.gd" id="4_pwjbl"]
 
 [node name="main" type="Control"]
 layout_mode = 3
@@ -12,17 +13,143 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="demo_graph" type="Graph_2D" parent="."]
-_window.frame.size = Vector2(1153, 664)
+"Window Frame Size" = Vector2(1296, 759)
 layout_mode = 0
-offset_right = 1153.0
-offset_bottom = 664.0
+offset_right = 1296.0
+offset_bottom = 759.0
 script = ExtResource("1_3fdkq")
 
-[node name="Button" type="Button" parent="."]
+[node name="fps_plot" type="Graph_2D" parent="."]
+window_color = Color(0, 0, 0, 0)
+"Window Frame Size" = Vector2(643, 383)
+"Display Color" = Color(0.0705882, 0.0705882, 0.0705882, 0)
 layout_mode = 0
-offset_left = 1188.0
-offset_top = 29.0
-offset_right = 1431.0
-offset_bottom = 110.0
-text = "Create new plot"
-script = ExtResource("2_dr7ux")
+offset_left = 1309.0
+offset_top = 16.0
+offset_right = 1952.0
+offset_bottom = 399.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(1974, 423)
+scale = Vector2(0.765625, 0.734375)
+texture = ExtResource("3_mfy13")
+
+[node name="graph_settings_panel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 1393.0
+offset_top = 393.0
+offset_right = 1623.0
+offset_bottom = 691.0
+
+[node name="apply_button" type="Button" parent="graph_settings_panel" groups=["graph_settings"]]
+layout_mode = 0
+offset_left = 44.0
+offset_top = 255.0
+offset_right = 188.0
+offset_bottom = 286.0
+text = "Apply & Generate"
+script = ExtResource("4_pwjbl")
+
+[node name="GridContainer" type="GridContainer" parent="graph_settings_panel"]
+layout_mode = 0
+offset_left = 21.0
+offset_top = 40.0
+offset_right = 214.0
+offset_bottom = 241.0
+columns = 2
+
+[node name="Label" type="Label" parent="graph_settings_panel/GridContainer"]
+layout_mode = 2
+text = "Data type: "
+
+[node name="data_type_option" type="OptionButton" parent="graph_settings_panel/GridContainer" groups=["graph_settings"]]
+custom_minimum_size = Vector2(100, 30)
+layout_mode = 2
+selected = 0
+item_count = 2
+popup/item_0/text = "sin"
+popup/item_1/text = "random"
+popup/item_1/id = 1
+
+[node name="Label2" type="Label" parent="graph_settings_panel/GridContainer"]
+layout_mode = 2
+text = "y min: "
+vertical_alignment = 1
+
+[node name="y_min_val" type="LineEdit" parent="graph_settings_panel/GridContainer" groups=["graph_settings"]]
+custom_minimum_size = Vector2(100, 30)
+layout_mode = 2
+tooltip_text = "Sets the y minimum of the y-axis"
+
+[node name="Label3" type="Label" parent="graph_settings_panel/GridContainer"]
+layout_mode = 2
+text = "y max:"
+
+[node name="y_max_val" type="LineEdit" parent="graph_settings_panel/GridContainer" groups=["graph_settings"]]
+custom_minimum_size = Vector2(100, 30)
+layout_mode = 2
+
+[node name="Label4" type="Label" parent="graph_settings_panel/GridContainer"]
+layout_mode = 2
+text = "Amplitude: "
+
+[node name="amplitude" type="LineEdit" parent="graph_settings_panel/GridContainer" groups=["graph_settings"]]
+custom_minimum_size = Vector2(100, 30)
+layout_mode = 2
+
+[node name="Label5" type="Label" parent="graph_settings_panel/GridContainer"]
+layout_mode = 2
+text = "Min value: "
+
+[node name="min_val" type="LineEdit" parent="graph_settings_panel/GridContainer" groups=["graph_settings"]]
+custom_minimum_size = Vector2(100, 30)
+layout_mode = 2
+
+[node name="Label6" type="Label" parent="graph_settings_panel/GridContainer"]
+layout_mode = 2
+text = "Max value: "
+
+[node name="max_val" type="LineEdit" parent="graph_settings_panel/GridContainer" groups=["graph_settings"]]
+custom_minimum_size = Vector2(100, 30)
+layout_mode = 2
+
+[node name="Label7" type="Label" parent="graph_settings_panel"]
+layout_mode = 2
+offset_left = 58.0
+offset_top = 1.0
+offset_right = 172.0
+offset_bottom = 24.0
+text = "Graph settings"
+
+[node name="data_view_panel" type="Panel" parent="."]
+layout_mode = 0
+offset_left = 1652.0
+offset_top = 393.0
+offset_right = 1898.0
+offset_bottom = 481.0
+
+[node name="GridContainer" type="GridContainer" parent="data_view_panel"]
+layout_mode = 0
+offset_left = 21.0
+offset_top = 41.0
+offset_right = 225.0
+offset_bottom = 72.0
+columns = 2
+
+[node name="x_val" type="LineEdit" parent="data_view_panel/GridContainer" groups=["data_viewer"]]
+custom_minimum_size = Vector2(100, 30)
+layout_mode = 2
+editable = false
+
+[node name="y_val" type="LineEdit" parent="data_view_panel/GridContainer" groups=["data_viewer"]]
+custom_minimum_size = Vector2(100, 30)
+layout_mode = 2
+editable = false
+
+[node name="Label" type="Label" parent="data_view_panel"]
+layout_mode = 0
+offset_left = 78.0
+offset_top = 7.0
+offset_right = 172.0
+offset_bottom = 30.0
+text = "Data Viewer"

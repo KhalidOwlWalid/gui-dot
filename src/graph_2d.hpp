@@ -118,14 +118,16 @@ class Data_t : public Line_t {
       Vector2 min = packed_v2_data[0];
       Vector2 max = packed_v2_data[0];
       // TODO: Find a better optimized way to do this
+      LOG(DEBUG, packed_v2_data);
       for (size_t i = 0; i < packed_v2_data.size(); i++) {
         min.x = std::min(min.x, packed_v2_data[i].x);
         min.y = std::min(min.y, packed_v2_data[i].y);
         max.x = std::max(max.x, packed_v2_data[i].x);
         max.y = std::max(max.y, packed_v2_data[i].y);
+        LOG(DEBUG, max.x, " ", packed_v2_data[i].x);
       }
       x_range = Vector2(min.x, max.x);
-      y_range = Vector2(min.y, max.y);
+      y_range = Vector2(min.y, max.y) + Vector2(0.1, 0.1) * Vector2(min.y, max.y);
     }
 
     void info() const {
@@ -191,9 +193,6 @@ class Graph_2D : public Control {
     void _draw_ticks();
     void _draw_plot();
     void _init_font();
-
-    void _build_label_container();
-    void _destroy_label_container();
 
     void _calculate_grid_spacing();
     void _init();
