@@ -195,7 +195,7 @@ void Graph_2D::set_y_range(const String keyword, const float min, const float ma
   for (size_t i=0; i < data_vector.size(); i++) {
     if (data_vector.at(i).keyword.casecmp_to(keyword) == 0) {
       data_vector.at(i).set_y_range(min, max);
-      LOG(DEBUG, "Setting y range: ", data_vector.at(i).y_range);
+      LOG(INFO, "Setting y range with the following setting: ", data_vector.at(i).y_range);
       // Lock the y-axis since the user is taking over
       // If not, the axis will be dynamically drawn to reflect the changes of the data
       data_vector.at(i).is_y_axis_lock = true;
@@ -443,7 +443,6 @@ void Graph_2D::_draw_plot() {
   // FIXME: When plotting a constant value over time, the whole axis will be that constant value
   // For instance, if you're plotting 1 at the y-axis constantly, it will be 1 to 1
 
-  // TEST IMPLEMENTATION
   if (data_vector.empty()) {
     LOG(DEBUG, "Data vector is empty. Plot will not be drawn.");
     return;
@@ -456,12 +455,37 @@ void Graph_2D::_draw_plot() {
     }
     curr_data.pixel_pos_v2_data = _coordinate_to_pixel(curr_data.packed_v2_data, curr_data.x_range, curr_data.y_range);
     for (size_t i = 0; i < curr_data.pixel_pos_v2_data.size() - 1; i++) {
-      // Enable anti-aliasing for better resolution
-      // Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
-      // TODO: Allow anti-aliasing to be toggled on and off during runtime
-      // This will help in optimizing the performance when we are drawing multiple lines at once
-      draw_line(curr_data.pixel_pos_v2_data[i], curr_data.pixel_pos_v2_data[i + 1], curr_data.color, 1.0, true);
-      draw_circle(curr_data.pixel_pos_v2_data[i + 1], 5.0, curr_data.color);
+
+      const Vector2 curr_pixel_pos = curr_data.pixel_pos_v2_data[i];
+      const Vector2 next_pixel_pos = curr_data.pixel_pos_v2_data[i + 1];
+      bool curr_point_visible = curr_pixel_pos.y < _display.bottom_left().y && curr_pixel_pos.y > _display.top_left().y;
+      bool next_point_visible = next_pixel_pos.y < _display.bottom_left().y && next_pixel_pos.y > _display.top_left().y;
+
+      if (not curr_point_visible && not next_point_visible) {
+        // If both points are not visible, then skip to the next dataset
+        continue;
+      } else if (curr_point_visible && next_point_visible) {
+        // Enable anti-aliasing for better resolution
+        // Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
+        // TODO: Allow anti-aliasing to be toggled on and off during runtime
+        // This will help in optimizing the performance when we are drawing multiple lines at once
+        draw_line(curr_data.pixel_pos_v2_data[i], curr_data.pixel_pos_v2_data[i + 1], curr_data.color, 1.0, true);
+        draw_circle(curr_data.pixel_pos_v2_data[i + 1], 5.0, curr_data.color);
+      } else {
+        // Interpolate
+        float y3;
+        float m = (curr_pixel_pos.y - next_pixel_pos.y) / (curr_pixel_pos.x - next_pixel_pos.x);
+        // NOTE: Pixel coordinates increment from top to bottom, so points above the top display border would be smaller
+        if ((not next_point_visible && next_pixel_pos.y < _display.top_left().y) || (not curr_point_visible && curr_pixel_pos.y < _display.top_left().y)) {
+          y3 = _display.top_left().y;
+        } else {
+          // Conditions trigger if either points not visible, but it is bigger than the bottom display border
+          y3 = _display.bottom_left().y;
+        }
+        float x3 = (y3 - curr_pixel_pos.y)/(m) + curr_pixel_pos.x;
+        draw_line(Vector2(x3, y3), curr_data.pixel_pos_v2_data[i], curr_data.color, 1.0, true);
+        draw_circle(Vector2(x3, y3), 5.0, curr_data.color);
+      }
     }
   }
 }

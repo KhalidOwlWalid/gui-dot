@@ -122,7 +122,6 @@ class Data_t : public Line_t {
       Vector2 min = packed_v2_data[0];
       Vector2 max = packed_v2_data[0];
       // TODO: Find a better optimized way to do this
-      LOG(DEBUG, packed_v2_data);
       for (size_t i = 0; i < packed_v2_data.size(); i++) {
           min.x = std::min(min.x, packed_v2_data[i].x);
           max.x = std::max(max.x, packed_v2_data[i].x);
@@ -133,10 +132,13 @@ class Data_t : public Line_t {
       x_range = is_x_axis_lock ? x_range: Vector2(min.x, max.x);
       // A scale of 0.1 is added for both min and max y to ensure the data is not drawn at the border of the display
       y_range = is_y_axis_lock ? y_range: Vector2(min.y, max.y) + Vector2(0.1, 0.1) * Vector2(min.y, max.y);
-      LOG(DEBUG, "y_range: ", y_range);
     }
 
     void set_y_range(float min, float max) {
+      if (min > max) {
+        LOG(WARNING, "min > max! Defaults to min,", y_min(), " and max,", y_max());
+        return;
+      }
       y_range[0] = min;
       y_range[1] = max;
     }
