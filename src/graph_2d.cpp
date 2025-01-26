@@ -98,22 +98,6 @@ void Graph_2D::_notification(const int p_what) {
   }
 }
 
-void Graph_2D::_build_label_container() {
-  _label_parent = memnew(Node2D);
-  _label_parent->set_name("Labels");
-  add_child(_label_parent, true);
-}
-
-void Graph_2D::_destroy_label_container() {
-  Array labels = _label_parent->get_children();
-	LOG(DEBUG, "Destroying ", labels.size(), " region labels");
-	for (int i = 0; i < labels.size(); i++) {
-		Node *label = cast_to<Node>(labels[i]);
-		memdelete(label);
-	}
-  memdelete(_label_parent);
-}
-
 void Graph_2D::_calculate_grid_spacing() {
   // Calculate the amount of spacing required per pixel with n_grid
   _grid_spacing.x = static_cast<uint>(_display.x_size() / _n_grid.x);
@@ -268,7 +252,7 @@ void Graph_2D::_draw_display() {
       tmp = tmp + "0";
     }
     // NOTE: +40 added on Vector2.y to pretify format
-    display_margin = data_vector.size() * (_axis.width + _font_manager->get_string_size(tmp).x + _axis.width + 20);
+    display_margin = data_vector.size() * (_axis.width + _font_manager->get_string_size(tmp).x + _axis.width + 30);
   }
 
   // NOTE: +50 added on top of display_margin to contain the display within the borders of window frame
@@ -363,7 +347,14 @@ void Graph_2D::_draw_axis() {
     // x-axis
     draw_line(_display.bottom_left(), _display.bottom_right(), _axis.color, _axis.width);
     
-    Data_t curr_data = data_vector.at(n);
+    // If the current data has no populated data, then do not proceed, skip to the next dataset
+    Data_t &curr_data = data_vector.at(n);
+    if (curr_data.packed_v2_data.is_empty()) {
+        continue;
+    }
+    
+    // Obtain the max and min value of both x and y axis
+    curr_data.set_range();
 
     const int tmp = _n_grid.y;
     float y_step = curr_data.get_y_diff<float>() / tmp;
@@ -394,6 +385,7 @@ void Graph_2D::_draw_axis() {
   Data_t curr_data = data_vector.at(0);
 
   float x_step = curr_data.get_x_diff<float>() / _n_grid.x;
+  LOG(DEBUG, "x_step: ", x_step, ", x grid size: ", _n_grid.x);
   // float y_step = curr_data.get_y_diff<float>() / _n_grid.y;
 
   for (size_t i = 0; i <= _n_grid.x; i++) {
@@ -440,7 +432,6 @@ void Graph_2D::_draw_plot() {
     if (curr_data.packed_v2_data.is_empty()) {
       continue;
     }
-    curr_data.set_range();
     curr_data.pixel_pos_v2_data = _coordinate_to_pixel(curr_data.packed_v2_data, curr_data.x_range, curr_data.y_range);
     for (size_t i = 0; i < curr_data.pixel_pos_v2_data.size() - 1; i++) {
       // Enable anti-aliasing for better resolution
