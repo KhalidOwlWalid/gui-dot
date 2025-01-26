@@ -42,6 +42,8 @@ func _pressed() -> void:
 	var data_type_node: Node = graph_settings[settings_dict.get("data_type_option")]
 	var min_val_node: Node = graph_settings[settings_dict.get("min_val")]
 	var max_val_node: Node = graph_settings[settings_dict.get("max_val")]
+	var y_min_val_node: Node = graph_settings[settings_dict.get("y_min_val")]
+	var y_max_val_node: Node = graph_settings[settings_dict.get("y_max_val")]
 	var curr_type_idx: int = data_type_node.selected
 	var curr_item_txt: String = data_type_node.get_item_text(curr_type_idx)
 	match curr_item_txt:
@@ -56,6 +58,8 @@ func _pressed() -> void:
 		_:
 			print("Selected data type does not exist. Defaulting to sin")
 
+	demo_graph.set_y_range(data_keyword, float(y_min_val_node.text), float(y_max_val_node.text))
+	print(float(y_min_val_node.text))
 	demo_graph.update_data_with_keyword(data_keyword, data)
 	var x_viewer: Node = data_viewer[data_viewer_dict.get("x_val")]
 	var y_viewer: Node = data_viewer[data_viewer_dict.get("y_val")]

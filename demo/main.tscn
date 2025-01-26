@@ -65,6 +65,7 @@ text = "Data type: "
 [node name="data_type_option" type="OptionButton" parent="graph_settings_panel/GridContainer" groups=["graph_settings"]]
 custom_minimum_size = Vector2(100, 30)
 layout_mode = 2
+alignment = 1
 selected = 0
 item_count = 2
 popup/item_0/text = "sin"
@@ -80,6 +81,8 @@ vertical_alignment = 1
 custom_minimum_size = Vector2(100, 30)
 layout_mode = 2
 tooltip_text = "Sets the y minimum of the y-axis"
+text = "-10"
+alignment = 1
 
 [node name="Label3" type="Label" parent="graph_settings_panel/GridContainer"]
 layout_mode = 2
@@ -88,6 +91,8 @@ text = "y max:"
 [node name="y_max_val" type="LineEdit" parent="graph_settings_panel/GridContainer" groups=["graph_settings"]]
 custom_minimum_size = Vector2(100, 30)
 layout_mode = 2
+text = "10"
+alignment = 1
 
 [node name="Label4" type="Label" parent="graph_settings_panel/GridContainer"]
 layout_mode = 2
