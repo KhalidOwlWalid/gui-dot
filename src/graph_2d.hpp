@@ -168,6 +168,9 @@ class Graph_2D : public Control {
     void set_data(const PackedVector2Array &data, const int n);
     PackedVector2Array get_data(const int n) const;
 
+    void set_y_range(const Vector2 range);
+    Vector2 get_y_range() const;
+
     Status add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data, const Color color);
     Status update_data_with_keyword(const String &keyword, const PackedVector2Array &data);
     PackedVector2Array get_data_with_keyword(const String &keyword) const;

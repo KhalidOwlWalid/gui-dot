@@ -27,6 +27,9 @@ void Graph_2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_data_line_color", "n"), &Graph_2D::get_data_line_color);
 	ClassDB::bind_method(D_METHOD("set_data_line_color", "color", "n"), &Graph_2D::set_data_line_color);
 
+	ClassDB::bind_method(D_METHOD("get_y_range"), &Graph_2D::get_y_range);
+	ClassDB::bind_method(D_METHOD("set_y_range", "range"), &Graph_2D::set_y_range);
+
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "window_color"), "set_window_background_color", "get_window_background_color");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "Window Frame Size"), "set_window_size", "get_window_size");
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "Display Color"), "set_display_background_color", "get_display_background_color");
@@ -69,33 +72,33 @@ void Graph_2D::_init() {
 }
 
 void Graph_2D::_notification(const int p_what) {
-  switch (p_what) {
+  // switch (p_what) {
 
-    case NOTIFICATION_POSTINITIALIZE: {
-      LOG(INFO, "NOTIFICATION_POSTINITIALIZE");
-      break;
-    }
+  //   case NOTIFICATION_POSTINITIALIZE: {
+  //     LOG(INFO, "NOTIFICATION_POSTINITIALIZE");
+  //     break;
+  //   }
 
-    case NOTIFICATION_ENTER_TREE: {
-      LOG(INFO, "NOTIFICATION_ENTER_TREE");
-      break;
-    }
+  //   case NOTIFICATION_ENTER_TREE: {
+  //     LOG(INFO, "NOTIFICATION_ENTER_TREE");
+  //     break;
+  //   }
 
-    case NOTIFICATION_READY: {
-      LOG(INFO, "NOTIFICATION_READY");
-      break;
-    }
+  //   case NOTIFICATION_READY: {
+  //     LOG(INFO, "NOTIFICATION_READY");
+  //     break;
+  //   }
 
-    case NOTIFICATION_EXIT_TREE: {
-      LOG(INFO, "NOTIFICATION_EXIT_TREE");
-      break;
-    }
+  //   case NOTIFICATION_EXIT_TREE: {
+  //     LOG(INFO, "NOTIFICATION_EXIT_TREE");
+  //     break;
+  //   }
 
-    case NOTIFICATION_PREDELETE: {
-      LOG(INFO, "NOTIFICATION_PREDELETE");
-      break;
-    }
-  }
+  //   case NOTIFICATION_PREDELETE: {
+  //     LOG(INFO, "NOTIFICATION_PREDELETE");
+  //     break;
+  //   }
+  // }
 }
 
 void Graph_2D::_calculate_grid_spacing() {
@@ -181,6 +184,14 @@ Color Graph_2D::get_data_line_color(const int n) const {
 
 void Graph_2D::set_data_line_color(const Color &color, const int n) {
   data_vector.at(n).color = color;
+}
+
+Vector2 Graph_2D::get_y_range() const {
+  Vector2 tmp;
+  return tmp;
+}
+
+void Graph_2D::set_y_range(const Vector2 range) { 
 }
 
 Graph_2D::Status Graph_2D::add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data, const Color line_color) {
@@ -385,7 +396,6 @@ void Graph_2D::_draw_axis() {
   Data_t curr_data = data_vector.at(0);
 
   float x_step = curr_data.get_x_diff<float>() / _n_grid.x;
-  LOG(DEBUG, "x_step: ", x_step, ", x grid size: ", _n_grid.x);
   // float y_step = curr_data.get_y_diff<float>() / _n_grid.y;
 
   for (size_t i = 0; i <= _n_grid.x; i++) {
