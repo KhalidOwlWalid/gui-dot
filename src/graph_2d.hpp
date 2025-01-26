@@ -80,6 +80,9 @@ class Data_t : public Line_t {
   String keyword;
   String unit;
 
+  bool is_y_axis_lock = false;
+  bool is_x_axis_lock = false;
+
   public:
 
     // TODO: Create an assertion to ensure x_max is always bigger than x_min
@@ -114,20 +117,28 @@ class Data_t : public Line_t {
       return diff;
     }
 
+    // Sets the range for the x and y axis by obtaining the min and max value of the data
     void set_range() {
       Vector2 min = packed_v2_data[0];
       Vector2 max = packed_v2_data[0];
       // TODO: Find a better optimized way to do this
       LOG(DEBUG, packed_v2_data);
       for (size_t i = 0; i < packed_v2_data.size(); i++) {
-        min.x = std::min(min.x, packed_v2_data[i].x);
-        min.y = std::min(min.y, packed_v2_data[i].y);
-        max.x = std::max(max.x, packed_v2_data[i].x);
-        max.y = std::max(max.y, packed_v2_data[i].y);
-        LOG(DEBUG, max.x, " ", packed_v2_data[i].x);
+          min.x = std::min(min.x, packed_v2_data[i].x);
+          max.x = std::max(max.x, packed_v2_data[i].x);
+          min.y = std::min(min.y, packed_v2_data[i].y);
+          max.y = std::max(max.y, packed_v2_data[i].y);
       }
-      x_range = Vector2(min.x, max.x);
-      y_range = Vector2(min.y, max.y) + Vector2(0.1, 0.1) * Vector2(min.y, max.y);
+      // Only update the range if the axis is not lock
+      x_range = is_x_axis_lock ? x_range: Vector2(min.x, max.x);
+      // A scale of 0.1 is added for both min and max y to ensure the data is not drawn at the border of the display
+      y_range = is_y_axis_lock ? y_range: Vector2(min.y, max.y) + Vector2(0.1, 0.1) * Vector2(min.y, max.y);
+      LOG(DEBUG, "y_range: ", y_range);
+    }
+
+    void set_y_range(float min, float max) {
+      y_range[0] = min;
+      y_range[1] = max;
     }
 
     void info() const {
@@ -168,8 +179,8 @@ class Graph_2D : public Control {
     void set_data(const PackedVector2Array &data, const int n);
     PackedVector2Array get_data(const int n) const;
 
-    void set_y_range(const Vector2 range);
-    Vector2 get_y_range() const;
+    void set_y_range(const String keyword, const float min, const float max);
+    Vector2 get_y_range(const String keyword) const;
 
     Status add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data, const Color color);
     Status update_data_with_keyword(const String &keyword, const PackedVector2Array &data);

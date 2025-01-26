@@ -186,12 +186,24 @@ void Graph_2D::set_data_line_color(const Color &color, const int n) {
   data_vector.at(n).color = color;
 }
 
-Vector2 Graph_2D::get_y_range() const {
+Vector2 Graph_2D::get_y_range(const String keyword) const {
   Vector2 tmp;
   return tmp;
 }
 
-void Graph_2D::set_y_range(const Vector2 range) { 
+void Graph_2D::set_y_range(const String keyword, const float min, const float max) {
+  for (size_t i=0; i < data_vector.size(); i++) {
+    if (data_vector.at(i).keyword.casecmp_to(keyword) == 0) {
+      data_vector.at(i).set_y_range(min, max);
+      LOG(DEBUG, "Setting y range: ", data_vector.at(i).y_range);
+      // Lock the y-axis since the user is taking over
+      // If not, the axis will be dynamically drawn to reflect the changes of the data
+      data_vector.at(i).is_y_axis_lock = true;
+      queue_redraw();
+      // Note: This function should only do for one keyword, no need to iterate anymore once found
+      break;
+    }
+  }
 }
 
 Graph_2D::Status Graph_2D::add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data, const Color line_color) {
