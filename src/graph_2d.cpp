@@ -483,7 +483,13 @@ void Graph_2D::_draw_plot() {
           y3 = _display.bottom_left().y;
         }
         float x3 = (y3 - curr_pixel_pos.y)/(m) + curr_pixel_pos.x;
-        draw_line(Vector2(x3, y3), curr_data.pixel_pos_v2_data[i], curr_data.color, 1.0, true);
+        
+        if (next_point_visible) {
+          draw_line(Vector2(x3, y3), curr_data.pixel_pos_v2_data[i + 1], curr_data.color, 1.0, true);
+        } else {
+        // HACK: Solution to ghost point, without this, there will be unconnected points between the ghost point and the next point (i+1)
+          draw_line(Vector2(x3, y3), curr_data.pixel_pos_v2_data[i], curr_data.color, 1.0, true);
+        }
         draw_circle(Vector2(x3, y3), 5.0, curr_data.color);
       }
     }
