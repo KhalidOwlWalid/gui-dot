@@ -116,7 +116,10 @@ void Graph_2D::_draw() {
   _draw_grids();
   _draw_axis();
   if (not data_vector.empty()) {
+    float start_tick = Time::get_singleton()->get_ticks_usec();
     _draw_plot();
+    float end_tick = Time::get_singleton()->get_ticks_usec();
+    LOG(DEBUG, "_draw_plot (us): ", end_tick - start_tick);
   }
 }
 
@@ -421,7 +424,7 @@ void Graph_2D::_draw_axis() {
   }
 }
 
-PackedVector2Array Graph_2D::_coordinate_to_pixel(const PackedVector2Array &data, const Vector2 &x_range, const Vector2 &y_range) {
+Vector2 Graph_2D::_coordinate_to_pixel(const Vector2 &data, const Vector2 &x_range, const Vector2 &y_range) {
   PackedVector2Array data_pixel_pos;
 
   float x_min = x_range[0];
@@ -429,14 +432,18 @@ PackedVector2Array Graph_2D::_coordinate_to_pixel(const PackedVector2Array &data
   float y_min = y_range[0];
   float y_max = y_range[1];
 
-  for (size_t i = 0; i < data.size(); i++) {
-    // TODO: Optimize this by pre-computing the remap position outside the for loop
-    // Use of inline may optimize it to some extent, but calling it every loop is super f**king stupid
-    double x_pixel = UtilityFunctions::remap(data[i].x, x_min, x_max, _display.bottom_left().x, _display.x() + _display.x_size());
-    double y_pixel = UtilityFunctions::remap(data[i].y, y_min, y_max, _display.bottom_left().y, _display.bottom_left().y - _display.y_size());
-    data_pixel_pos.append(Vector2(x_pixel, y_pixel));
-  }
-  return data_pixel_pos;
+  Vector2 pixel_pos;
+  pixel_pos.x = UtilityFunctions::remap(data.x, x_min, x_max, _display.bottom_left().x, _display.x() + _display.x_size());
+  pixel_pos.y = UtilityFunctions::remap(data.y, y_min, y_max, _display.bottom_left().y, _display.bottom_left().y - _display.y_size());
+
+  // for (size_t i = 0; i < data.size(); i++) {
+  //   // TODO: Optimize this by pre-computing the remap position outside the for loop
+  //   // Use of inline may optimize it to some extent, but calling it every loop is super f**king stupid
+  //   double x_pixel = UtilityFunctions::remap(data[i].x, x_min, x_max, _display.bottom_left().x, _display.x() + _display.x_size());
+  //   double y_pixel = UtilityFunctions::remap(data[i].y, y_min, y_max, _display.bottom_left().y, _display.bottom_left().y - _display.y_size());
+  //   data_pixel_pos.append(Vector2(x_pixel, y_pixel));
+  // }
+  return pixel_pos;
 }
 
 void Graph_2D::_draw_plot() {
@@ -453,11 +460,11 @@ void Graph_2D::_draw_plot() {
     if (curr_data.packed_v2_data.is_empty()) {
       continue;
     }
-    curr_data.pixel_pos_v2_data = _coordinate_to_pixel(curr_data.packed_v2_data, curr_data.x_range, curr_data.y_range);
-    for (size_t i = 0; i < curr_data.pixel_pos_v2_data.size() - 1; i++) {
 
-      const Vector2 curr_pixel_pos = curr_data.pixel_pos_v2_data[i];
-      const Vector2 next_pixel_pos = curr_data.pixel_pos_v2_data[i + 1];
+    for (size_t i = 0; i < curr_data.packed_v2_data.size() - 1; i++) {
+
+      const Vector2 curr_pixel_pos = _coordinate_to_pixel(curr_data.packed_v2_data[i], curr_data.x_range, curr_data.y_range);
+      const Vector2 next_pixel_pos = _coordinate_to_pixel(curr_data.packed_v2_data[i + 1], curr_data.x_range, curr_data.y_range);
       bool curr_point_visible = curr_pixel_pos.y < _display.bottom_left().y && curr_pixel_pos.y > _display.top_left().y;
       bool next_point_visible = next_pixel_pos.y < _display.bottom_left().y && next_pixel_pos.y > _display.top_left().y;
 
@@ -469,8 +476,9 @@ void Graph_2D::_draw_plot() {
         // Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
         // TODO: Allow anti-aliasing to be toggled on and off during runtime
         // This will help in optimizing the performance when we are drawing multiple lines at once
-        draw_line(curr_data.pixel_pos_v2_data[i], curr_data.pixel_pos_v2_data[i + 1], curr_data.color, 1.0, true);
-        draw_circle(curr_data.pixel_pos_v2_data[i + 1], 5.0, curr_data.color);
+        draw_line(curr_pixel_pos, next_pixel_pos, curr_data.color, 1.0, true);
+        // BUGFIX?: For some reason, drawing with circles make the program to run really slow
+        // draw_circle(curr_data.pixel_pos_v2_data[i + 1], 5.0, curr_data.color);
       } else {
         // Interpolate
         float y3;
@@ -483,15 +491,14 @@ void Graph_2D::_draw_plot() {
           y3 = _display.bottom_left().y;
         }
         float x3 = (y3 - curr_pixel_pos.y)/(m) + curr_pixel_pos.x;
-        
         if (next_point_visible) {
-          draw_line(Vector2(x3, y3), curr_data.pixel_pos_v2_data[i + 1], curr_data.color, 1.0, true);
+          draw_line(Vector2(x3, y3), next_pixel_pos, curr_data.color, 1.0, true);
         } else {
-        // HACK: Solution to ghost point, without this, there will be unconnected points between the ghost point and the next point (i+1)
-          draw_line(Vector2(x3, y3), curr_data.pixel_pos_v2_data[i], curr_data.color, 1.0, true);
+          // HACK: Solution to ghost point, without this, there will be unconnected points between the ghost point and the next point (i+1)
+          draw_line(Vector2(x3, y3), next_pixel_pos, curr_data.color, 1.0, true);
         }
-        draw_circle(Vector2(x3, y3), 5.0, curr_data.color);
       }
+
     }
   }
 }

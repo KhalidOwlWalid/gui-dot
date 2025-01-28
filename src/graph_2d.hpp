@@ -212,7 +212,7 @@ class Graph_2D : public Control {
 
     void _calculate_grid_spacing();
     void _init();
-    PackedVector2Array _coordinate_to_pixel(const PackedVector2Array &data, const Vector2 &x_range, const Vector2 &y_range);
+    Vector2 _coordinate_to_pixel(const Vector2 &data, const Vector2 &x_range, const Vector2 &y_range);
 
     // TODO: Make this a template
     String _format_axis_label(const float &val, int dp);
