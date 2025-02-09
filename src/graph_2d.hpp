@@ -74,8 +74,10 @@ class Data_t : public Line_t {
 
   Vector2 x_range;
   Vector2 y_range;
-  PackedVector2Array packed_v2_data;
+  // TODO: Once data server is implemented, this should be move there?
+  PackedVector2Array packed_v2_data; // Stores all of the data
   PackedVector2Array pixel_pos_v2_data;
+  PackedVector2Array lod_data; // Level Of Detail data - only plot visible data
   bool use_antialiased;
   String keyword;
   String unit;
@@ -143,6 +145,15 @@ class Data_t : public Line_t {
       y_range[1] = max;
     }
 
+    void set_x_range(float min, float max) {
+      if (min > max) {
+        LOG(WARNING, "min > max! Defaults to min,", x_min(), " and max,", x_max());
+        return;
+      }
+      x_range[0] = min;
+      x_range[1] = max;
+    }
+
     void info() const {
       LOG(INFO, "Keyword: ", keyword, " - Current V2 data: ", packed_v2_data);
     }
@@ -184,9 +195,15 @@ class Graph_2D : public Control {
     void set_y_range(const String keyword, const float min, const float max);
     Vector2 get_y_range(const String keyword) const;
 
+    void set_x_range(const String keyword, const float min, const float max);
+    Vector2 get_x_range(const String keyword) const;
+
+    void set_antialiased_flag(const bool flag);
+
     Status add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data, const Color color);
     Status update_data_with_keyword(const String &keyword, const PackedVector2Array &data);
     PackedVector2Array get_data_with_keyword(const String &keyword) const;
+
 
     void set_data_line_color(const Color &color, const int n);
     Color get_data_line_color(const int n) const;
@@ -208,10 +225,13 @@ class Graph_2D : public Control {
     void _draw_axis();
     void _draw_ticks();
     void _draw_plot();
+    void _preprocess_data();
     void _init_font();
 
     void _calculate_grid_spacing();
     void _init();
+
+    bool use_antialiased = false;
     Vector2 _coordinate_to_pixel(const Vector2 &data, const Vector2 &x_range, const Vector2 &y_range);
 
     // TODO: Make this a template

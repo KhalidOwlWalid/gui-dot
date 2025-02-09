@@ -28,7 +28,12 @@ void Graph_2D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_data_line_color", "color", "n"), &Graph_2D::set_data_line_color);
 
 	ClassDB::bind_method(D_METHOD("get_y_range"), &Graph_2D::get_y_range);
-	ClassDB::bind_method(D_METHOD("set_y_range", "range"), &Graph_2D::set_y_range);
+	ClassDB::bind_method(D_METHOD("set_y_range", "keyword", "min", "max"), &Graph_2D::set_y_range);
+
+	ClassDB::bind_method(D_METHOD("get_x_range"), &Graph_2D::get_x_range);
+	ClassDB::bind_method(D_METHOD("set_x_range", "keyword", "min", "max"), &Graph_2D::set_x_range);
+
+	ClassDB::bind_method(D_METHOD("set_antialiased_flag", "flag"), &Graph_2D::set_antialiased_flag);
 
 	ADD_PROPERTY(PropertyInfo(Variant::COLOR, "window_color"), "set_window_background_color", "get_window_background_color");
 	ADD_PROPERTY(PropertyInfo(Variant::VECTOR2, "Window Frame Size"), "set_window_size", "get_window_size");
@@ -113,29 +118,15 @@ void Graph_2D::_draw() {
   the window) */
   _draw_window();
   _draw_display();
+  _preprocess_data();
   _draw_grids();
   _draw_axis();
   if (not data_vector.empty()) {
-    float start_tick = Time::get_singleton()->get_ticks_usec();
     _draw_plot();
-    float end_tick = Time::get_singleton()->get_ticks_usec();
-    LOG(DEBUG, "_draw_plot (us): ", end_tick - start_tick);
   }
 }
 
 void Graph_2D::_process(double delta) {
-  // ticks = Time::get_singleton()->get_ticks_usec();
-  // if (ticks - last_update_ticks >= 0.1e6) {
-  //   for (size_t i = 0; i < data_vector.size(); i++) {
-  //     uint64_t curr_tick = Time::get_singleton()->get_ticks_usec();
-  //     data_vector.at(i).packed_v2_data.append(Vector2(curr_tick * 1e-6, uf::randf_range(-10000, 10000)));
-  //     if (data_vector.at(i).packed_v2_data.size() > 100) {
-  //       data_vector.at(i).packed_v2_data.remove_at(0);
-  //     }
-  //   }
-  //   queue_redraw();
-  //   last_update_ticks = Time::get_singleton()->get_ticks_usec();
-  // }
 }
 
 void Graph_2D::_init_font() {
@@ -207,6 +198,31 @@ void Graph_2D::set_y_range(const String keyword, const float min, const float ma
       break;
     }
   }
+}
+
+Vector2 Graph_2D::get_x_range(const String keyword) const {
+  Vector2 tmp;
+  return tmp;
+}
+
+void Graph_2D::set_x_range(const String keyword, const float min, const float max) {
+  for (size_t i=0; i < data_vector.size(); i++) {
+    if (data_vector.at(i).keyword.casecmp_to(keyword) == 0) {
+      data_vector.at(i).set_x_range(min, max);
+      LOG(INFO, "Setting y range with the following setting: ", data_vector.at(i).y_range);
+      // Lock the y-axis since the user is taking over
+      // If not, the axis will be dynamically drawn to reflect the changes of the data
+      data_vector.at(i).is_x_axis_lock = true;
+      queue_redraw();
+      // Note: This function should only do for one keyword, no need to iterate anymore once found
+      break;
+    }
+  }
+}
+
+void Graph_2D::set_antialiased_flag(const bool flag) {
+  LOG(INFO, "Antialised flag set to", flag);
+  use_antialiased = flag;
 }
 
 Graph_2D::Status Graph_2D::add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data, const Color line_color) {
@@ -286,6 +302,24 @@ void Graph_2D::_draw_display() {
   _display.frame.set_position(Vector2(display_margin, 30));
 
   draw_rect(_display.frame, _display.color);
+}
+
+void Graph_2D::_preprocess_data() {
+  // Take the full dataset and calculate the required data to be displayed 
+  if (data_vector.empty()) {
+    return;
+  }
+
+  for (size_t n = 0; n < data_vector.size(); n++) { 
+    // If the current data has no populated data, then do not proceed, skip to the next dataset
+    Data_t &curr_data = data_vector.at(n);
+    if (curr_data.packed_v2_data.is_empty()) {
+        continue;
+    }
+    
+    // Obtain the max and min value of both x and y axis
+    curr_data.set_range();
+  }
 }
 
 void Graph_2D::_draw_grids() {
@@ -378,10 +412,7 @@ void Graph_2D::_draw_axis() {
     if (curr_data.packed_v2_data.is_empty()) {
         continue;
     }
-    
-    // Obtain the max and min value of both x and y axis
-    curr_data.set_range();
-
+  
     const int tmp = _n_grid.y;
     float y_step = curr_data.get_y_diff<float>() / tmp;
 
@@ -409,10 +440,7 @@ void Graph_2D::_draw_axis() {
   /* HACK: This shouldnt be left in production, for now, only use one of the data struct to set the x-axis
   The graph should be able to support multiple axis. This will cause issues if data vector 1 is empty. */
   Data_t curr_data = data_vector.at(0);
-
   float x_step = curr_data.get_x_diff<float>() / _n_grid.x;
-  // float y_step = curr_data.get_y_diff<float>() / _n_grid.y;
-
   for (size_t i = 0; i <= _n_grid.x; i++) {
     // Added offset before performing the spacing calculation due to the frame margin
     Vector2 font_pos = Vector2(_display.x() + i * _grid_spacing.x, _display.y() + _display.y_size());
@@ -436,20 +464,12 @@ Vector2 Graph_2D::_coordinate_to_pixel(const Vector2 &data, const Vector2 &x_ran
   pixel_pos.x = UtilityFunctions::remap(data.x, x_min, x_max, _display.bottom_left().x, _display.x() + _display.x_size());
   pixel_pos.y = UtilityFunctions::remap(data.y, y_min, y_max, _display.bottom_left().y, _display.bottom_left().y - _display.y_size());
 
-  // for (size_t i = 0; i < data.size(); i++) {
-  //   // TODO: Optimize this by pre-computing the remap position outside the for loop
-  //   // Use of inline may optimize it to some extent, but calling it every loop is super f**king stupid
-  //   double x_pixel = UtilityFunctions::remap(data[i].x, x_min, x_max, _display.bottom_left().x, _display.x() + _display.x_size());
-  //   double y_pixel = UtilityFunctions::remap(data[i].y, y_min, y_max, _display.bottom_left().y, _display.bottom_left().y - _display.y_size());
-  //   data_pixel_pos.append(Vector2(x_pixel, y_pixel));
-  // }
   return pixel_pos;
 }
 
 void Graph_2D::_draw_plot() {
   // FIXME: When plotting a constant value over time, the whole axis will be that constant value
   // For instance, if you're plotting 1 at the y-axis constantly, it will be 1 to 1
-
   if (data_vector.empty()) {
     LOG(DEBUG, "Data vector is empty. Plot will not be drawn.");
     return;
@@ -461,6 +481,19 @@ void Graph_2D::_draw_plot() {
       continue;
     }
 
+    /* Technically, we only care about the rendering. Data storing should only be done by another data server node (To be made).
+    Hence, we can run some pre-processing to remove any non-visible data by taking it into chunks. In a way the relationship works this way:
+    
+    IO -> Data server -> call update data method of graph_2d -> graph 2d pre-process the data -> plot only visible datasets
+    
+    Pre-process step:
+    - Graph 2D creates local copy of the data from the server data node
+    - Data is split into chunks (decide how this will be split, maybe half, quarter?)
+    - Data is pre-processed through the use of multiple threads to determine which points are visible
+    - Merge
+    - Plot only visible datasets
+
+    */
     for (size_t i = 0; i < curr_data.packed_v2_data.size() - 1; i++) {
 
       const Vector2 curr_pixel_pos = _coordinate_to_pixel(curr_data.packed_v2_data[i], curr_data.x_range, curr_data.y_range);
@@ -474,9 +507,8 @@ void Graph_2D::_draw_plot() {
       } else if (curr_point_visible && next_point_visible) {
         // Enable anti-aliasing for better resolution
         // Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
-        // TODO: Allow anti-aliasing to be toggled on and off during runtime
         // This will help in optimizing the performance when we are drawing multiple lines at once
-        draw_line(curr_pixel_pos, next_pixel_pos, curr_data.color, 1.0, true);
+        draw_line(curr_pixel_pos, next_pixel_pos, curr_data.color, 1.0, use_antialiased);
         // BUGFIX?: For some reason, drawing with circles make the program to run really slow
         // draw_circle(curr_data.pixel_pos_v2_data[i + 1], 5.0, curr_data.color);
       } else {
@@ -492,13 +524,12 @@ void Graph_2D::_draw_plot() {
         }
         float x3 = (y3 - curr_pixel_pos.y)/(m) + curr_pixel_pos.x;
         if (next_point_visible) {
-          draw_line(Vector2(x3, y3), next_pixel_pos, curr_data.color, 1.0, true);
+          draw_line(Vector2(x3, y3), next_pixel_pos, curr_data.color, 1.0, use_antialiased);
         } else {
           // HACK: Solution to ghost point, without this, there will be unconnected points between the ghost point and the next point (i+1)
-          draw_line(Vector2(x3, y3), next_pixel_pos, curr_data.color, 1.0, true);
+          draw_line(Vector2(x3, y3), next_pixel_pos, curr_data.color, 1.0, use_antialiased);
         }
       }
-
     }
   }
 }
