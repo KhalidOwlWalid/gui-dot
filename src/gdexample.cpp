@@ -1,4 +1,5 @@
 #include "gdexample.h"
+#include "logger.hpp"
 #include <godot_cpp/core/class_db.hpp>
 
 using namespace godot;
@@ -44,21 +45,26 @@ GDExample::~GDExample() {
 }
 
 void GDExample::_process(double delta) {
-	time_passed += delta;
+	// time_passed += delta;
 
-	Vector2 new_position = Vector2(
-		speed * (amplitude + (amplitude * sin(time_passed * 2.0))),
-		speed * (amplitude + (amplitude * cos(time_passed * 1.5)))
-	);
+	// Vector2 new_position = Vector2(
+	// 	speed * (amplitude + (amplitude * sin(time_passed * 2.0))),
+	// 	speed * (amplitude + (amplitude * cos(time_passed * 1.5)))
+	// );
 
-	set_position(new_position);
+	// set_position(new_position);
 	
-	time_emit += delta;
-	if (time_emit > 1.0) {
-		emit_signal("position_changed", this, new_position);
-		time_emit = 0.0;
-	}
+	// time_emit += delta;
+	// if (time_emit > 1.0) {
+	// 	emit_signal("position_changed", this, new_position);
+	// 	time_emit = 0.0;
+	// }
+	// LOG(DEBUG, ref_example);
 }
+
+// Ref<PackedVector2Array> GDExample::get_ref_example() const {
+// 	return ref_example;
+// }
 
 void GDExample::set_amplitude(const double p_amplitude) {
 	amplitude = p_amplitude;
