@@ -81,6 +81,7 @@ class Data_t : public Line_t {
   bool use_antialiased;
   String keyword;
   String unit;
+  Dictionary data_dict;
 
   bool is_y_axis_lock = false;
   bool is_x_axis_lock = false;
@@ -121,14 +122,14 @@ class Data_t : public Line_t {
 
     // Sets the range for the x and y axis by obtaining the min and max value of the data
     void set_range() {
-      Vector2 min = packed_v2_data[0];
-      Vector2 max = packed_v2_data[0];
+      Vector2 min = lod_data[0];
+      Vector2 max = lod_data[0];
       // TODO: Find a better optimized way to do this
-      for (size_t i = 0; i < packed_v2_data.size(); i++) {
-          min.x = std::min(min.x, packed_v2_data[i].x);
-          max.x = std::max(max.x, packed_v2_data[i].x);
-          min.y = std::min(min.y, packed_v2_data[i].y);
-          max.y = std::max(max.y, packed_v2_data[i].y);
+      for (size_t i = 0; i < lod_data.size(); i++) {
+          min.x = std::min(min.x, lod_data[i].x);
+          max.x = std::max(max.x, lod_data[i].x);
+          min.y = std::min(min.y, lod_data[i].y);
+          max.y = std::max(max.y, lod_data[i].y);
       }
       // Only update the range if the axis is not lock
       x_range = is_x_axis_lock ? x_range: Vector2(min.x, max.x);
@@ -155,7 +156,7 @@ class Data_t : public Line_t {
     }
 
     void info() const {
-      LOG(INFO, "Keyword: ", keyword, " - Current V2 data: ", packed_v2_data);
+      LOG(INFO, "Keyword: ", keyword, " - Current V2 data: ", lod_data);
     }
 
 };
@@ -203,6 +204,8 @@ class Graph_2D : public Control {
     Status add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data, const Color color);
     Status update_data_with_keyword(const String &keyword, const PackedVector2Array &data);
     PackedVector2Array get_data_with_keyword(const String &keyword) const;
+    Status append_data_with_keyword(const String &keyword, const Vector2 &data);
+    Status append_data_array_with_keyword(const String &keyword, const PackedVector2Array &data_array);
 
 
     void set_data_line_color(const Color &color, const int n);

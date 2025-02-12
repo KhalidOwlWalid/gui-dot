@@ -23,6 +23,8 @@ void Graph_2D::_bind_methods() {
   ClassDB::bind_method(D_METHOD("add_data_with_keyword", "data", "keyword"), &Graph_2D::add_new_data_with_keyword);
   ClassDB::bind_method(D_METHOD("update_data_with_keyword", "data", "keyword"), &Graph_2D::update_data_with_keyword);
   ClassDB::bind_method(D_METHOD("get_data_with_keyword", "keyword"), &Graph_2D::get_data_with_keyword);
+  ClassDB::bind_method(D_METHOD("append_data_with_keyword", "keyword", "data"), &Graph_2D::append_data_with_keyword);
+  ClassDB::bind_method(D_METHOD("append_data_array_with_keyword", "keyword", "data_array"), &Graph_2D::append_data_array_with_keyword);
 
 	ClassDB::bind_method(D_METHOD("get_data_line_color", "n"), &Graph_2D::get_data_line_color);
 	ClassDB::bind_method(D_METHOD("set_data_line_color", "color", "n"), &Graph_2D::set_data_line_color);
@@ -250,6 +252,35 @@ Graph_2D::Status Graph_2D::update_data_with_keyword(const String &keyword, const
   return FAIL;
 }
 
+// TODO: Implement this so we can append data instead of referencing the whole data multiple times
+Graph_2D::Status Graph_2D::append_data_with_keyword(const String &keyword, const Vector2 &data) {
+  for (size_t i = 0; i < data_vector.size(); i++) {
+    Data_t &curr_data = data_vector.at(i);
+    if (curr_data.keyword.casecmp_to(keyword) == 0) {
+      curr_data.packed_v2_data.append(data);
+      queue_redraw();
+      return SUCCESS;
+    } else {
+      LOG(INFO, "No data with keyword (", keyword, ") found.");
+    }
+  }
+  return FAIL; 
+}
+
+Graph_2D::Status Graph_2D::append_data_array_with_keyword(const String &keyword, const PackedVector2Array &data_array) {
+  for (size_t i = 0; i < data_vector.size(); i++) {
+    Data_t &curr_data = data_vector.at(i);
+    if (curr_data.keyword.casecmp_to(keyword) == 0) {
+      curr_data.packed_v2_data.append_array(data_array);
+      queue_redraw();
+      return SUCCESS;
+    } else {
+      LOG(INFO, "No data with keyword (", keyword, ") found.");
+    }
+  }
+  return FAIL; 
+}
+
 PackedVector2Array Graph_2D::get_data_with_keyword(const String &keyword) const {
   if (data_vector.empty()) {
     LOG(INFO, "No data available to get");
@@ -313,12 +344,26 @@ void Graph_2D::_preprocess_data() {
   for (size_t n = 0; n < data_vector.size(); n++) { 
     // If the current data has no populated data, then do not proceed, skip to the next dataset
     Data_t &curr_data = data_vector.at(n);
+    // tmp to avoid crash
     if (curr_data.packed_v2_data.is_empty()) {
         continue;
     }
-    
+
+    /*
+    TODO:
+    1. Calculate the frequency of the data if there is at least 2 data points
+    2. Once the expected frequency of the data is known, calculate the expected number of elements required for a full buffer of 30s
+    3. 
+    */
+    if (curr_data.packed_v2_data.size() < 3) {
+      curr_data.lod_data = curr_data.packed_v2_data;
+    } else {
+      curr_data.lod_data = curr_data.packed_v2_data;
+    }
+
     // Obtain the max and min value of both x and y axis
     curr_data.set_range();
+
   }
 }
 
@@ -409,7 +454,7 @@ void Graph_2D::_draw_axis() {
     
     // If the current data has no populated data, then do not proceed, skip to the next dataset
     Data_t &curr_data = data_vector.at(n);
-    if (curr_data.packed_v2_data.is_empty()) {
+    if (curr_data.lod_data.is_empty()) {
         continue;
     }
   
@@ -477,7 +522,7 @@ void Graph_2D::_draw_plot() {
 
   for (size_t n = 0; n < data_vector.size(); n++) {
     Data_t &curr_data = data_vector.at(n);
-    if (curr_data.packed_v2_data.is_empty()) {
+    if (curr_data.lod_data.is_empty()) {
       continue;
     }
 
@@ -494,10 +539,10 @@ void Graph_2D::_draw_plot() {
     - Plot only visible datasets
 
     */
-    for (size_t i = 0; i < curr_data.packed_v2_data.size() - 1; i++) {
+    for (size_t i = 0; i < curr_data.lod_data.size() - 1; i++) {
 
-      const Vector2 curr_pixel_pos = _coordinate_to_pixel(curr_data.packed_v2_data[i], curr_data.x_range, curr_data.y_range);
-      const Vector2 next_pixel_pos = _coordinate_to_pixel(curr_data.packed_v2_data[i + 1], curr_data.x_range, curr_data.y_range);
+      const Vector2 curr_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i], curr_data.x_range, curr_data.y_range);
+      const Vector2 next_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i + 1], curr_data.x_range, curr_data.y_range);
       bool curr_point_visible = curr_pixel_pos.y < _display.bottom_left().y && curr_pixel_pos.y > _display.top_left().y;
       bool next_point_visible = next_pixel_pos.y < _display.bottom_left().y && next_pixel_pos.y > _display.top_left().y;
 
