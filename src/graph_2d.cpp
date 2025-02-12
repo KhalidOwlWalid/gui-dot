@@ -5,6 +5,7 @@ using namespace godot;
 
 void Graph_2D::_bind_methods() {
 
+  // Test
   BIND_ENUM_CONSTANT(FAIL);
   BIND_ENUM_CONSTANT(SUCCESS);
 
