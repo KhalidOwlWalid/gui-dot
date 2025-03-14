@@ -5,3 +5,4 @@ tmp/
 src/*.os
 bin/*.so
 .sconsign.dblite
+.vscode/*

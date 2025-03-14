@@ -1,8 +1,0 @@
-{
-  "ros.distro": "humble",
-  "files.associations": {
-    "*.tcc": "cpp",
-    "string": "cpp",
-    "list": "cpp"
-  }
-}
