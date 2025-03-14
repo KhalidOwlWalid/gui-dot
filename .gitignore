@@ -2,3 +2,6 @@
 .godot/
 godot-cpp/
 tmp/
+src/*.os
+bin/*.so
+.sconsign.dblite
