@@ -172,6 +172,11 @@ class Data_t : public Line_t {
 
 };
 
+struct sliding_window_info {
+  float t_min;
+  float t_max;
+};
+
 class Graph_2D : public Control {
 
   GDCLASS(Graph_2D, Control);
@@ -215,7 +220,7 @@ class Graph_2D : public Control {
     Status add_new_data_with_keyword(const String &keyword, const PackedVector2Array &data, const Color color);
     Status update_data_with_keyword(const String &keyword, const PackedVector2Array &data);
     PackedVector2Array get_data_with_keyword(const String &keyword) const;
-    Status append_data_with_keyword(const String &keyword, const Vector2 &data);
+    Status append_data_with_keyword(const String &keyword, const float &data);
     Status append_data_array_with_keyword(const String &keyword, const PackedVector2Array &data_array);
 
 
@@ -290,6 +295,10 @@ class Graph_2D : public Control {
     const int label_margin = 20;
     const int dp = 2;
     int max_digit_size = 1;
+
+    float sliding_window_duration = 10.0;
+
+    sliding_window_info _sw_info;
 
 };
 
