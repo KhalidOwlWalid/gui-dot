@@ -175,6 +175,8 @@ class Data_t : public Line_t {
 struct sliding_window_info {
   float t_min;
   float t_max;
+
+  Vector2 range() {return Vector2(t_min, t_max);}
 };
 
 class Graph_2D : public Control {

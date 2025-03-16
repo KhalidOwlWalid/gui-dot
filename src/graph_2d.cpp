@@ -376,9 +376,9 @@ void Graph_2D::_preprocess_data() {
 
   float curr_time = static_cast<float>(Time::get_singleton()->get_ticks_usec() * 1e-6);
   float min_window_time = static_cast<float>(curr_time - sliding_window_duration);
-  _sw_info.t_min = CLAMP(std::min((float)0.0, min_window_time), (float)0.0, min_window_time);
+  _sw_info.t_min = std::max((float)0.0, min_window_time);
   _sw_info.t_max = std::max(sliding_window_duration, curr_time);
-  LOG(DEBUG, _sw_info.t_min, " ", _sw_info.t_max);
+  LOG(DEBUG, _sw_info.range());
 }
 
 void Graph_2D::_draw_grids() {
@@ -498,13 +498,25 @@ void Graph_2D::_draw_axis() {
 
   /* HACK: This shouldnt be left in production, for now, only use one of the data struct to set the x-axis
   The graph should be able to support multiple axis. This will cause issues if data vector 1 is empty. */
+  // Data_t curr_data = data_vector.at(0);
+  // float x_step = curr_data.get_x_diff<float>() / _n_grid.x;
+  // for (size_t i = 0; i <= _n_grid.x; i++) {
+  //   // Added offset before performing the spacing calculation due to the frame margin
+  //   Vector2 font_pos = Vector2(_display.x() + i * _grid_spacing.x, _display.y() + _display.y_size());
+  //   // Add minimum to offset the axis label
+  //   float x = curr_data.x_min() + i * x_step;
+  //   String fmt_x_str = _format_axis_label(x);
+  //   // Added offset here (hardcoded for now) to prettify formatting
+  //   draw_string(_axis.font, Vector2(font_pos.x - font_size/2, font_pos.y + font_margin/2), fmt_x_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
+  // }
+
   Data_t curr_data = data_vector.at(0);
-  float x_step = curr_data.get_x_diff<float>() / _n_grid.x;
+  float x_step = sliding_window_duration / _n_grid.x;
   for (size_t i = 0; i <= _n_grid.x; i++) {
     // Added offset before performing the spacing calculation due to the frame margin
     Vector2 font_pos = Vector2(_display.x() + i * _grid_spacing.x, _display.y() + _display.y_size());
     // Add minimum to offset the axis label
-    float x = curr_data.x_min() + i * x_step;
+    float x = _sw_info.t_min + i * x_step;
     String fmt_x_str = _format_axis_label(x);
     // Added offset here (hardcoded for now) to prettify formatting
     draw_string(_axis.font, Vector2(font_pos.x - font_size/2, font_pos.y + font_margin/2), fmt_x_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
@@ -555,8 +567,11 @@ void Graph_2D::_draw_plot() {
     */
     for (size_t i = 0; i < curr_data.lod_data.size() - 1; i++) {
 
-      const Vector2 curr_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i], curr_data.x_range, curr_data.y_range);
-      const Vector2 next_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i + 1], curr_data.x_range, curr_data.y_range);
+      // const Vector2 curr_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i], curr_data.x_range, curr_data.y_range);
+      // const Vector2 next_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i + 1], curr_data.x_range, curr_data.y_range);
+
+      const Vector2 curr_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i], _sw_info.range(), curr_data.y_range);
+      const Vector2 next_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i + 1], _sw_info.range(), curr_data.y_range);
       bool curr_point_visible = curr_pixel_pos.y < _display.bottom_left().y && curr_pixel_pos.y > _display.top_left().y;
       bool next_point_visible = next_pixel_pos.y < _display.bottom_left().y && next_pixel_pos.y > _display.top_left().y;
 
