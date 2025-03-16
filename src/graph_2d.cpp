@@ -350,16 +350,27 @@ void Graph_2D::_preprocess_data() {
         continue;
     }
 
-    /*
-    TODO:
-    1. Calculate the frequency of the data if there is at least 2 data points
-    2. Once the expected frequency of the data is known, calculate the expected number of elements required for a full buffer of 30s
-    3. 
-    */
-    if (curr_data.packed_v2_data.size() < 3) {
+    // TODO(Khalid): Change this to a parameter controlled by the user
+    int moving_window_size = 10;
+    const int data_size = curr_data.packed_v2_data.size();
+    
+    // Ensure that we have enough data points before we perform the time sample calculations
+    if (data_size < moving_window_size + 1) {
       curr_data.lod_data = curr_data.packed_v2_data;
     } else {
-      curr_data.lod_data = curr_data.packed_v2_data;
+      // Get the time sample of the last 10 data points
+      float ts_sum = 0;
+      // In order to get the sample time with the size of the moving window, we need to add one more since we are calculating
+      // the next time minus the current time
+      for (size_t i = moving_window_size + 1; i > 1; i--) {
+        ts_sum += (curr_data.packed_v2_data[data_size - (i-1)].x - curr_data.packed_v2_data[data_size - i].x);
+      }
+      curr_data.ts = ts_sum / moving_window_size;
+
+      // Get the last 30s of data by calculating the estimated data size required to be parsed
+      float t_win_size_s = 5;
+      int  t_win_size_n = static_cast<int>(floor(t_win_size_s/curr_data.ts));
+      curr_data.lod_data = curr_data.packed_v2_data.slice(data_size - std::min(data_size, t_win_size_n), data_size - 1);
     }
 
     // Obtain the max and min value of both x and y axis
