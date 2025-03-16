@@ -298,7 +298,7 @@ class Graph_2D : public Control {
     const int dp = 2;
     int max_digit_size = 1;
 
-    float sliding_window_duration = 10.0;
+    float sliding_window_duration = 15.0;
 
     sliding_window_info _sw_info;
 
