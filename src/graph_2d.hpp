@@ -78,6 +78,7 @@ class Data_t : public Line_t {
   PackedVector2Array packed_v2_data; // Stores all of the data
   PackedVector2Array pixel_pos_v2_data;
   PackedVector2Array lod_data; // Level Of Detail data - only plot visible data
+  float ts; // Calculated Sample time
   bool use_antialiased;
   String keyword;
   String unit;
@@ -254,6 +255,8 @@ class Graph_2D : public Control {
     Line_t _axis;
     Line_t _grid;
 
+    // Data vector allows us to store multiple sets of data
+    // for multi-axis plot
     std::vector<Data_t> data_vector;
     PackedVector2Array test_data;
 
