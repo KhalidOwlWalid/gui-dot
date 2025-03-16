@@ -254,11 +254,12 @@ Graph_2D::Status Graph_2D::update_data_with_keyword(const String &keyword, const
 }
 
 // TODO: Implement this so we can append data instead of referencing the whole data multiple times
-Graph_2D::Status Graph_2D::append_data_with_keyword(const String &keyword, const Vector2 &data) {
+Graph_2D::Status Graph_2D::append_data_with_keyword(const String &keyword, const float &data) {
   for (size_t i = 0; i < data_vector.size(); i++) {
     Data_t &curr_data = data_vector.at(i);
     if (curr_data.keyword.casecmp_to(keyword) == 0) {
-      curr_data.packed_v2_data.append(data);
+      float curr_time = Time::get_singleton()->get_ticks_usec();
+      curr_data.packed_v2_data.append(Vector2(curr_time * 1e-6, data));
       queue_redraw();
       return SUCCESS;
     } else {
@@ -325,7 +326,7 @@ void Graph_2D::_draw_display() {
     for (size_t i = 0; i < max_digit_size; i++) {
       tmp = tmp + "0";
     }
-    // NOTE: +40 added on Vector2.y to pretify format
+    // NOTE: +30 added on Vector2.y to pretify format
     display_margin = data_vector.size() * (_axis.width + _font_manager->get_string_size(tmp).x + _axis.width + 30);
   }
 
@@ -366,21 +367,24 @@ void Graph_2D::_preprocess_data() {
       curr_data.calculate_sample_time(min_samples_required);
       // Extract the most recent data within the sliding window duration
       // TODO(Khalid): Allow this setting to be configurable to the user through the use of API
-      float sliding_window_duration = 30;
       int  sliding_window_length = static_cast<int>(floor(sliding_window_duration/curr_data.ts));
       curr_data.lod_data = curr_data.packed_v2_data.slice(data_size - std::min(data_size, sliding_window_length), data_size - 1);
     }
-
     // Obtain the max and min value of both x and y axis
     curr_data.set_range();
-
   }
+
+  float curr_time = static_cast<float>(Time::get_singleton()->get_ticks_usec() * 1e-6);
+  float min_window_time = static_cast<float>(curr_time - sliding_window_duration);
+  _sw_info.t_min = CLAMP(std::min((float)0.0, min_window_time), (float)0.0, min_window_time);
+  _sw_info.t_max = std::max(sliding_window_duration, curr_time);
+  LOG(DEBUG, _sw_info.t_min, " ", _sw_info.t_max);
 }
 
 void Graph_2D::_draw_grids() {
   _calculate_grid_spacing();
-  int font_margin = 12;
   // For column, we start with index 1 since we start drawing from the left, which will overlap with the y-axis
+  // To perform moving grid axis, we first need to calculate the required number of grids on the x-axis as the axis moves
   for (size_t i = 1; i <= _n_grid.x; i++) {
 
     // Ensure every 5 rows, add some width to help distinguish visually
@@ -477,7 +481,7 @@ void Graph_2D::_draw_axis() {
       where top right corner is origin (0, 0) */
       /* HACK: For now, this formatting works for multiple y-axis but this is a really terrible hack.
       Figure out a way to parametrize all of the below parameters or magic number. At the moment, this formatting works
-      for 1 dp or 2 dp, as sson as 3dp and above is used, it becomes really horrible to read. I'd assume, no one would
+      for 1 dp or 2 dp, as soon as 3dp and above is used, it becomes really horrible to read. I'd assume, no one would
       really use 3 dp, but sometimes, you have to take that into consideration. */
       float y = curr_data.y_min() + (i) * y_step;
       String fmt_y_str = _format_axis_label(y, dp);
