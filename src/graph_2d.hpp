@@ -156,6 +156,16 @@ class Data_t : public Line_t {
       x_range[1] = max;
     }
 
+    void calculate_sample_time(float window_sample_size) {
+      float ts_sum = 0;
+      // In order to get the sample time with the size of the moving window, we need to add one more since we are calculating
+      // the next time minus the current time
+      for (size_t i = packed_v2_data.size() - window_sample_size - 1; i < packed_v2_data.size() - 1; i++) {
+        ts_sum += (packed_v2_data[i + 1].x - packed_v2_data[i].x);
+      }
+      ts = ts_sum / window_sample_size;
+    }
+
     void info() const {
       LOG(INFO, "Keyword: ", keyword, " - Current V2 data: ", lod_data);
     }

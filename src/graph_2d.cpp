@@ -336,6 +336,9 @@ void Graph_2D::_draw_display() {
   draw_rect(_display.frame, _display.color);
 }
 
+/// @brief Data preprocessing is done to minimize the number of data points needed to be plotted
+/// by calculating the necessary level of details (LOD). This method implements a sliding window
+/// method for achieving LOD plots.
 void Graph_2D::_preprocess_data() {
   // Take the full dataset and calculate the required data to be displayed 
   if (data_vector.empty()) {
@@ -351,26 +354,21 @@ void Graph_2D::_preprocess_data() {
     }
 
     // TODO(Khalid): Change this to a parameter controlled by the user
-    int moving_window_size = 10;
+    int min_samples_required = 10;
     const int data_size = curr_data.packed_v2_data.size();
-    
-    // Ensure that we have enough data points before we perform the time sample calculations
-    if (data_size < moving_window_size + 1) {
+
+    // Skip time calculations if insufficient data is available
+    // The +1 accounts for the fact that sample times are calculated between the current sample time
+    // and the next sample time
+    if (data_size < min_samples_required + 1) {
       curr_data.lod_data = curr_data.packed_v2_data;
     } else {
-      // Get the time sample of the last 10 data points
-      float ts_sum = 0;
-      // In order to get the sample time with the size of the moving window, we need to add one more since we are calculating
-      // the next time minus the current time
-      for (size_t i = moving_window_size + 1; i > 1; i--) {
-        ts_sum += (curr_data.packed_v2_data[data_size - (i-1)].x - curr_data.packed_v2_data[data_size - i].x);
-      }
-      curr_data.ts = ts_sum / moving_window_size;
-
-      // Get the last 30s of data by calculating the estimated data size required to be parsed
-      float t_win_size_s = 5;
-      int  t_win_size_n = static_cast<int>(floor(t_win_size_s/curr_data.ts));
-      curr_data.lod_data = curr_data.packed_v2_data.slice(data_size - std::min(data_size, t_win_size_n), data_size - 1);
+      curr_data.calculate_sample_time(min_samples_required);
+      // Extract the most recent data within the sliding window duration
+      // TODO(Khalid): Allow this setting to be configurable to the user through the use of API
+      float sliding_window_duration = 30;
+      int  sliding_window_length = static_cast<int>(floor(sliding_window_duration/curr_data.ts));
+      curr_data.lod_data = curr_data.packed_v2_data.slice(data_size - std::min(data_size, sliding_window_length), data_size - 1);
     }
 
     // Obtain the max and min value of both x and y axis
