@@ -378,13 +378,19 @@ void Graph_2D::_preprocess_data() {
   float min_window_time = static_cast<float>(curr_time - sliding_window_duration);
   _sw_info.t_min = std::max((float)0.0, min_window_time);
   _sw_info.t_max = std::max(sliding_window_duration, curr_time);
-  LOG(DEBUG, _sw_info.range());
 }
 
 void Graph_2D::_draw_grids() {
   _calculate_grid_spacing();
   // For column, we start with index 1 since we start drawing from the left, which will overlap with the y-axis
   // To perform moving grid axis, we first need to calculate the required number of grids on the x-axis as the axis moves
+  float multiples = 5.0;
+  float t_min_floor = static_cast<float>(round_down_to_nearest_multiple(_sw_info.t_min, multiples));
+  float t_max_floor = static_cast<float>(round_down_to_nearest_multiple(_sw_info.t_max, multiples));
+  const int n_grid_x = static_cast<int>((t_max_floor - t_min_floor) / multiples);
+
+  LOG(DEBUG, "Inside draw grids: ", t_min_floor, " ", t_max_floor, " ", n_grid_x);
+
   for (size_t i = 1; i <= _n_grid.x; i++) {
 
     // Ensure every 5 rows, add some width to help distinguish visually
