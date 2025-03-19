@@ -390,14 +390,14 @@ void Graph_2D::_draw_grids() {
 	// For column, we start with index 1 since we start drawing from the left, which will overlap with the y-axis
 	// To perform moving grid axis, we first need to calculate the required number of grids on the x-axis as the axis moves
 
-	float multiples = 5.0;
-	float t_min_floor = static_cast<float>(round_down_to_nearest_multiple(_sw_info.t_min, multiples));
-	float t_max_floor = static_cast<float>(round_down_to_nearest_multiple(_sw_info.t_max, multiples));
-	const int n_grid_x = static_cast<int>((t_max_floor - t_min_floor) / multiples);
+	_sw_info.multiples = 5.0;
+	_sw_info.t_min_floor = static_cast<float>(round_down_to_nearest_multiple(_sw_info.t_min, _sw_info.multiples));
+	_sw_info.t_max_floor = static_cast<float>(round_down_to_nearest_multiple(_sw_info.t_max, _sw_info.multiples));
+	_n_grid.x = static_cast<int>((_sw_info.t_max_floor - _sw_info.t_min_floor) / _sw_info.multiples);
 
 	// Draws moving x axis line
-	for (size_t i = 1; i <= (n_grid_x); i++) {
-		double t = static_cast<double>(t_min_floor + i * multiples);
+	for (size_t i = 1; i <= (_n_grid.x); i++) {
+		double t = static_cast<double>(_sw_info.t_min_floor + i * _sw_info.multiples);
 		double x_pixel_pos = UtilityFunctions::remap(t, (double)_sw_info.t_min, (double)_sw_info.t_max, _display.bottom_left().x, _display.bottom_right().x);
 		Vector2 top_column_grid = Vector2(x_pixel_pos, _display.y());
 		Vector2 bottom_column_grid = Vector2(x_pixel_pos, _display.y() + _display.y_size());
@@ -506,19 +506,32 @@ void Graph_2D::_draw_axis() {
 		draw_set_transform(Vector2(0, 0), 0);
 	}
 
-	/* HACK: This shouldnt be left in production, for now, only use one of the data struct to set the x-axis
-	The graph should be able to support multiple axis. This will cause issues if data vector 1 is empty. */
-	Data_t curr_data = data_vector.at(0);
+
+
+	// Draw the x ticks for the start of the display frame
+	Vector2 font_pos = Vector2(_display.bottom_left().x, _display.y() + _display.y_size());
+	// Add minimum to offset the axis label
+	String fmt_x_str = _format_axis_label((double)_sw_info.t_min);
+	draw_string(_axis.font, Vector2(font_pos.x - font_size/2, font_pos.y + font_margin/2), fmt_x_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
+
 	float x_step = sliding_window_duration / _n_grid.x;
-	for (size_t i = 0; i <= _n_grid.x; i++) {
+	for (size_t i = 1; i <= _n_grid.x; i++) {
 		// Added offset before performing the spacing calculation due to the frame margin
-		Vector2 font_pos = Vector2(_display.x() + i * _grid_spacing.x, _display.y() + _display.y_size());
+		double t = static_cast<double>(_sw_info.t_min_floor + i * _sw_info.multiples);
+		double x_pixel_pos = UtilityFunctions::remap(t, (double)_sw_info.t_min, (double)_sw_info.t_max, _display.bottom_left().x, _display.bottom_right().x);
+		Vector2 font_pos = Vector2(x_pixel_pos, _display.y() + _display.y_size());
 		// Add minimum to offset the axis label
-		float x = _sw_info.t_min + i * x_step;
+        double x = _sw_info.t_min_floor + i * _sw_info.multiples;
 		String fmt_x_str = _format_axis_label(x);
 		// Added offset here (hardcoded for now) to prettify formatting
 		draw_string(_axis.font, Vector2(font_pos.x - font_size/2, font_pos.y + font_margin/2), fmt_x_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
 	}
+
+	// Draw the x ticks for the end of the display frame
+	font_pos = Vector2(_display.bottom_right().x, _display.y() + _display.y_size());
+	// Add minimum to offset the axis label
+	fmt_x_str = _format_axis_label((double)_sw_info.t_max);
+	draw_string(_axis.font, Vector2(font_pos.x - font_size/2, font_pos.y + font_margin/2), fmt_x_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
 }
 
 Vector2 Graph_2D::_coordinate_to_pixel(const Vector2 &data, const Vector2 &x_range, const Vector2 &y_range) {
