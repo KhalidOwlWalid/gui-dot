@@ -175,6 +175,9 @@ class Data_t : public Line_t {
 struct sliding_window_info {
 	float t_min;
 	float t_max;
+	float t_min_floor;
+	float t_max_floor;
+	float multiples;
 
 	Vector2 range() {return Vector2(t_min, t_max);}
 };
@@ -298,7 +301,7 @@ class Graph_2D : public Control {
 		const int dp = 2;
 		int max_digit_size = 1;
 
-		float sliding_window_duration = 30.0;
+		float sliding_window_duration = 15.0;
 
 		sliding_window_info _sw_info;
 
