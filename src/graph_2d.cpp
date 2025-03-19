@@ -380,9 +380,16 @@ void Graph_2D::_preprocess_data() {
 }
 
 void Graph_2D::_draw_grids() {
+
+	// Take the full dataset and calculate the required data to be displayed 
+	if (data_vector.empty()) {
+		return;
+	}
+
 	_calculate_grid_spacing();
 	// For column, we start with index 1 since we start drawing from the left, which will overlap with the y-axis
 	// To perform moving grid axis, we first need to calculate the required number of grids on the x-axis as the axis moves
+
 	float multiples = 5.0;
 	float t_min_floor = static_cast<float>(round_down_to_nearest_multiple(_sw_info.t_min, multiples));
 	float t_max_floor = static_cast<float>(round_down_to_nearest_multiple(_sw_info.t_max, multiples));
@@ -390,15 +397,12 @@ void Graph_2D::_draw_grids() {
 
 	LOG(DEBUG, "Inside draw grids: ", t_min_floor, " ", t_max_floor, " ", n_grid_x);
 
-	for (size_t i = 1; i <= _n_grid.x; i++) {
-
-		// Ensure every 5 rows, add some width to help distinguish visually
-		float line_width = (i % 5 == 0) ? _grid.width + 4.0 : _grid.width; 
-
-		// Added offset before performing the spacing calculation due to the frame margin
-		Vector2 top_column_grid = Vector2(_display.x() + i * _grid_spacing.x, _display.y());
-		Vector2 bottom_column_grid = Vector2(_display.x() + i * _grid_spacing.x, _display.y() + _display.y_size());
-		draw_line(top_column_grid, bottom_column_grid, _grid.color, line_width);
+	for (size_t i = 1; i <= (n_grid_x); i++) {
+		double t = static_cast<double>(t_min_floor + i * multiples);
+		double x_pixel_pos = UtilityFunctions::remap(t, (double)_sw_info.t_min, (double)_sw_info.t_max, _display.bottom_left().x, _display.bottom_right().x);
+		Vector2 top_column_grid = Vector2(x_pixel_pos, _display.y());
+		Vector2 bottom_column_grid = Vector2(x_pixel_pos, _display.y() + _display.y_size());
+		draw_line(top_column_grid, bottom_column_grid, _grid.color, _grid.width);
 	}
 
 	// For row, we start with index 0, since we start drawing from the top
@@ -503,18 +507,6 @@ void Graph_2D::_draw_axis() {
 
 	/* HACK: This shouldnt be left in production, for now, only use one of the data struct to set the x-axis
 	The graph should be able to support multiple axis. This will cause issues if data vector 1 is empty. */
-	// Data_t curr_data = data_vector.at(0);
-	// float x_step = curr_data.get_x_diff<float>() / _n_grid.x;
-	// for (size_t i = 0; i <= _n_grid.x; i++) {
-	//   // Added offset before performing the spacing calculation due to the frame margin
-	//   Vector2 font_pos = Vector2(_display.x() + i * _grid_spacing.x, _display.y() + _display.y_size());
-	//   // Add minimum to offset the axis label
-	//   float x = curr_data.x_min() + i * x_step;
-	//   String fmt_x_str = _format_axis_label(x);
-	//   // Added offset here (hardcoded for now) to prettify formatting
-	//   draw_string(_axis.font, Vector2(font_pos.x - font_size/2, font_pos.y + font_margin/2), fmt_x_str, HORIZONTAL_ALIGNMENT_CENTER, (-1.0F), font_size);
-	// }
-
 	Data_t curr_data = data_vector.at(0);
 	float x_step = sliding_window_duration / _n_grid.x;
 	for (size_t i = 0; i <= _n_grid.x; i++) {
