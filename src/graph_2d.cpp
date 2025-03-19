@@ -395,8 +395,7 @@ void Graph_2D::_draw_grids() {
 	float t_max_floor = static_cast<float>(round_down_to_nearest_multiple(_sw_info.t_max, multiples));
 	const int n_grid_x = static_cast<int>((t_max_floor - t_min_floor) / multiples);
 
-	LOG(DEBUG, "Inside draw grids: ", t_min_floor, " ", t_max_floor, " ", n_grid_x);
-
+	// Draws moving x axis line
 	for (size_t i = 1; i <= (n_grid_x); i++) {
 		double t = static_cast<double>(t_min_floor + i * multiples);
 		double x_pixel_pos = UtilityFunctions::remap(t, (double)_sw_info.t_min, (double)_sw_info.t_max, _display.bottom_left().x, _display.bottom_right().x);
@@ -404,6 +403,8 @@ void Graph_2D::_draw_grids() {
 		Vector2 bottom_column_grid = Vector2(x_pixel_pos, _display.y() + _display.y_size());
 		draw_line(top_column_grid, bottom_column_grid, _grid.color, _grid.width);
 	}
+	// Draw line on the border of the display
+	draw_line(_display.top_right(), _display.bottom_right(), _grid.color, _grid.width);
 
 	// For row, we start with index 0, since we start drawing from the top
 	for (size_t i = 0; i <= _n_grid.y; i++) {
