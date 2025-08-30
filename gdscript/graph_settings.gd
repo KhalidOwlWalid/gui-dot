@@ -6,9 +6,11 @@ var settings_dict: Dictionary
 var data_viewer_dict: Dictionary
 var data_type_dict: Dictionary
 var data: PackedVector2Array
+var data2: PackedVector2Array
 var demo_graph: Node
 var count: float
 var data_keyword: String
+var data_keyword2: String
 var data_keyword_1: String
 var is_button_held: bool
 var flag: bool
@@ -29,20 +31,27 @@ func _ready() -> void:
 		data_viewer_dict.get_or_add(data_viewer[i].name, i)
 
 	data = PackedVector2Array()
+	data2 = PackedVector2Array()
 	demo_graph = get_node(NodePath("/root/main/demo_graph"))
 	data_keyword = "Test"
+	data_keyword2 = "Test2"
 	demo_graph.add_data_with_keyword(data_keyword, data, Color.RED)
+	#demo_graph.add_data_with_keyword(data_keyword2, data2, Color.BLUE)
 	count = 0
 	pause_flag = false
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	time += delta
+	var mouse_position: Vector2 = get_viewport().get_mouse_position()
 	var curr_tick: int = Time.get_ticks_usec()
 	if (not pause_flag):
-		if (curr_tick - last_tick > 0.001e6):
-			demo_graph.append_data_with_keyword(data_keyword, sin(time))
+		if (curr_tick - last_tick > 0.01e6):
+			demo_graph.append_data_with_keyword(data_keyword, mouse_position.x)
+			#demo_graph.append_data_with_keyword(data_keyword2, mouse_position.y)
 			last_tick = Time.get_ticks_usec()
+			demo_graph.set_y_range(data_keyword, 200, 500)
+			#demo_graph.set_y_range(data_keyword2, 200, 500)
 
 func _button_down() -> void:
 	print("Trigger")

@@ -1,5 +1,5 @@
 #@tool
-extends Sprite2D
+extends Graph_2D
 var data: PackedVector2Array
 var data1: PackedVector2Array
 var graph_node: Node
