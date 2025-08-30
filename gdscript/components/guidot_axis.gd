@@ -1,5 +1,5 @@
 class_name Guidot_Axis
-extends ColorRect
+extends Guidot_Common
 
 @onready var min: float = 0
 @onready var max: float = 1
@@ -11,7 +11,7 @@ extends ColorRect
 	"y": 1
 }
 
-func _setup_axis_node(name: String, color: Color, left: int, right: int, top: int, bottom: int) -> void:
+func setup_axis_node(name: String, color: Color, left: int, right: int, top: int, bottom: int) -> void:
 	self.name = name
 	self.clip_contents = true
 	self.color = color

@@ -1,11 +1,12 @@
 class_name Guidot_Plot
-extends ColorRect
+extends Guidot_Common
+# extends ColorRect
 
 @onready var default_color = Color(0.17, 0.17, 0.17, 1)
 # Normalized size of the plot with respect to the node frame
 @onready var default_norm_size: int = 0.8
 
-func _setup_plot(frame_size: Vector2, norm_size: float, color: Color) -> void:
+func setup_plot(frame_size: Vector2, norm_size: float, color: Color) -> void:
 	self.name = "Plot"
 	self.clip_contents = true
 	self.color = color

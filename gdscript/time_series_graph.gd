@@ -22,7 +22,7 @@ var window_color: Color
 @onready var y_axis_node: Guidot_Axis = Guidot_Axis.new()
 
 func setup_plot_node():
-	plot_node._setup_plot(Vector2(self.size.x, self.size.y), 0.8, color_dict["white"])
+	plot_node.setup_plot(Vector2(self.size.x, self.size.y), 0.8, color_dict["white"])
 	add_child(plot_node)
 
 func setup_x_axis_node():
@@ -31,7 +31,7 @@ func setup_x_axis_node():
 	var right = plot_node.offset_left
 	var top = plot_node.offset_top
 	var bottom = plot_node.offset_bottom
-	x_axis_node._setup_axis_node("X Axis", color_dict["blue"], left, right, top, bottom)
+	x_axis_node.setup_axis_node("X Axis", color_dict["blue"], left, right, top, bottom)
 	x_axis_node.setup_axis_limit(0, 15)
 	add_child(x_axis_node)
 
@@ -41,7 +41,7 @@ func setup_y_axis_node():
 	var right = plot_node.offset_right
 	var top = plot_node.offset_bottom
 	var bottom = plot_node.offset_bottom + axis_height
-	y_axis_node._setup_axis_node("Y Axis", color_dict["red"], left, right, top, bottom)
+	y_axis_node.setup_axis_node("Y Axis", color_dict["red"], left, right, top, bottom)
 	y_axis_node.setup_axis_limit(0, 1)
 	add_child(y_axis_node)
 
