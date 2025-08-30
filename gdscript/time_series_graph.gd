@@ -24,7 +24,7 @@ var window_color: Color
 @onready var y_axis_node: Guidot_Axis = Guidot_Axis.new()
 
 func setup_plot_node():
-	plot_node.setup_plot(Vector2(self.size.x, self.size.y), 0.8, color_dict["white"])
+	plot_node.setup_plot(Vector2(self.size.x, self.size.y), 0.9, color_dict["black"])
 	add_child(plot_node)
 
 # X/Y axis rectangle anchor offset calculation depends on the plot node anchor offset maths
@@ -59,6 +59,7 @@ func _ready() -> void:
 	setup_plot_node()
 	setup_x_axis_node()
 	setup_y_axis_node()
+	plot_node.plot_data(x_axis_node)
 	queue_redraw()
 
 # TODO: Implement this with error detection
