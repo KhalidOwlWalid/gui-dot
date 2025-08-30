@@ -1,6 +1,9 @@
 @tool
 extends ColorRect
 
+var Guidot_Axis := preload("res://gdscript/components/guidot_axis.gd")
+var Guidot_Line := preload("res://gdscript/components/guidot_line.gd")
+var Guidot_Plot := preload("res://gdscript/components/guidot_plot.gd")
 
 @onready var color_dict: Dictionary = Guidot_Utils.color_dict
 
@@ -15,20 +18,8 @@ var window_color: Color
 
 # Components used for building the graph 
 @onready var plot_node: ColorRect = ColorRect.new()
-@onready var x_axis_node: ColorRect = ColorRect.new()
-@onready var y_axis_node: ColorRect = ColorRect.new()
-
-@onready var axis: Dictionary = {
-	"x": 0,
-	"y": 1
-}
-
-@onready var test_dict: Dictionary = {
-	1: "Black"
-}
-
-@export_group("Test")
-@export var test: Vector2 = Vector2(100, 100)
+@onready var x_axis_node: Guidot_Axis = Guidot_Axis.new()
+@onready var y_axis_node: Guidot_Axis = Guidot_Axis.new()
 
 # TODO (Khalid): Parametrize this
 func _setup_plot_node() -> void:
@@ -52,37 +43,25 @@ func _setup_plot_node() -> void:
 	add_child(plot_node)
 	queue_redraw()
 
-func _setup_axis_node(node: ColorRect, name: String, color: Color, left: int, right: int, top: int, bottom: int) -> void:
-
-	node.name = name
-	node.clip_contents = true
-	node.color = color
-	
-	node.set_anchors_preset(Control.LayoutPreset.PRESET_CENTER)
-	node.set_offset(SIDE_LEFT, left)
-	node.set_offset(SIDE_RIGHT, right)
-	node.set_offset(SIDE_TOP, top)
-	node.set_offset(SIDE_BOTTOM, bottom)
-
-	add_child(node)
-	queue_redraw()
-
 func _setup_x_axis_node():
 	var axis_width = (self.size.x - plot_node.size.x)/2
 	var left = plot_node.offset_left - axis_width
 	var right = plot_node.offset_left
 	var top = plot_node.offset_top
 	var bottom = plot_node.offset_bottom
-	_setup_axis_node(x_axis_node, "X Axis", color_dict["blue"], left, right, top, bottom)
+	x_axis_node._setup_axis_node("X Axis", color_dict["blue"], left, right, top, bottom)
+	x_axis_node.setup_axis_limit(0, 15)
+	add_child(x_axis_node)
 
 func _setup_y_axis_node():
 	var axis_height = (self.size.y - plot_node.size.y)/2
-	print(axis_height)
 	var left = plot_node.offset_left
 	var right = plot_node.offset_right
 	var top = plot_node.offset_bottom
 	var bottom = plot_node.offset_bottom + axis_height
-	_setup_axis_node(y_axis_node, "Y Axis", color_dict["red"], left, right, top, bottom)
+	y_axis_node._setup_axis_node("Y Axis", color_dict["red"], left, right, top, bottom)
+	y_axis_node.setup_axis_limit(0, 1)
+	add_child(y_axis_node)
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:

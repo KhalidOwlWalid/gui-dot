@@ -78,7 +78,6 @@ func _setup_x_axis_node():
 
 func _setup_y_axis_node():
 	var axis_height = (self.size.y - plot_node.size.y)/2
-	print(axis_height)
 	var left = plot_node.offset_left
 	var right = plot_node.offset_right
 	var top = plot_node.offset_bottom

@@ -11,11 +11,7 @@ static var color_dict: Dictionary = {
 	"gd_black": Color.BLACK
 }
 
-static var test_dict: Dictionary = {
-    "1": 1
-}
-
 static var some_val: int = 10
 
 static func hello_world() -> void:
-    print("Hello")
+    pass
