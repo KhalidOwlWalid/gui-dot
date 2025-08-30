@@ -1,0 +1,2 @@
+class_name Guidot_Axis
+extends ColorRect

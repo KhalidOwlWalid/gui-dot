@@ -1,8 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://b7e2pd3t4pbfn"]
+[gd_scene load_steps=3 format=3 uid="uid://b7e2pd3t4pbfn"]
 
-[ext_resource type="Script" path="res://gdscript/graph_2d.gd" id="1_4cel8"]
 [ext_resource type="Script" path="res://gdscript/time_series_graph.gd" id="1_0623l"]
-[ext_resource type="Script" path="res://gdscript/data.gd" id="2_uvvf5"]
+[ext_resource type="Script" path="res://gdscript/mavlink_node.gd" id="2_8j47k"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -30,7 +29,7 @@ offset_top = 464.0
 offset_right = 707.0
 offset_bottom = 764.0
 color = Color(0.1, 0.1, 0.1, 1)
-script = ExtResource("1_4cel8")
+script = ExtResource("1_0623l")
 
 [node name="ColorRect" type="ColorRect" parent="test"]
 layout_mode = 1
@@ -62,4 +61,4 @@ grow_vertical = 2
 color = Color(0, 1, 1, 1)
 
 [node name="Mavlink_Node" type="Node" parent="."]
-script = ExtResource("2_uvvf5")
+script = ExtResource("2_8j47k")

@@ -1,22 +1,25 @@
 @tool
 extends ColorRect
 
-
-@onready var color_dict: Dictionary = Guidot_Utils.color_dict
-
 # Property of the graph
 var window_size: Vector2
 var window_color: Color
 
-@onready var mavlink_node = get_node('../Mavlink_Node')
-
 @onready var default_window_size: Vector2 = Vector2(500, 300)
 @onready var default_window_color: Color = Color.BLACK
 
-# Components used for building the graph 
 @onready var plot_node: ColorRect = ColorRect.new()
 @onready var x_axis_node: ColorRect = ColorRect.new()
 @onready var y_axis_node: ColorRect = ColorRect.new()
+
+@onready var color_dict: Dictionary = {
+	"white": Color.WHITE,
+	"black": Color(0.1, 0.1, 0.1, 1),
+	"grey": Color(0.12, 0.12, 0.12, 1),
+	"red": Color.RED,
+	"blue": Color.BLUE,
+	"gd_black": Color.BLACK
+}
 
 @onready var axis: Dictionary = {
 	"x": 0,
@@ -50,7 +53,6 @@ func _setup_plot_node() -> void:
 	plot_node.set_offset(SIDE_BOTTOM, plot_y_size_scaled)
 
 	add_child(plot_node)
-	queue_redraw()
 
 func _setup_axis_node(node: ColorRect, name: String, color: Color, left: int, right: int, top: int, bottom: int) -> void:
 
@@ -65,7 +67,6 @@ func _setup_axis_node(node: ColorRect, name: String, color: Color, left: int, ri
 	node.set_offset(SIDE_BOTTOM, bottom)
 
 	add_child(node)
-	queue_redraw()
 
 func _setup_x_axis_node():
 	var axis_width = (self.size.x - plot_node.size.x)/2
@@ -73,7 +74,7 @@ func _setup_x_axis_node():
 	var right = plot_node.offset_left
 	var top = plot_node.offset_top
 	var bottom = plot_node.offset_bottom
-	_setup_axis_node(x_axis_node, "X Axis", color_dict["blue"], left, right, top, bottom)
+	_setup_axis_node(x_axis_node, "X Axis", color_dict["black"], left, right, top, bottom)
 
 func _setup_y_axis_node():
 	var axis_height = (self.size.y - plot_node.size.y)/2
@@ -82,7 +83,7 @@ func _setup_y_axis_node():
 	var right = plot_node.offset_right
 	var top = plot_node.offset_bottom
 	var bottom = plot_node.offset_bottom + axis_height
-	_setup_axis_node(y_axis_node, "Y Axis", color_dict["red"], left, right, top, bottom)
+	_setup_axis_node(y_axis_node, "Y Axis", color_dict["black"], left, right, top, bottom)
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
