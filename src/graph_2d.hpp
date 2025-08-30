@@ -1,176 +1,12 @@
-#ifndef GRAPH_2D_HPP
-#define GRAPH_2D_HPP
+#pragma once
 
-#include <godot_cpp/classes/control.hpp>
-#include <godot_cpp/variant/vector2.hpp>
-#include <godot_cpp/core/math.hpp>
-#include <godot_cpp/variant/utility_functions.hpp>
-#include <godot_cpp/classes/font.hpp>
-#include <godot_cpp/classes/time.hpp>
-#include <godot_cpp/classes/label.hpp>
-#include <godot_cpp/classes/node2d.hpp>
+#include "guidot_common.hpp"
+#include "components/frame.hpp"
+#include "components/line.hpp"
+#include "components/axis.hpp"
+#include "components/data.hpp"
 
-#include <algorithm>
-#include <vector>
-
-#include "logger.hpp"
-#include "util.hpp"
-
-using namespace godot;
-
-using uf = UtilityFunctions;
-
-class Frame_t {
-	public:
-		Rect2 frame;
-		Color color;
-
-		// Helper function to get the top left position of the frame
-		inline Vector2 get_pos() const {return frame.position;}
-		inline void set_pos(const Vector2 pos) {frame.set_position(pos);}
-		inline int x() const {return frame.position.x;}
-		inline int y() const {return frame.position.y;}
-
-		// Useful to get different coordinates of the frame
-		inline Vector2 top_left() const {return Vector2(frame.position.x, frame.position.y);}
-		inline Vector2 top_right() const {return Vector2(frame.position.x + frame.size.x, frame.position.y);}
-		inline Vector2 bottom_left() const {return Vector2(frame.position.x, frame.position.y + frame.size.y);}
-		inline Vector2 bottom_right() const {return Vector2(frame.position.x + frame.size.x, frame.position.y + frame.size.y);}
-
-		// Helper function to get or set the size of the frame
-		inline Vector2 get_size() const {return frame.get_size();}
-		inline void set_size(const Vector2 size) {frame.set_size(size);}
-		inline uint x_size() const {return frame.size.x;}
-		inline uint y_size() const {return frame.size.y;}
-};
-
-class Line_t {
-
-	friend class Axis_t;
-	friend class Graph_2D;
-
-	Color color;
-	float width;
-	Ref<Font> font;
-
-	public:
-		inline Color get_color() const {return color;}
-		inline void set_color(const Color new_color) {color = new_color;}
-
-		inline float get_width() const {return width;}
-		inline void set_width(const float new_width) {width = new_width;}
-
-};
-
-class Axis_t : public Line_t {
-	String x_label;
-	String y_label;
-};
-
-class Data_t : public Line_t {
-
-	const String __class__ = "Data_t";
-	friend class Graph_2D;
-
-	Vector2 x_range;
-	Vector2 y_range;
-	// TODO: Once data server is implemented, this should be move there?
-	PackedVector2Array packed_v2_data; // Stores all of the data
-	PackedVector2Array pixel_pos_v2_data;
-	PackedVector2Array lod_data; // Level Of Detail data - only plot visible data
-	float ts; // Calculated Sample time
-	bool use_antialiased;
-	String keyword;
-	String unit;
-	Dictionary data_dict;
-
-	bool is_y_axis_lock = false;
-	bool is_x_axis_lock = false;
-
-	public:
-
-		// TODO: Create an assertion to ensure x_max is always bigger than x_min
-		template <typename T> void set_x_max(const T val) {
-			x_range[1] = val;
-		};
-
-		template <typename T> void set_x_min(const T val) {
-			x_range[0] = val;
-		}
-
-		template <typename T> void set_y_max(const T val) {
-			y_range[1] = val;
-		}
-
-		template <typename T> void set_y_min(const T val) {
-			y_range[0] = val;
-		}
-
-		inline double x_max() {return x_range[1]; }
-		inline double x_min() {return x_range[0]; }
-		inline double y_max() {return y_range[1]; }
-		inline double y_min() {return y_range[0]; }
-
-		template <typename T> T get_x_diff() {
-			T diff = x_range[1] - x_range[0];
-			return diff;
-		}
-
-		template <typename T> T get_y_diff() const {
-			T diff = y_range[1] - y_range[0];
-			return diff;
-		}
-
-		// Sets the range for the x and y axis by obtaining the min and max value of the data
-		void set_range() {
-			Vector2 min = lod_data[0];
-			Vector2 max = lod_data[0];
-			// TODO: Find a better optimized way to do this
-			for (size_t i = 0; i < lod_data.size(); i++) {
-					min.x = std::min(min.x, lod_data[i].x);
-					max.x = std::max(max.x, lod_data[i].x);
-					min.y = std::min(min.y, lod_data[i].y);
-					max.y = std::max(max.y, lod_data[i].y);
-			}
-			// Only update the range if the axis is not lock
-			x_range = is_x_axis_lock ? x_range: Vector2(min.x, max.x);
-			// A scale of 0.1 is added for both min and max y to ensure the data is not drawn at the border of the display
-			y_range = is_y_axis_lock ? y_range: Vector2(min.y, max.y) + Vector2(0.1, 0.1) * Vector2(min.y, max.y);
-		}
-
-		void set_y_range(float min, float max) {
-			if (min > max) {
-				LOG(WARNING, "min > max! Defaults to min,", y_min(), " and max,", y_max());
-				return;
-			}
-			y_range[0] = min;
-			y_range[1] = max;
-		}
-
-		void set_x_range(float min, float max) {
-			if (min > max) {
-				LOG(WARNING, "min > max! Defaults to min,", x_min(), " and max,", x_max());
-				return;
-			}
-			x_range[0] = min;
-			x_range[1] = max;
-		}
-
-		void calculate_sample_time(float window_sample_size) {
-			float ts_sum = 0;
-			// In order to get the sample time with the size of the moving window, we need to add one more since we are calculating
-			// the next time minus the current time
-			for (size_t i = packed_v2_data.size() - window_sample_size - 1; i < packed_v2_data.size() - 1; i++) {
-				ts_sum += (packed_v2_data[i + 1].x - packed_v2_data[i].x);
-			}
-			ts = ts_sum / window_sample_size;
-		}
-
-		void info() const {
-			LOG(INFO, "Keyword: ", keyword, " - Current V2 data: ", lod_data);
-		}
-
-};
+namespace godot {
 
 struct sliding_window_info {
 	float t_min;
@@ -255,6 +91,9 @@ class Graph_2D : public Control {
 		void _calculate_grid_spacing();
 		void _init();
 
+		void _setup_axes();
+		void _draw_content();
+
 		bool use_antialiased = false;
 		Vector2 _coordinate_to_pixel(const Vector2 &data, const Vector2 &x_range, const Vector2 &y_range);
 
@@ -305,8 +144,10 @@ class Graph_2D : public Control {
 
 		sliding_window_info _sw_info;
 
+		Control *axes;
+
+};
+
 };
 
 VARIANT_ENUM_CAST(Graph_2D::Status);
-
-#endif

@@ -66,7 +66,7 @@ void Graph_2D::_init() {
 	_axis.color = white;
 	_axis.width = 3.0;
 
-	_calculate_grid_spacing();
+	// _calculate_grid_spacing();
 
 	_axis.font = this->get_theme_default_font();
 	_init_font();
@@ -76,6 +76,13 @@ void Graph_2D::_init() {
 	ticks = Time::get_singleton()->get_ticks_usec();
 	last_update_ticks = ticks;
 	_initialized = true;
+
+	axes = memnew(Control);
+	add_child(axes, true);
+	axes->set_name("Axes");
+	// axes->set_position(Vector2(50, 50));
+	Rect2 axes_rect = Rect2(Vector2(50, 50), Vector2(100, 100));
+	// axes->draw_rect(axes_rect, white, true, -1.0, true);
 }
 
 void Graph_2D::_notification(const int p_what) {
@@ -114,18 +121,42 @@ void Graph_2D::_calculate_grid_spacing() {
 	_grid_spacing.y = static_cast<uint>(_display.y_size() / _n_grid.y);
 }
 
+void Graph_2D::_setup_axes() {
+
+}
+
 void Graph_2D::_draw() {
 	/* Drawing order is very important to avoid lines overlapping on top of each other 
 	(e.g. Drawing display frame before window would cause display frame to be hidden behind
 	the window) */
+
 	_draw_window();
-	_draw_display();
-	_preprocess_data();
-	_draw_grids();
-	_draw_axis();
-	if (not data_vector.empty()) {
-		_draw_plot();
-	}
+	_draw_content();
+	// _draw_display();
+	// _draw_grids();
+	// _draw_axis();
+	// _preprocess_data();
+	// if (not data_vector.empty()) {
+	// 	_draw_plot();
+	// }
+	// _setup_axes();
+	// _setup_axis_limits(x_axis_idx, x_min, x_max);
+	// _setup_axis_limits(y_axis_idx, y_min, y_max);
+}
+
+void Graph_2D::_draw_content() {
+	Rect2 axes_rect = Rect2(Vector2(50, 50), Vector2(100, 100));
+	draw_rect(axes_rect, white, true, -1.0, true);
+    // draw_line(Vector2(0, 0), Vector2(500, 500), Color(1, 0, 0), 2);
+    // draw_circle(Vector2(200, 200), 100, Color(0, 0, 1));
+    
+    // // Draw some sample data
+    // for (int i = 0; i < 100; i++) {
+    //     float x = i * 5.0f;
+    //     float y = Math::sin(x * 0.1f) * 100.0f + 200.0f;
+    //     draw_rect(Rect2(x, y, 2, 2), Color(0, 1, 0), true);
+    // }
+    
 }
 
 void Graph_2D::_process(double delta) {
@@ -191,7 +222,7 @@ void Graph_2D::set_y_range(const String keyword, const float min, const float ma
 	for (size_t i=0; i < data_vector.size(); i++) {
 		if (data_vector.at(i).keyword.casecmp_to(keyword) == 0) {
 			data_vector.at(i).set_y_range(min, max);
-			LOG(INFO, "Setting y range with the following setting: ", data_vector.at(i).y_range);
+			// LOG(INFO, "Setting y range with the following setting: ", data_vector.at(i).y_range);
 			// Lock the y-axis since the user is taking over
 			// If not, the axis will be dynamically drawn to reflect the changes of the data
 			data_vector.at(i).is_y_axis_lock = true;
@@ -578,44 +609,44 @@ void Graph_2D::_draw_plot() {
 		*/
 		for (size_t i = 0; i < curr_data.lod_data.size() - 1; i++) {
 
-		// const Vector2 curr_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i], curr_data.x_range, curr_data.y_range);
-		// const Vector2 next_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i + 1], curr_data.x_range, curr_data.y_range);
+			// const Vector2 curr_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i], curr_data.x_range, curr_data.y_range);
+			// const Vector2 next_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i + 1], curr_data.x_range, curr_data.y_range);
 
-		const Vector2 curr_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i], _sw_info.range(), curr_data.y_range);
-		const Vector2 next_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i + 1], _sw_info.range(), curr_data.y_range);
-		bool curr_point_visible = curr_pixel_pos.y < _display.bottom_left().y && curr_pixel_pos.y > _display.top_left().y;
-		bool next_point_visible = next_pixel_pos.y < _display.bottom_left().y && next_pixel_pos.y > _display.top_left().y;
+			const Vector2 curr_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i], _sw_info.range(), curr_data.y_range);
+			const Vector2 next_pixel_pos = _coordinate_to_pixel(curr_data.lod_data[i + 1], _sw_info.range(), curr_data.y_range);
+			bool curr_point_visible = curr_pixel_pos.y < _display.bottom_left().y && curr_pixel_pos.y > _display.top_left().y;
+			bool next_point_visible = next_pixel_pos.y < _display.bottom_left().y && next_pixel_pos.y > _display.top_left().y;
 
-		if (not curr_point_visible && not next_point_visible) {
-			// If both points are not visible, then skip to the next dataset
-			continue;
-		} else if (curr_point_visible && next_point_visible) {
-			// Enable anti-aliasing for better resolution
-			// Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
-			// This will help in optimizing the performance when we are drawing multiple lines at once
-			draw_line(curr_pixel_pos, next_pixel_pos, curr_data.color, 1.0, use_antialiased);
-			// BUGFIX?: For some reason, drawing with circles make the program to run really slow
-			// draw_circle(curr_data.pixel_pos_v2_data[i + 1], 5.0, curr_data.color);
-		} else {
-			// Interpolate
-			float y3;
-			float m = (curr_pixel_pos.y - next_pixel_pos.y) / (curr_pixel_pos.x - next_pixel_pos.x);
-
-			// NOTE: Pixel coordinates increment from top to bottom, so points above the top display border would be smaller
-			if ((not next_point_visible && next_pixel_pos.y < _display.top_left().y) || (not curr_point_visible && curr_pixel_pos.y < _display.top_left().y)) {
-				y3 = _display.top_left().y;
+			if (not curr_point_visible && not next_point_visible) {
+				// If both points are not visible, then skip to the next dataset
+				continue;
+			} else if (curr_point_visible && next_point_visible) {
+				// Enable anti-aliasing for better resolution
+				// Source: https://docs.godotengine.org/en/stable/tutorials/2d/2d_antialiasing.html
+				// This will help in optimizing the performance when we are drawing multiple lines at once
+				draw_line(curr_pixel_pos, next_pixel_pos, curr_data.color, 1.0, use_antialiased);
+				// BUGFIX?: For some reason, drawing with circles make the program to run really slow
+				draw_circle(curr_pixel_pos, 1.0, curr_data.color);
 			} else {
-			// Conditions trigger if either points not visible, but it is bigger than the bottom display border
-				y3 = _display.bottom_left().y;
-			}
+				// Interpolate
+				float y3;
+				float m = (curr_pixel_pos.y - next_pixel_pos.y) / (curr_pixel_pos.x - next_pixel_pos.x);
 
-			float x3 = (y3 - curr_pixel_pos.y)/(m) + curr_pixel_pos.x;
-			if (next_point_visible) {
-				draw_line(Vector2(x3, y3), next_pixel_pos, curr_data.color, 1.0, use_antialiased);
-			} else {
-			// HACK: Solution to ghost point, without this, there will be unconnected points between the ghost point and the next point (i+1)
-				draw_line(Vector2(x3, y3), next_pixel_pos, curr_data.color, 1.0, use_antialiased);
-			}
+				// NOTE: Pixel coordinates increment from top to bottom, so points above the top display border would be smaller
+				if ((not next_point_visible && next_pixel_pos.y < _display.top_left().y) || (not curr_point_visible && curr_pixel_pos.y < _display.top_left().y)) {
+					y3 = _display.top_left().y;
+				} else {
+				// Conditions trigger if either points not visible, but it is bigger than the bottom display border
+					y3 = _display.bottom_left().y;
+				}
+
+				float x3 = (y3 - curr_pixel_pos.y)/(m) + curr_pixel_pos.x;
+				if (next_point_visible) {
+					draw_line(Vector2(x3, y3), next_pixel_pos, curr_data.color, 1.0, use_antialiased);
+				} else {
+				// HACK: Solution to ghost point, without this, there will be unconnected points between the ghost point and the next point (i+1)
+					draw_line(Vector2(x3, y3), next_pixel_pos, curr_data.color, 1.0, use_antialiased);
+				}
 
 			}
 		}

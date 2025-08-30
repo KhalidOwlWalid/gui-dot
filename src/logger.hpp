@@ -1,5 +1,4 @@
-#ifndef LOGGER_HPP
-#define LOGGER_HPP
+#pragma once
 
 #include <godot_cpp/variant/utility_functions.hpp>
 
@@ -34,5 +33,3 @@ constexpr LogLevel ERROR = LogLevel::ERROR;
         break;                                                                                                                \
     }                                                                                                                         \
   } while (0)                                         
-
-#endif // LOGGER_HPP
