@@ -20,8 +20,8 @@ func _ready() -> void:
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	var curr_ms = Time.get_ticks_msec()
-	if (curr_ms - last_update_ms > 2000):
+	if (curr_ms - last_update_ms > 1000):
 		var curr_mouse_pos = self.get_viewport().get_mouse_position()
 		data.append(Vector2(curr_ms, curr_mouse_pos.x))
 		last_update_ms = Time.get_ticks_msec()
-		
+		print(remap(5, 0, 10, 0, 500))

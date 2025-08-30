@@ -16,8 +16,8 @@ clip_contents = true
 layout_mode = 0
 offset_left = 237.0
 offset_top = 78.0
-offset_right = 737.0
-offset_bottom = 378.0
+offset_right = 1537.0
+offset_bottom = 838.0
 color = Color(0.1, 0.1, 0.1, 1)
 script = ExtResource("1_0623l")
 

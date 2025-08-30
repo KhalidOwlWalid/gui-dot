@@ -131,14 +131,13 @@ void Graph_2D::_draw() {
 	the window) */
 
 	_draw_window();
-	_draw_content();
-	// _draw_display();
-	// _draw_grids();
-	// _draw_axis();
-	// _preprocess_data();
-	// if (not data_vector.empty()) {
-	// 	_draw_plot();
-	// }
+	_draw_display();
+	_draw_grids();
+	_draw_axis();
+	_preprocess_data();
+	if (not data_vector.empty()) {
+		_draw_plot();
+	}
 	// _setup_axes();
 	// _setup_axis_limits(x_axis_idx, x_min, x_max);
 	// _setup_axis_limits(y_axis_idx, y_min, y_max);
@@ -626,7 +625,7 @@ void Graph_2D::_draw_plot() {
 				// This will help in optimizing the performance when we are drawing multiple lines at once
 				draw_line(curr_pixel_pos, next_pixel_pos, curr_data.color, 1.0, use_antialiased);
 				// BUGFIX?: For some reason, drawing with circles make the program to run really slow
-				draw_circle(curr_pixel_pos, 1.0, curr_data.color);
+				// draw_circle(curr_pixel_pos, 1.0, curr_data.color);
 			} else {
 				// Interpolate
 				float y3;

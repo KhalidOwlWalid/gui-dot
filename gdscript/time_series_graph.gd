@@ -15,7 +15,7 @@ var window_color: Color
 
 @onready var mavlink_node = get_node('../Mavlink_Node')
 
-@onready var default_window_size: Vector2 = Vector2(500, 300)
+@onready var default_window_size: Vector2 = Vector2(1300, 760)
 @onready var default_window_color: Color = Color.BLACK
 
 # Components used for building the graph 
@@ -35,7 +35,7 @@ func setup_x_axis_node():
 	var right = plot_node.offset_left
 	var top = plot_node.offset_top
 	var bottom = plot_node.offset_bottom
-	x_axis_node.setup_axis_node("X Axis", color_dict["blue"], left, right, top, bottom)
+	x_axis_node.setup_axis_node("X Axis", color_dict["black"], left, right, top, bottom)
 	x_axis_node.setup_axis_limit(0, 15)
 	add_child(x_axis_node)
 
@@ -45,7 +45,7 @@ func setup_y_axis_node():
 	var right = plot_node.offset_right
 	var top = plot_node.offset_bottom
 	var bottom = plot_node.offset_bottom + axis_height
-	y_axis_node.setup_axis_node("Y Axis", color_dict["red"], left, right, top, bottom)
+	y_axis_node.setup_axis_node("Y Axis", color_dict["black"], left, right, top, bottom)
 	y_axis_node.setup_axis_limit(0, 1)
 	add_child(y_axis_node)
 
