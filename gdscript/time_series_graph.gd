@@ -5,9 +5,12 @@ extends ColorRect
 var window_size: Vector2
 var window_color: Color
 
+@onready var mavlink_node = get_node('../Mavlink_Node')
+
 @onready var default_window_size: Vector2 = Vector2(500, 300)
 @onready var default_window_color: Color = Color.BLACK
 
+# Components used for building the graph 
 @onready var plot_node: ColorRect = ColorRect.new()
 @onready var x_axis_node: ColorRect = ColorRect.new()
 @onready var y_axis_node: ColorRect = ColorRect.new()
@@ -35,7 +38,7 @@ var window_color: Color
 
 # TODO (Khalid): Parametrize this
 func _setup_plot_node() -> void:
-	plot_node.name = "Axes"
+	plot_node.name = "Plot"
 	plot_node.clip_contents = true
 	plot_node.color = color_dict["white"]
 	
@@ -74,7 +77,7 @@ func _setup_x_axis_node():
 	var right = plot_node.offset_left
 	var top = plot_node.offset_top
 	var bottom = plot_node.offset_bottom
-	_setup_axis_node(x_axis_node, "X Axis", color_dict["red"], left, right, top, bottom)
+	_setup_axis_node(x_axis_node, "X Axis", color_dict["blue"], left, right, top, bottom)
 
 func _setup_y_axis_node():
 	var axis_height = (self.size.y - plot_node.size.y)/2
