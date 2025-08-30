@@ -1,9 +1,11 @@
 @tool
 extends ColorRect
 
-const Guidot_Axis := preload("res://gdscript/components/guidot_axis.gd")
+const Guidot_Axis := preload("res://gdscript/components/axis/guidot_axis.gd")
+const Guidot_X_Axis := preload("res://gdscript/components/axis/guidot_x_axis.gd")
 const Guidot_Plot := preload("res://gdscript/components/guidot_plot.gd")
 const Guidot_Line := preload("res://gdscript/components/guidot_line.gd")
+const Guidot_Data := preload("res://gdscript/components/guidot_data.gd")
 
 @onready var color_dict: Dictionary = Guidot_Utils.color_dict
 
@@ -18,13 +20,15 @@ var window_color: Color
 
 # Components used for building the graph 
 @onready var plot_node: Guidot_Plot = Guidot_Plot.new()
-@onready var x_axis_node: Guidot_Axis = Guidot_Axis.new()
+@onready var x_axis_node: Guidot_Axis = Guidot_X_Axis.new()
 @onready var y_axis_node: Guidot_Axis = Guidot_Axis.new()
 
 func setup_plot_node():
 	plot_node.setup_plot(Vector2(self.size.x, self.size.y), 0.8, color_dict["white"])
 	add_child(plot_node)
 
+# X/Y axis rectangle anchor offset calculation depends on the plot node anchor offset maths
+# Hence, plot node needs to be ran first before we run the axis node setup
 func setup_x_axis_node():
 	var axis_width = (self.size.x - plot_node.size.x)/2
 	var left = plot_node.offset_left - axis_width
@@ -57,12 +61,12 @@ func _ready() -> void:
 	setup_y_axis_node()
 	queue_redraw()
 
-func _draw():
-	pass
-
 # TODO: Implement this with error detection
 func set_window_color(color_str: String) -> void:
 	self.color = color_dict[color_str]
+
+func _draw():
+	x_axis_node.draw_axis()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:

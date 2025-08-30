@@ -13,6 +13,8 @@ extends Guidot_Common
 
 func setup_axis_node(name: String, color: Color, left: int, right: int, top: int, bottom: int) -> void:
 	self.name = name
+
+	# Prevents us from drawing beyond the axis frame
 	self.clip_contents = true
 	self.color = color
 
@@ -25,6 +27,9 @@ func setup_axis_node(name: String, color: Color, left: int, right: int, top: int
 func setup_axis_limit(min: float, max: float) -> void:
 	self.min = min
 	self.max = max
+
+func draw_axis():
+	pass
 
 func _ready() -> void:
 	pass
