@@ -1,9 +1,9 @@
 @tool
 extends ColorRect
 
-var Guidot_Axis := preload("res://gdscript/components/guidot_axis.gd")
-var Guidot_Line := preload("res://gdscript/components/guidot_line.gd")
-var Guidot_Plot := preload("res://gdscript/components/guidot_plot.gd")
+const Guidot_Axis := preload("res://gdscript/components/guidot_axis.gd")
+const Guidot_Plot := preload("res://gdscript/components/guidot_plot.gd")
+const Guidot_Line := preload("res://gdscript/components/guidot_line.gd")
 
 @onready var color_dict: Dictionary = Guidot_Utils.color_dict
 
@@ -17,33 +17,15 @@ var window_color: Color
 @onready var default_window_color: Color = Color.BLACK
 
 # Components used for building the graph 
-@onready var plot_node: ColorRect = ColorRect.new()
+@onready var plot_node: Guidot_Plot = Guidot_Plot.new()
 @onready var x_axis_node: Guidot_Axis = Guidot_Axis.new()
 @onready var y_axis_node: Guidot_Axis = Guidot_Axis.new()
 
-# TODO (Khalid): Parametrize this
-func _setup_plot_node() -> void:
-	plot_node.name = "Plot"
-	plot_node.clip_contents = true
-	plot_node.color = color_dict["white"]
-	
-	# Find the necessary offset relative to the graph area
-	var norm_size: float = 0.8
-	var plot_size_scaled: Vector2 = norm_size * Vector2(self.size.x, self.size.y)
-	var plot_x_size_scaled: int = plot_size_scaled.x/2
-	var plot_y_size_scaled: int = plot_size_scaled.y/2
-
-	# Setup anchor with respect to the window display
-	plot_node.set_anchors_preset(Control.LayoutPreset.PRESET_CENTER)
-	plot_node.set_offset(SIDE_LEFT, -plot_x_size_scaled)
-	plot_node.set_offset(SIDE_RIGHT, plot_x_size_scaled)
-	plot_node.set_offset(SIDE_TOP, -plot_y_size_scaled)
-	plot_node.set_offset(SIDE_BOTTOM, plot_y_size_scaled)
-
+func setup_plot_node():
+	plot_node._setup_plot(Vector2(self.size.x, self.size.y), 0.8, color_dict["white"])
 	add_child(plot_node)
-	queue_redraw()
 
-func _setup_x_axis_node():
+func setup_x_axis_node():
 	var axis_width = (self.size.x - plot_node.size.x)/2
 	var left = plot_node.offset_left - axis_width
 	var right = plot_node.offset_left
@@ -53,7 +35,7 @@ func _setup_x_axis_node():
 	x_axis_node.setup_axis_limit(0, 15)
 	add_child(x_axis_node)
 
-func _setup_y_axis_node():
+func setup_y_axis_node():
 	var axis_height = (self.size.y - plot_node.size.y)/2
 	var left = plot_node.offset_left
 	var right = plot_node.offset_right
@@ -70,9 +52,10 @@ func _ready() -> void:
 	self.color = default_window_color	
 	
 	# Add child node for the graph
-	_setup_plot_node()
-	_setup_x_axis_node()
-	_setup_y_axis_node()
+	setup_plot_node()
+	setup_x_axis_node()
+	setup_y_axis_node()
+	queue_redraw()
 
 func _draw():
 	pass
