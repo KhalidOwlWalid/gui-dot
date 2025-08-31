@@ -1,6 +1,5 @@
 class_name Guidot_Plot
 extends Guidot_Common
-# extends ColorRect
 
 @onready var default_color = Color(0.17, 0.17, 0.17, 1)
 # Normalized size of the plot with respect to the node frame

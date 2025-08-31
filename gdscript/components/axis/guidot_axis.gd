@@ -7,8 +7,18 @@ extends Guidot_Common
 @onready var axis_name: String = "X-Axis"
 @onready var tick_length: int = 5
 
+# Keep a reference to the plot node, useful for dynamic resizing etc.
+var plot_node_ref: Node
+
 # Axis component properties
 var last_color: Color
+var axis_width: int
+var axis_height: int
+
+# These values are dependent on the plot frame
+# It is the offset of the axis node from the centre anchor
+# TODO (Khalid): Allow more anchor options, the calculation would not be as straightforward
+# but it will allow the axis to be scaled according to the user needs
 var left_offset: float
 var right_offset: float
 var top_offset: float
@@ -19,7 +29,7 @@ var bottom_offset: float
 	"y": 1
 }
 
-func setup_axis_node(name: String, color: Color, left: int, right: int, top: int, bottom: int) -> void:
+func setup_axis_node(name: String, color: Color) -> void:
 	self.name = name
 
 	# Prevents us from drawing beyond the axis frame
@@ -27,10 +37,10 @@ func setup_axis_node(name: String, color: Color, left: int, right: int, top: int
 	self.color = color
 
 	self.set_anchors_preset(Control.LayoutPreset.PRESET_CENTER)
-	self.set_offset(SIDE_LEFT, left)
-	self.set_offset(SIDE_RIGHT, right)
-	self.set_offset(SIDE_TOP, top)
-	self.set_offset(SIDE_BOTTOM, bottom)
+	# self.set_offset(SIDE_LEFT, self.left_offset)
+	# self.set_offset(SIDE_RIGHT, self.right_offset)
+	# self.set_offset(SIDE_TOP, self.top_offset)
+	# self.set_offset(SIDE_BOTTOM, self.bottom_offset)
 
 	# Setup signal connection if user hovers above the axis
 	self.mouse_entered.connect(_on_mouse_entered)

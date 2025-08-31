@@ -22,7 +22,7 @@ var window_color: Color
 # Components used for building the graph 
 @onready var plot_node: Guidot_Plot = Guidot_Plot.new()
 @onready var x_axis_node: Guidot_Axis = Guidot_X_Axis.new()
-@onready var y_axis_node: Guidot_Axis = Guidot_T_Axis.new()
+@onready var t_axis_node: Guidot_Axis = Guidot_T_Axis.new()
 
 var test
 
@@ -33,24 +33,25 @@ func setup_plot_node():
 # X/Y axis rectangle anchor offset calculation depends on the plot node anchor offset maths
 # Hence, plot node needs to be ran first before we run the axis node setup
 func setup_x_axis_node():
+	x_axis_node.plot_node_ref = plot_node
 	var axis_width = (self.size.x - plot_node.size.x)/2
-	var left = plot_node.offset_left - axis_width
-	var right = plot_node.offset_left
-	var top = plot_node.offset_top
-	var bottom = plot_node.offset_bottom
-	x_axis_node.setup_axis_node("x_axis", color_dict["black"], left, right, top, bottom)
+	x_axis_node.offset_left = plot_node.offset_left - axis_width
+	x_axis_node.offset_right = plot_node.offset_left
+	x_axis_node.offset_top = plot_node.offset_top
+	x_axis_node.offset_bottom = plot_node.offset_bottom
+	x_axis_node.setup_axis_node("x_axis", color_dict["black"])
 	x_axis_node.setup_axis_limit(0, 15)
 	add_child(x_axis_node)
 
 func setup_t_axis_node():
 	var axis_height = (self.size.y - plot_node.size.y)/2
-	var left = plot_node.offset_left
-	var right = plot_node.offset_right
-	var top = plot_node.offset_bottom
-	var bottom = plot_node.offset_bottom + axis_height
-	y_axis_node.setup_axis_node("y_axis", color_dict["black"], left, right, top, bottom)
-	y_axis_node.setup_axis_limit(0, 1)
-	add_child(y_axis_node)
+	t_axis_node.offset_left = plot_node.offset_left
+	t_axis_node.offset_right = plot_node.offset_right
+	t_axis_node.offset_top = plot_node.offset_bottom
+	t_axis_node.offset_bottom = plot_node.offset_bottom + axis_height
+	t_axis_node.setup_axis_node("y_axis", color_dict["black"])
+	t_axis_node.setup_axis_limit(0, 1)
+	add_child(t_axis_node)
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -74,7 +75,7 @@ func set_window_color(color_str: String) -> void:
 
 func _draw():
 	x_axis_node.draw_axis()
-	y_axis_node.draw_axis()
+	t_axis_node.draw_axis()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
