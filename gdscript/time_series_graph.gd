@@ -3,6 +3,7 @@ extends ColorRect
 
 const Guidot_Axis := preload("res://gdscript/components/axis/guidot_axis.gd")
 const Guidot_X_Axis := preload("res://gdscript/components/axis/guidot_x_axis.gd")
+const Guidot_Y_Axis := preload("res://gdscript/components/axis/guidot_y_axis.gd")
 const Guidot_Plot := preload("res://gdscript/components/guidot_plot.gd")
 const Guidot_Line := preload("res://gdscript/components/guidot_line.gd")
 const Guidot_Data := preload("res://gdscript/components/guidot_data.gd")
@@ -21,7 +22,7 @@ var window_color: Color
 # Components used for building the graph 
 @onready var plot_node: Guidot_Plot = Guidot_Plot.new()
 @onready var x_axis_node: Guidot_Axis = Guidot_X_Axis.new()
-@onready var y_axis_node: Guidot_Axis = Guidot_Axis.new()
+@onready var y_axis_node: Guidot_Axis = Guidot_Y_Axis.new()
 
 func setup_plot_node():
 	plot_node.setup_plot(Vector2(self.size.x, self.size.y), 0.9, color_dict["black"])

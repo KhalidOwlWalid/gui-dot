@@ -5,6 +5,7 @@ extends Guidot_Common
 @onready var max: float = 1
 @onready var n_steps: int = 10
 @onready var axis_name: String = "X-Axis"
+@onready var tick_length: int = 5
 
 @onready var axis: Dictionary = {
 	"x": 0,
