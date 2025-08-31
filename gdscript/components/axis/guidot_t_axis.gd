@@ -1,0 +1,3 @@
+class_name Guidot_T_Axis
+extends Guidot_Y_Axis
+

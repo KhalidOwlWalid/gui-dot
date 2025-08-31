@@ -3,7 +3,7 @@ extends ColorRect
 
 const Guidot_Axis := preload("res://gdscript/components/axis/guidot_axis.gd")
 const Guidot_X_Axis := preload("res://gdscript/components/axis/guidot_x_axis.gd")
-const Guidot_Y_Axis := preload("res://gdscript/components/axis/guidot_y_axis.gd")
+const Guidot_T_Axis := preload("res://gdscript/components/axis/guidot_t_axis.gd")
 const Guidot_Plot := preload("res://gdscript/components/guidot_plot.gd")
 const Guidot_Line := preload("res://gdscript/components/guidot_line.gd")
 const Guidot_Data_Core := preload("res://gdscript/components/guidot_data.gd")
@@ -22,7 +22,9 @@ var window_color: Color
 # Components used for building the graph 
 @onready var plot_node: Guidot_Plot = Guidot_Plot.new()
 @onready var x_axis_node: Guidot_Axis = Guidot_X_Axis.new()
-@onready var y_axis_node: Guidot_Axis = Guidot_Y_Axis.new()
+@onready var y_axis_node: Guidot_Axis = Guidot_T_Axis.new()
+
+var test
 
 func setup_plot_node():
 	plot_node.setup_plot(Vector2(self.size.x, self.size.y), 0.9, color_dict["black"])
@@ -36,17 +38,17 @@ func setup_x_axis_node():
 	var right = plot_node.offset_left
 	var top = plot_node.offset_top
 	var bottom = plot_node.offset_bottom
-	x_axis_node.setup_axis_node("X Axis", color_dict["black"], left, right, top, bottom)
+	x_axis_node.setup_axis_node("x_axis", color_dict["black"], left, right, top, bottom)
 	x_axis_node.setup_axis_limit(0, 15)
 	add_child(x_axis_node)
 
-func setup_y_axis_node():
+func setup_t_axis_node():
 	var axis_height = (self.size.y - plot_node.size.y)/2
 	var left = plot_node.offset_left
 	var right = plot_node.offset_right
 	var top = plot_node.offset_bottom
 	var bottom = plot_node.offset_bottom + axis_height
-	y_axis_node.setup_axis_node("Y Axis", color_dict["black"], left, right, top, bottom)
+	y_axis_node.setup_axis_node("y_axis", color_dict["black"], left, right, top, bottom)
 	y_axis_node.setup_axis_limit(0, 1)
 	add_child(y_axis_node)
 
@@ -54,12 +56,15 @@ func setup_y_axis_node():
 func _ready() -> void:
 	self.clip_contents = true
 	self.size = default_window_size
-	self.color = default_window_color	
+	self.color = default_window_color
+
+	self.resized.connect(_on_display_frame_resized)
 	
 	# Add child node for the graph
 	setup_plot_node()
 	setup_x_axis_node()
-	setup_y_axis_node()
+	setup_t_axis_node()
+
 	plot_node.plot_data(mavlink_node.data)
 	queue_redraw()
 
@@ -74,4 +79,10 @@ func _draw():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	set_window_color("black")
-	plot_node.plot_data(mavlink_node.data)
+	# plot_node.plot_data(mavlink_node.data)
+
+func _on_mouse_entered() -> void:
+	print("Mouse entered")
+
+func _on_display_frame_resized() -> void:
+	print("Display frame resized")

@@ -5,6 +5,7 @@ class_name Guidot_Utils
 static var color_dict: Dictionary = {
 	"white": Color.WHITE,
 	"black": Color(0.1, 0.1, 0.1, 1),
+	"dim_black": Color(0.3, 0.3, 0.3, 0.1),
 	"grey": Color(0.12, 0.12, 0.12, 1),
 	"red": Color.RED,
 	"blue": Color.BLUE,

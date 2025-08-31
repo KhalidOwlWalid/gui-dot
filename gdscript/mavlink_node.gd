@@ -1,4 +1,4 @@
-@tool
+# @tool
 extends Node
 
 # const Guidot_Utils := preload("res://gdscript/components/guidot_utils.gd")
