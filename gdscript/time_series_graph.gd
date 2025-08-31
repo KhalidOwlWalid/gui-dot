@@ -24,33 +24,31 @@ var window_color: Color
 @onready var x_axis_node: Guidot_Axis = Guidot_X_Axis.new()
 @onready var t_axis_node: Guidot_Axis = Guidot_T_Axis.new()
 
-var test
-
-func setup_plot_node():
+func setup_plot_node() -> void:
 	plot_node.setup_plot(Vector2(self.size.x, self.size.y), 0.9, color_dict["black"])
+
+func init_plot_node():
+	setup_plot_node()
 	add_child(plot_node)
 
 # X/Y axis rectangle anchor offset calculation depends on the plot node anchor offset maths
-# Hence, plot node needs to be ran first before we run the axis node setup
-func setup_x_axis_node():
-	x_axis_node.plot_node_ref = plot_node
-	var axis_width = (self.size.x - plot_node.size.x)/2
-	x_axis_node.offset_left = plot_node.offset_left - axis_width
-	x_axis_node.offset_right = plot_node.offset_left
-	x_axis_node.offset_top = plot_node.offset_top
-	x_axis_node.offset_bottom = plot_node.offset_bottom
+# Hence, plot node needs to be ran first before we run the axis node init
+func setup_x_axis_node() -> void:
 	x_axis_node.setup_axis_node("x_axis", color_dict["black"])
 	x_axis_node.setup_axis_limit(0, 15)
+	x_axis_node.calculate_offset_from_plot_frame(self, plot_node)
+
+func init_x_axis_node():
+	setup_x_axis_node()
 	add_child(x_axis_node)
 
-func setup_t_axis_node():
-	var axis_height = (self.size.y - plot_node.size.y)/2
-	t_axis_node.offset_left = plot_node.offset_left
-	t_axis_node.offset_right = plot_node.offset_right
-	t_axis_node.offset_top = plot_node.offset_bottom
-	t_axis_node.offset_bottom = plot_node.offset_bottom + axis_height
+func setup_t_axis_node() -> void:
 	t_axis_node.setup_axis_node("y_axis", color_dict["black"])
 	t_axis_node.setup_axis_limit(0, 1)
+	t_axis_node.calculate_offset_from_plot_frame(self, plot_node)
+
+func init_t_axis_node():
+	setup_t_axis_node()
 	add_child(t_axis_node)
 
 # Called when the node enters the scene tree for the first time.
@@ -62,9 +60,9 @@ func _ready() -> void:
 	self.resized.connect(_on_display_frame_resized)
 	
 	# Add child node for the graph
-	setup_plot_node()
-	setup_x_axis_node()
-	setup_t_axis_node()
+	init_plot_node()
+	init_x_axis_node()
+	init_t_axis_node()
 
 	plot_node.plot_data(mavlink_node.data)
 	queue_redraw()
@@ -86,4 +84,7 @@ func _on_mouse_entered() -> void:
 	print("Mouse entered")
 
 func _on_display_frame_resized() -> void:
+	setup_plot_node()
+	setup_x_axis_node()
+	setup_t_axis_node()
 	print("Display frame resized")

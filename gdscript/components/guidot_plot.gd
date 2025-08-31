@@ -12,7 +12,7 @@ func setup_plot_anchor() -> void:
 # Setup the plot relative to the size of the graph display frame
 # The plot size 
 func setup_plot(frame_size: Vector2, norm_size: float, color: Color) -> void:
-	self.name = "Plot"
+	self.name = "plot_frame"
  
 	# This helps ensuring that we do not draw anything beyond the plot frame
 	self.clip_contents = true

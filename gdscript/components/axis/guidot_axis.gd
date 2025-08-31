@@ -29,22 +29,17 @@ var bottom_offset: float
 	"y": 1
 }
 
+func init_event_handler() -> void:
+	# Setup signal connection if user hovers above the axis
+	self.mouse_entered.connect(_on_mouse_entered)
+	self.mouse_exited.connect(_on_mouse_exited)
+
 func setup_axis_node(name: String, color: Color) -> void:
 	self.name = name
 
 	# Prevents us from drawing beyond the axis frame
 	self.clip_contents = true
 	self.color = color
-
-	self.set_anchors_preset(Control.LayoutPreset.PRESET_CENTER)
-	# self.set_offset(SIDE_LEFT, self.left_offset)
-	# self.set_offset(SIDE_RIGHT, self.right_offset)
-	# self.set_offset(SIDE_TOP, self.top_offset)
-	# self.set_offset(SIDE_BOTTOM, self.bottom_offset)
-
-	# Setup signal connection if user hovers above the axis
-	self.mouse_entered.connect(_on_mouse_entered)
-	self.mouse_exited.connect(_on_mouse_exited)
 
 func setup_axis_limit(min: float, max: float) -> void:
 	self.min = min
@@ -63,6 +58,7 @@ func _ready() -> void:
 	# Override this if necessary
 	self.color = Guidot_Utils.color_dict["black"]
 	self.last_color = self.color
+	
 
 func _draw() -> void:
 	pass

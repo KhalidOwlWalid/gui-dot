@@ -15,8 +15,8 @@ grow_vertical = 2
 clip_contents = true
 layout_mode = 0
 offset_top = -1.0
-offset_right = 600.0
-offset_bottom = 449.0
+offset_right = 552.0
+offset_bottom = 298.0
 color = Color(0.1, 0.1, 0.1, 1)
 script = ExtResource("1_0623l")
 
