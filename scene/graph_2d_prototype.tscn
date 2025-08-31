@@ -14,12 +14,29 @@ grow_vertical = 2
 [node name="graph_2d" type="ColorRect" parent="."]
 clip_contents = true
 layout_mode = 0
-offset_left = 237.0
-offset_top = 78.0
-offset_right = 1537.0
-offset_bottom = 838.0
+offset_top = -1.0
+offset_right = 600.0
+offset_bottom = 449.0
 color = Color(0.1, 0.1, 0.1, 1)
 script = ExtResource("1_0623l")
 
 [node name="Mavlink_Node" type="Node" parent="."]
 script = ExtResource("2_8j47k")
+
+[node name="graph_2d2" type="ColorRect" parent="."]
+clip_contents = true
+offset_left = 602.0
+offset_top = 1.0
+offset_right = 1202.0
+offset_bottom = 451.0
+color = Color(0.1, 0.1, 0.1, 1)
+script = ExtResource("1_0623l")
+
+[node name="graph_2d3" type="ColorRect" parent="."]
+clip_contents = true
+offset_left = -3.0
+offset_top = 448.0
+offset_right = 597.0
+offset_bottom = 898.0
+color = Color(0.1, 0.1, 0.1, 1)
+script = ExtResource("1_0623l")

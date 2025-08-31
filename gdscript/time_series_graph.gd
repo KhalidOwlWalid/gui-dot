@@ -6,7 +6,7 @@ const Guidot_X_Axis := preload("res://gdscript/components/axis/guidot_x_axis.gd"
 const Guidot_Y_Axis := preload("res://gdscript/components/axis/guidot_y_axis.gd")
 const Guidot_Plot := preload("res://gdscript/components/guidot_plot.gd")
 const Guidot_Line := preload("res://gdscript/components/guidot_line.gd")
-const Guidot_Data := preload("res://gdscript/components/guidot_data.gd")
+const Guidot_Data_Core := preload("res://gdscript/components/guidot_data.gd")
 
 @onready var color_dict: Dictionary = Guidot_Utils.color_dict
 
@@ -16,7 +16,7 @@ var window_color: Color
 
 @onready var mavlink_node = get_node('../Mavlink_Node')
 
-@onready var default_window_size: Vector2 = Vector2(1300, 760)
+@onready var default_window_size: Vector2 = Vector2(600, 450)
 @onready var default_window_color: Color = Color.BLACK
 
 # Components used for building the graph 
@@ -60,7 +60,7 @@ func _ready() -> void:
 	setup_plot_node()
 	setup_x_axis_node()
 	setup_y_axis_node()
-	plot_node.plot_data(x_axis_node)
+	plot_node.plot_data(mavlink_node.data)
 	queue_redraw()
 
 # TODO: Implement this with error detection
@@ -69,7 +69,9 @@ func set_window_color(color_str: String) -> void:
 
 func _draw():
 	x_axis_node.draw_axis()
+	y_axis_node.draw_axis()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	set_window_color("black")
+	plot_node.plot_data(mavlink_node.data)
