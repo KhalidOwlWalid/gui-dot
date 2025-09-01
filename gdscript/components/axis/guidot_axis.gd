@@ -38,8 +38,9 @@ func setup_axis_node(name: String, color: Color) -> void:
 	self.name = name
 
 	# Prevents us from drawing beyond the axis frame
-	self.clip_contents = true
+	self.clip_contents = false
 	self.color = color
+	self.init_event_handler()
 
 func setup_axis_limit(min: float, max: float) -> void:
 	self.min = min

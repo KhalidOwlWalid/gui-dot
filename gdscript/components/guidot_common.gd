@@ -50,7 +50,7 @@ func bottom_left(from: Origin = Origin.SELF) -> Vector2:
 
 	return _bot_left
 
-func bottom_right(from: Origin = Origin.PARENT) -> Vector2:
+func bottom_right(from: Origin = Origin.SELF) -> Vector2:
 	var _bot_right: Vector2
 	var x_new: float
 	var y_new: float
