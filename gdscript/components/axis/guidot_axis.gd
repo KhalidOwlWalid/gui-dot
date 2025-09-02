@@ -1,10 +1,10 @@
 class_name Guidot_Axis
 extends Guidot_Common
 
-@onready var min: float = 0
-@onready var max: float = 1
+var min_val: float
+var max_val: float
 @onready var n_steps: int = 10
-@onready var axis_name: String = "X-Axis"
+@onready var axis_name: String = "axis_common"
 @onready var tick_length: int = 5
 
 # Keep a reference to the plot node, useful for dynamic resizing etc.
@@ -15,19 +15,19 @@ var last_color: Color
 var axis_width: int
 var axis_height: int
 
+# Helpful for figuring out where to draw the value for each ticks
+@onready var ticks_pos: PackedVector2Array = PackedVector2Array()
+@onready var tick_values: Array = Array()
+@onready var font_size: float = 10
+
 # These values are dependent on the plot frame
 # It is the offset of the axis node from the centre anchor
 # TODO (Khalid): Allow more anchor options, the calculation would not be as straightforward
 # but it will allow the axis to be scaled according to the user needs
-var left_offset: float
-var right_offset: float
-var top_offset: float
-var bottom_offset: float
-
-@onready var axis: Dictionary = {
-	"x": 0,
-	"y": 1
-}
+var left_offset 
+var right_offset
+var top_offset
+var bottom_offset
 
 func init_event_handler() -> void:
 	# Setup signal connection if user hovers above the axis
@@ -43,14 +43,18 @@ func setup_axis_node(name: String, color: Color) -> void:
 	self.init_event_handler()
 
 func setup_axis_limit(min: float, max: float) -> void:
-	self.min = min
-	self.max = max
+	self.min_val = min
+	self.max_val = max
 
 func set_min(min: float) -> void:
-	self.min = min
+	self.min_val = min
 
 func set_max(max: float) -> void:
-	self.max = max
+	self.max_val = max
+
+# func set_label_offset(x_offset: int, y_offset: int) -> void:
+# 	self.tick_label_x_offset = x_offset
+# 	self.tick_label_y_offset = y_offset
 
 func draw_axis():
 	pass
@@ -59,6 +63,7 @@ func _ready() -> void:
 	# Override this if necessary
 	self.color = Guidot_Utils.color_dict["black"]
 	self.last_color = self.color
+	font_size = 10
 	
 
 func _draw() -> void:
