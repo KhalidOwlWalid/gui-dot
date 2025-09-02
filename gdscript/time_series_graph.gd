@@ -1,4 +1,4 @@
-@tool
+# @tool
 extends ColorRect
 
 const Guidot_Axis := preload("res://gdscript/components/axis/guidot_axis.gd")
@@ -35,7 +35,7 @@ var window_color: Color
 
 @export_group("Y-Axis")
 @export var y_axis_min: float = 0
-@export var y_axis_max: float = 30
+@export var y_axis_max: float = 1
 
 func setup_plot_node() -> void:
 	plot_node.setup_plot(Vector2(self.size.x, self.size.y), 0.9, color_dict["black"])
@@ -83,6 +83,8 @@ func _ready() -> void:
 	init_y_axis_node()
 	init_font()
 
+	mavlink_node.data_received.connect(_on_data_received)
+
 	queue_redraw()
 
 # TODO: Implement this with error detection
@@ -96,7 +98,7 @@ func _draw():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	set_window_color("black")
-	# plot_node.plot_data(mavlink_node.data)
+	plot_node.plot_data(mavlink_node.data)
 
 func _on_mouse_entered() -> void:
 	print("Mouse entered")
@@ -106,3 +108,7 @@ func _on_display_frame_resized() -> void:
 	setup_axis(y_axis_node, "y_axis", color_dict["black"], y_axis_min, y_axis_max)
 	setup_axis(t_axis_node, "t_axis", color_dict["black"], t_axis_min, t_axis_max)
 	print("Display frame resized")
+
+func _on_data_received() -> void:
+	print("Signal emitted")
+	queue_redraw()

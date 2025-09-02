@@ -27,8 +27,8 @@ func setup_plot(frame_size: Vector2, norm_size: float, color: Color) -> void:
 func _map_data_to_pixel(data_points: PackedVector2Array) -> PackedVector2Array:
 	var pixel_data_points: PackedVector2Array = PackedVector2Array()
 	for i in data_points.size():
-		var x_pixel_coords: int = remap(data_points[i].x, 0, 60, 0, self.get_component_size().x)
-		var y_pixel_coords: int = remap(data_points[i].y, 0, 2000, 0, self.get_component_size().y)
+		var x_pixel_coords: int = remap(data_points[i].x, 0, 30, 0, self.get_component_size().x)
+		var y_pixel_coords: int = remap(data_points[i].y, 0, 1, 0, self.get_component_size().y)
 		pixel_data_points.append(Vector2(x_pixel_coords, y_pixel_coords))
 	#print(pixel_data_points)
 	return pixel_data_points
