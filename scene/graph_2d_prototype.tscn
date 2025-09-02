@@ -15,11 +15,10 @@ grow_vertical = 2
 clip_contents = true
 layout_mode = 0
 offset_top = -1.0
-offset_right = 661.0
-offset_bottom = 457.0
+offset_right = 1242.0
+offset_bottom = 705.0
 color = Color(0.1, 0.1, 0.1, 1)
 script = ExtResource("1_0623l")
-t_axis_max = 60.0
 
 [node name="Mavlink_Node" type="Node" parent="."]
 script = ExtResource("2_8j47k")

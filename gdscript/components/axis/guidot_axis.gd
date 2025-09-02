@@ -3,7 +3,7 @@ extends Guidot_Common
 
 var min_val: float
 var max_val: float
-@onready var n_steps: int = 10
+@onready var n_steps: int = 5
 @onready var axis_name: String = "axis_common"
 @onready var tick_length: int = 5
 

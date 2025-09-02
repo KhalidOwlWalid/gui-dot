@@ -21,7 +21,7 @@ var window_color: Color
 
 @onready var mavlink_node = get_node('../Mavlink_Node')
 
-@onready var default_window_size: Vector2 = Vector2(600, 450)
+@onready var default_window_size: Vector2 = Vector2(1720, 980)
 @onready var default_window_color: Color = Color.BLACK
 
 # Components used for building the graph 
@@ -32,12 +32,15 @@ var window_color: Color
 @export_group("X-Axis")
 @export var t_axis_min: float = 0
 @export var t_axis_max: float = 30
+@export var x_number_of_ticks: int = 10
 
 @export_group("Y-Axis")
 @export var y_axis_min: float = 0
 @export var y_axis_max: float = 1
+@export var y_number_of_ticks: int = 10
 
 func setup_plot_node() -> void:
+	plot_node.init_plot(color_dict["black"])
 	plot_node.setup_plot(Vector2(self.size.x, self.size.y), 0.9, color_dict["black"])
 
 func init_plot_node():
@@ -98,7 +101,6 @@ func _draw():
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	set_window_color("black")
-	plot_node.plot_data(mavlink_node.data)
 
 func _on_mouse_entered() -> void:
 	print("Mouse entered")
@@ -110,5 +112,5 @@ func _on_display_frame_resized() -> void:
 	print("Display frame resized")
 
 func _on_data_received() -> void:
-	print("Signal emitted")
+	plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 	queue_redraw()

@@ -25,6 +25,7 @@ func _mouse_cursor_data(delta: float) -> void:
 		var curr_mouse_pos = self.get_viewport().get_mouse_position()
 		append_point(Vector2(curr_t, curr_mouse_pos.x/1920))
 		last_update_ms = Time.get_ticks_msec()
+	print(data[-1])
 
 func _process(delta: float) -> void:
 	_mouse_cursor_data(delta)
