@@ -1,6 +1,8 @@
 class_name Guidot_Axis
 extends Guidot_Common
 
+signal axis_limit_changed
+
 var min_val: float
 var max_val: float
 @onready var n_steps: int = 5
@@ -11,7 +13,9 @@ var max_val: float
 var plot_node_ref: Node
 
 # Axis component properties
-var last_color: Color
+var last_box_color: Color
+var last_line_color: Color
+var line_color: Color
 var axis_width: int
 var axis_height: int
 
@@ -48,36 +52,39 @@ func setup_axis_limit(min: float, max: float) -> void:
 
 func set_min(min: float) -> void:
 	self.min_val = min
+	axis_limit_changed.emit()
 
 func set_max(max: float) -> void:
 	self.max_val = max
-
-# func set_label_offset(x_offset: int, y_offset: int) -> void:
-# 	self.tick_label_x_offset = x_offset
-# 	self.tick_label_y_offset = y_offset
+	axis_limit_changed.emit()
 
 func draw_axis():
 	pass
 
 func _ready() -> void:
 	# Override this if necessary
+
+	# Since this is inheriting Rect2D, self.color refers to the box and not the lines of the axis!
 	self.color = Guidot_Utils.color_dict["black"]
-	self.last_color = self.color
+	self.line_color = Guidot_Utils.color_dict["white"]
+	self.last_box_color = self.color
+	self.last_line_color = self.line_color
 	font_size = 10
 	
-
 func _draw() -> void:
 	pass
 
+# Mouse entered and exit will allow user to hover above the 
 func _on_mouse_entered() -> void:
 	# Save the current color so we can revert back
-	self.last_color = self.color
+	self.last_box_color = self.color
+	# Change the color of the box so user knows they are hovering above it
 	self.color = Guidot_Utils.color_dict["dim_black"]
 	print("Mouse entered")
 	queue_redraw()
 
 func _on_mouse_exited() -> void:
-	self.color = self.last_color
+	self.color = self.last_box_color
 	print("Mouse exited")
 	queue_redraw()
 

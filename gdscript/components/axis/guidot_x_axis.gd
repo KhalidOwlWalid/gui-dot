@@ -1,8 +1,17 @@
 class_name Guidot_X_Axis
 extends Guidot_Axis
 
-# @onready var tick_label_x_offset: int = 5
-# @onready var tick_label_y_offset: int = 20	
+func _ready() -> void:
+	self.line_color = Guidot_Utils.color_dict["white"]
+	self.last_line_color = self.line_color
+	self.ticks_pos = PackedVector2Array()
+	var tick_y_pos: int = self.top_left().y
+	var axis_frame_size: Vector2 = self.get_component_size()
+	var increments: int  = axis_frame_size.x / n_steps
+	for i in range(n_steps + 1):
+		var tick_x_pos: int = self.top_left().x + i * increments
+		self.ticks_pos.append(Vector2(tick_x_pos, tick_y_pos))
+
 
 func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node: Node) -> void:
 	self.set_anchors_preset(Control.LayoutPreset.PRESET_CENTER)
@@ -13,10 +22,10 @@ func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node:
 	self.offset_bottom = plot_frame_node.offset_bottom + self.axis_height
 
 func _draw_ticks() -> void:
+	self.ticks_pos = PackedVector2Array()
 	var tick_y_pos: int = self.top_left().y
 	var axis_frame_size: Vector2 = self.get_component_size()
 	var increments: int  = axis_frame_size.x / n_steps
-	print(self.max_val)
 	var tick_interval: float = (self.max_val - self.min_val) / n_steps
 	for i in range(n_steps + 1):
 		var tick_x_pos: int = self.top_left().x + i * increments
@@ -36,7 +45,7 @@ func _draw_ticks() -> void:
 
 func draw_x_axis() -> void:
 	# Draw the vertical line of the x-axis 
-	draw_line(self.top_left(), self.top_right(), Color.WHITE, 1.0, true)
+	draw_line(self.top_left(), self.top_right(), self.line_color, 1.0, true)
 	_draw_ticks()
 
 func _draw() -> void:

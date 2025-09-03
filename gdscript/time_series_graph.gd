@@ -76,7 +76,6 @@ func _ready() -> void:
 	self.size = default_window_size
 	self.color = default_window_color
 
-	self.resized.connect(_on_display_frame_resized)
 	
 	# Add child node for the graph
 	init_plot_node()
@@ -86,7 +85,22 @@ func _ready() -> void:
 	init_y_axis_node()
 	init_font()
 
+	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
+	plot_node.update_y_ticks_properties(y_axis_node.n_steps, y_axis_node.ticks_pos)
+
+	##########################
+	#         SIGNAL         #
+	##########################
+
+	# Data oriented signal
 	mavlink_node.data_received.connect(_on_data_received)
+
+	# Axis node signal
+	t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
+	y_axis_node.axis_limit_changed.connect(_on_y_axis_changed)
+	
+	# Self node signal
+	self.resized.connect(_on_display_frame_resized)
 
 	queue_redraw()
 
@@ -95,6 +109,7 @@ func set_window_color(color_str: String) -> void:
 	self.color = color_dict[color_str]
 
 func _draw():
+	# Data line drawing is handled inside the _draw function of plot_node
 	y_axis_node.draw_axis()
 	t_axis_node.draw_axis()
 
@@ -111,6 +126,15 @@ func _on_display_frame_resized() -> void:
 	setup_axis(t_axis_node, "t_axis", color_dict["black"], t_axis_min, t_axis_max)
 	print("Display frame resized")
 
+########################################
+#    SIGNAL CALLBACK IMPLEMENTATION    #
+########################################
 func _on_data_received() -> void:
 	plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 	queue_redraw()
+
+func _on_t_axis_changed() -> void:
+	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
+
+func _on_y_axis_changed() -> void:
+	plot_node.update_y_ticks_properties(y_axis_node.n_steps, y_axis_node.ticks_pos)

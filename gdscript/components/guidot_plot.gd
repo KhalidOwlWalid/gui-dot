@@ -6,6 +6,12 @@ extends Guidot_Common
 @onready var default_norm_size: int = 0.8
 @onready var pixel_data_points: PackedVector2Array = PackedVector2Array()
 
+# Axis properties
+var n_x_ticks: int
+var x_ticks_pos: PackedVector2Array
+var n_y_ticks: int
+var y_ticks_pos: PackedVector2Array
+
 func setup_plot_anchor() -> void:
 	pass
 
@@ -45,9 +51,28 @@ func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_ra
 func test_func(data_node: Node):
 	print(data_node.data)
 
+func update_x_ticks_properties(n_ticks: int, ticks_pos: PackedVector2Array) -> void:
+	x_ticks_pos = ticks_pos
+	n_x_ticks = n_ticks
+
+func update_y_ticks_properties(n_ticks: int, ticks_pos: PackedVector2Array) -> void:
+	y_ticks_pos = ticks_pos
+	n_y_ticks = n_ticks
+
 func _ready() -> void:
 	pass
+
+func _draw_vertical_grids(n_ticks: int, ticks_pos: PackedVector2Array, color: Color) -> void:
+	for i in range(n_ticks + 1):
+		draw_line(Vector2(ticks_pos[i].x, self.bottom_right().y), Vector2(ticks_pos[i].x, self.top_right().y), color, -1, true)
+
+func _draw_horizontal_grids(n_ticks: int, ticks_pos: PackedVector2Array, color: Color) -> void:
+	for i in range(n_ticks):
+		draw_line(Vector2(self.top_left().x, ticks_pos[i].y), Vector2(self.top_right().x, ticks_pos[i].y), color, -1, true)
 	
+# Handle data line drawing here
 func _draw() -> void:
+	_draw_vertical_grids(n_x_ticks, x_ticks_pos, Guidot_Utils.color_dict["grey"])
+	_draw_horizontal_grids(n_y_ticks, y_ticks_pos, Guidot_Utils.color_dict["grey"])
 	for i in range(1, pixel_data_points.size()):
 		draw_line(pixel_data_points[i - 1], pixel_data_points[i], Color.RED, 0.5, true)
