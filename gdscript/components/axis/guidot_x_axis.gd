@@ -29,7 +29,7 @@ func _draw_ticks() -> void:
 	var tick_interval: float = (self.max_val - self.min_val) / n_steps
 	for i in range(n_steps + 1):
 		var tick_x_pos: int = self.top_left().x + i * increments
-		draw_line(Vector2(tick_x_pos, tick_y_pos), Vector2(tick_x_pos, tick_y_pos + self.tick_length), Color.WHITE, 1.0, true)
+		draw_line(Vector2(tick_x_pos, tick_y_pos), Vector2(tick_x_pos, tick_y_pos + self.tick_length), self.line_color, 1.0, true)
 		self.ticks_pos.append(Vector2(tick_x_pos, tick_y_pos))
 
 		# Bugfix (Khalid): Idk why tf I cant define this as a @onready var, everytime I do, the system complains "bad address index"???
@@ -41,7 +41,7 @@ func _draw_ticks() -> void:
 		var tick_label_x_pos: int = tick_x_pos - tick_label_x_offset
 		var tick_label_y_pos: int = tick_y_pos + tick_label_y_offset
 		var tick_label: String = str(self.min_val + i * tick_interval)
-		self.draw_string(self.get_theme_default_font(), Vector2(tick_label_x_pos, tick_label_y_pos), tick_label, 0, -1, self.font_size)
+		self.draw_string(self.get_theme_default_font(), Vector2(tick_label_x_pos, tick_label_y_pos), tick_label, 0, -1, self.font_size, self.line_color)
 
 func draw_x_axis() -> void:
 	# Draw the vertical line of the x-axis 

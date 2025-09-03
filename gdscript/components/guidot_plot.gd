@@ -15,7 +15,7 @@ var y_ticks_pos: PackedVector2Array
 func setup_plot_anchor() -> void:
 	pass
 
-func init_plot(color: Color) -> void:
+func init_plot(color: Color = Guidot_Utils.color_dict["gd_black"]) -> void:
 	self.name = "plot_frame"
  
 	# This helps ensuring that we do not draw anything beyond the plot frame
@@ -24,7 +24,7 @@ func init_plot(color: Color) -> void:
 
 # Setup the plot relative to the size of the graph display frame
 # The plot size 
-func setup_plot(frame_size: Vector2, norm_size: float, color: Color) -> void:
+func setup_plot(frame_size: Vector2, norm_size: float) -> void:
 	# Find the necessary offset relative to the graph area
 	var plot_size_scaled: Vector2 = norm_size * frame_size
 	var plot_x_size_scaled: int = plot_size_scaled.x/2

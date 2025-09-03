@@ -22,7 +22,7 @@ var window_color: Color
 @onready var mavlink_node = get_node('../Mavlink_Node')
 
 @onready var default_window_size: Vector2 = Vector2(1720, 980)
-@onready var default_window_color: Color = Color.BLACK
+@onready var default_window_color: Color = color_dict["gd_black"]
 
 # Components used for building the graph 
 @onready var plot_node: Guidot_Plot = Guidot_Plot.new()
@@ -40,8 +40,8 @@ var window_color: Color
 @export var y_number_of_ticks: int = 10
 
 func setup_plot_node() -> void:
-	plot_node.init_plot(color_dict["black"])
-	plot_node.setup_plot(Vector2(self.size.x, self.size.y), 0.9, color_dict["black"])
+	plot_node.init_plot(color_dict["gd_black"])
+	plot_node.setup_plot(Vector2(self.size.x, self.size.y), 0.9)
 
 func init_plot_node():
 	setup_plot_node()
@@ -57,11 +57,11 @@ func init_axis(axis_node: Guidot_Axis, axis_name: String, axis_color: Color, axi
 	axis_node.calculate_offset_from_plot_frame(self, plot_node)
 
 func init_t_axis_node():
-	init_axis(t_axis_node, "t_axis", color_dict["black"], t_axis_min, t_axis_max)
+	init_axis(t_axis_node, "t_axis", color_dict["gd_black"], t_axis_min, t_axis_max)
 	add_child(t_axis_node)
 
 func init_y_axis_node():
-	init_axis(y_axis_node, "y_axis", color_dict["black"], y_axis_min, y_axis_max)
+	init_axis(y_axis_node, "y_axis", color_dict["gd_black"], y_axis_min, y_axis_max)
 	add_child(y_axis_node)
 
 func setup_font() -> void:
@@ -75,7 +75,6 @@ func _ready() -> void:
 	self.clip_contents = true
 	self.size = default_window_size
 	self.color = default_window_color
-
 	
 	# Add child node for the graph
 	init_plot_node()
@@ -105,8 +104,8 @@ func _ready() -> void:
 	queue_redraw()
 
 # TODO: Implement this with error detection
-func set_window_color(color_str: String) -> void:
-	self.color = color_dict[color_str]
+func set_window_color(color: Color) -> void:
+	self.color = color
 
 func _draw():
 	# Data line drawing is handled inside the _draw function of plot_node
@@ -115,15 +114,15 @@ func _draw():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	set_window_color("black")
+	pass
 
 func _on_mouse_entered() -> void:
 	print("Mouse entered")
 
 func _on_display_frame_resized() -> void:
 	setup_plot_node()
-	setup_axis(y_axis_node, "y_axis", color_dict["black"], y_axis_min, y_axis_max)
-	setup_axis(t_axis_node, "t_axis", color_dict["black"], t_axis_min, t_axis_max)
+	setup_axis(y_axis_node, "y_axis", y_axis_node.color, y_axis_min, y_axis_max)
+	setup_axis(t_axis_node, "t_axis", t_axis_node.color, t_axis_min, t_axis_max)
 	print("Display frame resized")
 
 ########################################
