@@ -84,13 +84,13 @@ func _on_mouse_entered() -> void:
 	self.color = Guidot_Utils.color_dict["gd_dim_blue"]
 	self.line_color = Guidot_Utils.color_dict["gd_bright_yellow"]
 	
-	print("Mouse entered")
+	print("Mouse entered inside ", self.name)
 	queue_redraw()
 
 func _on_mouse_exited() -> void:
 	self.color = self.last_box_color
 	self.line_color = self.last_line_color
-	print("Mouse exited")
+	print("Mouse exited inside ", self.name)
 	queue_redraw()
 
 func _input(event):
