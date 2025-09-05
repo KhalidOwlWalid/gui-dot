@@ -7,8 +7,18 @@ extends Guidot_Common
 @onready var pixel_data_points: PackedVector2Array = PackedVector2Array()
 
 # Data specific properties
+# Visualize the data as if it is a snake
+enum DataFetchMode {
+	BOTH_INSIDE,   		# Starting data and end of data is within the boundary of the plot
+	BOTH_OUTSIDE,   	# Both starting and end of data is outside the boundary of the plot (can be either left or right)
+	HEAD_OUT_TAIL_IN, 	# Starting data is outside the boundary, but the end of data is still within the boundary of the time frame
+	HEAD_IN_TAIL_OUT,	# Starting data is inside the boundary, but the end of data is outside the boundary (will need to truncate any excess data)
+	OVERFLOW_BOTH_ENDS, # Starting and end of data is outside the boundary, hence there are data within the boundaries, truncation needed
+	NOT_IMPLEMENTED,
+}
 var approx_sample_t: float
 @onready var n_sampling: int = 20
+@onready var data_fetching_mode: DataFetchMode = DataFetchMode.BOTH_INSIDE
 
 # Axis properties
 var n_x_ticks: int
@@ -52,6 +62,9 @@ func _map_data_to_pixel(data_points: PackedVector2Array, t_axis_range: Vector2, 
 func _find_data_between(ts_data: PackedVector2Array, t_start: float, t_end: float) -> Vector2:
 	return Vector2()
 
+func _handle_data_fetching(ts_data: PackedVector2Array) -> void:
+	pass
+
 func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVector2Array:
 
 	# This calculation should be done at least once when new time series data comes in
@@ -72,38 +85,60 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	var t_start: float = ts_data[0].x
 	var t_end: float = ts_data[-1].x
 
-	# # TODO (Khalid): Figure out a clean way to do this
-	if ((ts_data[0].x >= t_min and ts_data[-1].x <= t_max) and approx_sample_t * ts_data.size() < t_diff):
-		return ts_data
-	# We do not return data that is out of screen, only render what is necessary to avoid drawing clipped data
-	else:
-		"""
-		Based on approximated time stamp, and the size of the array, we can get a rough idea which part of the data to slice
-		This allows us to render only what is necessary (Level of Detail - LOD)
-		For example, if the array contains data from (0 to 30s), and we only need to plot data between 20s to 30s, then:
-			# approx_sample_time = 0.1
-			# time_diff = 10s 
-			# n_lod_size = 10 / 0.1 = 100
+	var n_slice_length: int = int(t_diff / approx_sample_t)
 
-		If first element is 0s, then we can safely assume that starting at (n, t) where (200, 20s) and (300, 30s)
-		To avoid miscalculation, we can simply grab slightly more data (e.g. n=150 to n=350)
-		When rendered, data that is not within the time frame will be clipped, so we do not have to worry about discontinuity in our plot
-		if there is any miscalculations!
-		"""
-		var n_slice_length: int = int(t_diff / approx_sample_t)
-		
-		if (t_start >= t_min and t_end <= t_max):
+	# # TODO (Khalid): Figure out a clean way to do this
+	if (t_start >= t_min and t_end <= t_max):
+		self.data_fetching_mode = DataFetchMode.BOTH_INSIDE
+	elif (t_start >= t_min and t_end >= t_max):
+		self.data_fetching_mode = DataFetchMode.HEAD_IN_TAIL_OUT
+	elif (t_start <= t_min and t_end <= t_max):
+		self.data_fetching_mode = DataFetchMode.HEAD_OUT_TAIL_IN
+	elif (t_start <= t_min and t_end >= t_max):
+		self.data_fetching_mode = DataFetchMode.OVERFLOW_BOTH_ENDS
+	else:
+		# In the case that there are conditions I did not capture
+		self.data_fetching_mode = DataFetchMode.NOT_IMPLEMENTED
+
+	"""
+	Based on approximated time stamp, and the size of the array, we can get a rough idea which part of the data to slice
+	This allows us to render only what is necessary (Level of Detail - LOD)
+	For example, if the array contains data from (0 to 30s), and we only need to plot data between 20s to 30s, then:
+		# approx_sample_time = 0.1
+		# time_diff = 10s 
+		# n_lod_size = 10 / 0.1 = 100
+
+	If first element is 0s, then we can safely assume that starting at (n, t) where (200, 20s) and (300, 30s)
+	To avoid miscalculation, we can simply grab slightly more data (e.g. n=150 to n=350)
+	When rendered, data that is not within the time frame will be clipped, so we do not have to worry about discontinuity in our plot
+	if there is any miscalculations!
+	"""	
+	match self.data_fetching_mode:
+
+		DataFetchMode.BOTH_INSIDE:
 			# Just draw the current dataset
-			return ts_data
-		elif (t_start <= t_min and t_end <= t_max):
+			print("Both inside")
+			pass
+
+		DataFetchMode.HEAD_IN_TAIL_OUT:
+			var k: int = int((t_max - t_start)/approx_sample_t)
+			ts_data = ts_data.slice(0, k + n_slice_length)
+			print("Head in, Tail out")
+		
+		DataFetchMode.HEAD_OUT_TAIL_IN:
 			# How much is the difference between t_start and t_min, just slice the starting point of t_min
 			var k: int = int((t_min - t_start)/approx_sample_t)
 			# k/2 is to grabbed a few elements so that we do not have any discontinuity
+			# We do not return data that is out of screen, only render what is necessary to avoid drawing clipped data
 			ts_data = ts_data.slice(k - int(k/2), k + n_slice_length)
-			return ts_data
-		else:
-			print("Not yet implemented")
-			return PackedVector2Array()
+			print("Head out, Tail in")
+
+		DataFetchMode.OVERFLOW_BOTH_ENDS:
+			ts_data = PackedVector2Array()
+			print("Overflow")
+
+		DataFetchMode.NOT_IMPLEMENTED:
+			print("Not implemented")
 	
 	return ts_data
 
@@ -116,7 +151,6 @@ func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_ra
 	if !(data_points.size() < n_sampling):
 		# We need at least 5 sets of data to be able to perform calculations for approximating the index of data we wish to plot
 		data = _data_processing(data, t_axis_range)
-		print(data)
 
 	self._map_data_to_pixel(data, t_axis_range, y_axis_range)
 	queue_redraw()
@@ -151,4 +185,4 @@ func _draw() -> void:
 		draw_line(pixel_data_points[i - 1], pixel_data_points[i], Color.RED, 0.5, true)
 		# TODO (Khalid): Circle should only be drawn when it is at a certain window size
 		# I am not sure why but drawing a circle is very taxing, maybe due to how it is implemeted
-		# draw_circle(pixel_data_points[i], 3, Color.RED)
+		draw_circle(pixel_data_points[i], 1, Color.RED)

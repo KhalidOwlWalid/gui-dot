@@ -19,7 +19,7 @@ offset_right = 1720.0
 offset_bottom = 979.0
 color = Color(0, 0, 0, 1)
 script = ExtResource("1_0623l")
-t_axis_min = 5.0
+t_axis_min = -5.0
 t_axis_max = 10.0
 
 [node name="Mavlink_Node" type="Node" parent="."]
