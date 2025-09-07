@@ -21,9 +21,11 @@ enum Graph_Buffer_Mode {
 
 func _on_mouse_entered() -> void:
 	self._mouse_in = true
+	print("Inside guidot common, mouse_in: ", self._mouse_in)
 
 func _on_mouse_exited() -> void:
 	self._mouse_in = false
+	print("Inside guidot common, mouse_in: ", self._mouse_in)
 
 func get_component_size() -> Vector2:
 	return self.size
@@ -90,3 +92,8 @@ func setup_center_anchor(x_size: int, y_size) -> void:
 	self.set_offset(SIDE_RIGHT, x_size)
 	self.set_offset(SIDE_TOP, -y_size)
 	self.set_offset(SIDE_BOTTOM, y_size)
+
+func _process(delta: float) -> void:
+	if _is_dragging:
+		print("Dragging")
+		self.position = _new_position

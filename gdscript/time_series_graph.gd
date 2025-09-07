@@ -103,6 +103,7 @@ func _ready() -> void:
 	
 	# Use the guidot common mouse entered implementation
 	self.mouse_entered.connect(self._on_mouse_entered)
+	self.mouse_exited.connect(self._on_mouse_exited)
 
 	queue_redraw()
 
@@ -114,9 +115,6 @@ func _draw():
 	# Data line drawing is handled inside the _draw function of plot_node
 	y_axis_node.draw_axis()
 	t_axis_node.draw_axis()
-
-# func _on_mouse_entered() -> void:
-# 	print("Mouse entered")
 
 func _on_display_frame_resized() -> void:
 	setup_plot_node()
@@ -143,6 +141,7 @@ func _input(event: InputEvent) -> void:
 	if (event is InputEventKey):
 		pass
 
+	# Simple implementation of moving the window during runtime
 	if (event is InputEventMouseButton):
 		
 		if (event.is_pressed() and _mouse_in):
@@ -150,9 +149,11 @@ func _input(event: InputEvent) -> void:
 			_drag_direction = (self.get_viewport().get_mouse_position() - self.position).normalized()
 			_is_dragging = true
 			_new_position = self.get_viewport().get_mouse_position() - self._dragging_distance * _drag_direction
+			print("Mouse pressed and inside the window")
 
 		else:
 			_is_dragging = false
+			print("Mouse stopped pressing")
 
 	elif (event is InputEventMouseMotion):
 		if _is_dragging:
