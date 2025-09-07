@@ -26,3 +26,10 @@ static var color_dict: Dictionary = {
 }
 
 static var some_val: int = 10
+
+# Programmatically add action keys
+static func add_action_with_keycode(action, key):
+	var event = InputEventKey.new()
+	event.physical_keycode = key
+	InputMap.add_action(action)
+	InputMap.action_add_event(action, event)

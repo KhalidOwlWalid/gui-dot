@@ -104,21 +104,21 @@ func _on_mouse_exited() -> void:
 
 func _input(event):
 
-	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			print("Mouse up")
-			self.set_min(self.min_val - 1)
-			self.set_max(event.factor + 1)
+	# Only allow the axis to be scaled only when mouse hovers on the axis
+	if (self._mouse_in):
+		var axis_diff: float = abs(self.max_val - self.min_val)
+		if event is InputEventMouseButton and event.pressed:
+			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+				self.set_min(self.min_val + axis_diff)
+				self.set_max(self.max_val + axis_diff)
 
-		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			print("Mouse down")
-			event.set_factor(0.8)
-			self.set_min(self.min_val + 1)
-			self.set_max(self.max_val - 1)
+			if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				self.set_min(self.min_val - axis_diff)
+				self.set_max(self.max_val - axis_diff)
 
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			print("Mouse button right")
-			var submenu = PopupMenu.new()
-			submenu.name = "SubMenu"  # Assign a name for identification
-			submenu.add_item("Sub Item 1")
-			submenu.add_item("Sub Item 2")
+			if event.button_index == MOUSE_BUTTON_RIGHT:
+				print("Mouse button right")
+				var submenu = PopupMenu.new()
+				submenu.name = "SubMenu"  # Assign a name for identification
+				submenu.add_item("Sub Item 1")
+				submenu.add_item("Sub Item 2")

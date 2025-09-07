@@ -93,6 +93,7 @@ func setup_center_anchor(x_size: int, y_size) -> void:
 	self.set_offset(SIDE_TOP, -y_size)
 	self.set_offset(SIDE_BOTTOM, y_size)
 
+# This is placed inside Guidot_Common since I want each child to be able to use this
 func _move_display(event: InputEvent, in_moving_mode: bool) -> void:
 	# Simple implementation of moving the window during runtime
 	if (in_moving_mode):

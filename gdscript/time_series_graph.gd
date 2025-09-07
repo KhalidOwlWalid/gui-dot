@@ -29,6 +29,8 @@ var window_color: Color
 @onready var y_axis_node: Guidot_Axis = Guidot_Y_Axis.new()
 @onready var t_axis_node: Guidot_Axis = Guidot_T_Axis.new()
 
+@onready var _toggle_nerd_stats: bool = false
+
 @export_group("X-Axis")
 @export var t_axis_min: float = 0
 @export var t_axis_max: float = 30
@@ -70,6 +72,12 @@ func setup_font() -> void:
 func init_font() -> void:
 	setup_font()
 
+func _register_hotkeys() -> void:
+	# Input action mapping
+	Guidot_Utils.add_action_with_keycode("help", KEY_H)
+	Guidot_Utils.add_action_with_keycode("nerd_stats", KEY_SPACE)
+
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	self.clip_contents = true
@@ -105,6 +113,8 @@ func _ready() -> void:
 	self.mouse_entered.connect(self._on_mouse_entered)
 	self.mouse_exited.connect(self._on_mouse_exited)
 
+	self._register_hotkeys()
+
 	queue_redraw()
 
 # TODO: Implement this with error detection
@@ -130,16 +140,25 @@ func _on_data_received() -> void:
 	queue_redraw()
 
 func _on_t_axis_changed() -> void:
+	t_axis_min = t_axis_node.min_val
+	t_axis_max = t_axis_node.max_val
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
 
 func _on_y_axis_changed() -> void:
+	y_axis_min = y_axis_node.min_val
+	y_axis_max = y_axis_node.max_val
 	plot_node.update_y_ticks_properties(y_axis_node.n_steps, y_axis_node.ticks_pos)
+
+func _nerd_stats_panel_update():
+	
+	if (self._toggle_nerd_stats):
+		pass
 
 func _input(event: InputEvent) -> void:
 	
 	# For hotkeys
-	if (event is InputEventKey):
-		pass
+	if (Input.is_action_just_pressed("nerd_stats")):
+		self._toggle_nerd_stats = !self._toggle_nerd_stats
 
 	# TODO (Khalid): Move this flag globally, and only allow the window to be moved in design mode
 	var moving_mode_flag: bool = true
