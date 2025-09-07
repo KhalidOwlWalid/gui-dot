@@ -125,35 +125,53 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	When rendered, data that is not within the time frame will be clipped, so we do not have to worry about discontinuity in our plot
 	if there is any miscalculations!
 	"""	
+
+	# Notes: In the case of "data excess" plotting, the extra slice element fetch avoid any potential discontinuity when plotting on the graph
+	# I cant think of a much better solution for now, but this may introduce a bug at some point in the future if not handled correctly
+	# For instance, if the first element is of n = 9, n - 10, equals to -1, which causes the the slicing to begin at -1
+	var k_extra_slice: int = 10
+	var k_lower_slice: int
 	match self.data_fetching_mode:
 
 		DataFetchMode.BOTH_INSIDE:
 			# Just draw the current dataset
-			# print("Both inside")
+			print("Both inside")
 			pass
 
 		DataFetchMode.HEAD_IN_TAIL_OUT:
 			var k: int = int((t_max - t_start)/approx_sample_t)
 			# n_slice_length ensures we are grabbing slight more then enough data to avoid discontinuity
 			# Clipping handles the excess, but this has better performance than drawing the whole plot outside the boundary
-			ts_data = ts_data.slice(0, k + n_slice_length)
-			# print("Head in, Tail out")
+			k_lower_slice = 0
+			ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
+			print("Head in, Tail out")
 		
 		DataFetchMode.HEAD_OUT_TAIL_IN:
 			# How much is the difference between t_start and t_min, just slice the starting point of t_min
-			var k: int = int((t_min - t_start)/approx_sample_t)
-			# k/2 is to grabbed a few elements so that we do not have any discontinuity
+			var k: int = floor(int((t_min - t_start)/approx_sample_t))
+			
+			# Handles cases where it will cause a negative output, see notes above
+			k_lower_slice = k - k_extra_slice
+			if (k_lower_slice < 0):
+				k_lower_slice = 0
+
 			# We do not return data that is out of screen, only render what is necessary to avoid drawing clipped data
-			ts_data = ts_data.slice(k - int(k/2), k + n_slice_length)
-			# print("Head out, Tail in")
+			ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
+			print("Head out, Tail in")
 
 		DataFetchMode.OVERFLOW_BOTH_ENDS:
-			ts_data = PackedVector2Array()
-			# print("Overflow")
+			var k: int = floor(((t_min - ts_data[0].x)/approx_sample_t))
+
+			k_lower_slice = k - k_extra_slice
+			if (k_lower_slice < 0):
+				k = 0
+
+			ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
+			print("Overflow")
 
 		DataFetchMode.NOT_IMPLEMENTED:
 			pass
-			# print("Not implemented")
+			print("Not implemented")
 	
 	return ts_data
 
@@ -197,7 +215,7 @@ func _draw() -> void:
 		draw_line(pixel_data_points[i - 1], pixel_data_points[i], Color.RED, 0.5, true)
 		# TODO (Khalid): Circle should only be drawn when it is at a certain window size
 		# I am not sure why but drawing a circle is very taxing, maybe due to how it is implemeted
-		draw_circle(pixel_data_points[i], 1, Color.RED)
+		# draw_circle(pixel_data_points[i], 1, Color.RED)
 
 func _input(event: InputEvent) -> void:
 
