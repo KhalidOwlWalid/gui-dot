@@ -141,24 +141,9 @@ func _input(event: InputEvent) -> void:
 	if (event is InputEventKey):
 		pass
 
-	# Simple implementation of moving the window during runtime
-	if (event is InputEventMouseButton):
-		
-		if (event.is_pressed() and _mouse_in):
-			_dragging_distance = self.position.distance_to(self.get_viewport().get_mouse_position())
-			_drag_direction = (self.get_viewport().get_mouse_position() - self.position).normalized()
-			_is_dragging = true
-			_new_position = self.get_viewport().get_mouse_position() - self._dragging_distance * _drag_direction
-			print("Mouse pressed and inside the window")
-
-		else:
-			_is_dragging = false
-			print("Mouse stopped pressing")
-
-	elif (event is InputEventMouseMotion):
-		if _is_dragging:
-			_new_position = self.get_viewport().get_mouse_position() - self._dragging_distance * _drag_direction
+	# TODO (Khalid): Move this flag globally, and only allow the window to be moved in design mode
+	var moving_mode_flag: bool = true
+	self._move_display(event, moving_mode_flag)
 
 func _process(delta: float) -> void:
-	if _is_dragging:
-		self.position = _new_position
+	self._move_display_process()

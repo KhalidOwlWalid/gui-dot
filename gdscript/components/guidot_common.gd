@@ -93,7 +93,26 @@ func setup_center_anchor(x_size: int, y_size) -> void:
 	self.set_offset(SIDE_TOP, -y_size)
 	self.set_offset(SIDE_BOTTOM, y_size)
 
-func _process(delta: float) -> void:
+func _move_display(event: InputEvent, in_moving_mode: bool) -> void:
+	# Simple implementation of moving the window during runtime
+	if (in_moving_mode):
+		if (event is InputEventMouseButton):
+			
+			if (event.is_pressed() and _mouse_in):
+				_dragging_distance = self.position.distance_to(self.get_viewport().get_mouse_position())
+				_drag_direction = (self.get_viewport().get_mouse_position() - self.position).normalized()
+				_is_dragging = true
+				_new_position = self.get_viewport().get_mouse_position() - self._dragging_distance * _drag_direction
+				print("Mouse pressed and inside the window")
+
+			elif !(event.is_pressed()) and _mouse_in:
+				_is_dragging = false
+				print("Mouse stopped pressing")
+
+		elif (event is InputEventMouseMotion):
+			if _is_dragging:
+				_new_position = self.get_viewport().get_mouse_position() - self._dragging_distance * _drag_direction
+
+func _move_display_process() -> void:
 	if _is_dragging:
-		print("Dragging")
 		self.position = _new_position
