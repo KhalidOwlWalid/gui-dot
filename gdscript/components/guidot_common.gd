@@ -13,6 +13,18 @@ enum Graph_Buffer_Mode {
 	MOVING_PAGE,
 }
 
+@onready var _mouse_in: bool = false
+@onready var _new_position: Vector2 = Vector2()
+@onready var _drag_direction: Vector2 = Vector2()
+@onready var _is_dragging: bool = false
+@onready var _dragging_distance: float = 0
+
+func _on_mouse_entered() -> void:
+	self._mouse_in = true
+
+func _on_mouse_exited() -> void:
+	self._mouse_in = false
+
 func get_component_size() -> Vector2:
 	return self.size
 

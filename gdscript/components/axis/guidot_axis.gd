@@ -53,10 +53,12 @@ func setup_axis_limit(min: float, max: float) -> void:
 func set_min(min: float) -> void:
 	self.min_val = min
 	axis_limit_changed.emit()
+	queue_redraw()
 
 func set_max(max: float) -> void:
 	self.max_val = max
 	axis_limit_changed.emit()
+	queue_redraw()
 
 func draw_axis():
 	pass
@@ -94,5 +96,22 @@ func _on_mouse_exited() -> void:
 	queue_redraw()
 
 func _input(event):
+
 	if event is InputEventMouseButton and event.pressed:
-		print("Mouse left was pressed")
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			print("Mouse up")
+			self.set_min(self.min_val - 1)
+			self.set_max(event.factor + 1)
+
+		if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			print("Mouse down")
+			event.set_factor(0.8)
+			self.set_min(self.min_val + 1)
+			self.set_max(self.max_val - 1)
+
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			print("Mouse button right")
+			var submenu = PopupMenu.new()
+			submenu.name = "SubMenu"  # Assign a name for identification
+			submenu.add_item("Sub Item 1")
+			submenu.add_item("Sub Item 2")

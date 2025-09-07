@@ -1,5 +1,5 @@
 # @tool
-extends ColorRect
+extends Guidot_Common
 
 const Guidot_Axis := preload("res://gdscript/components/axis/guidot_axis.gd")
 const Guidot_Y_Axis := preload("res://gdscript/components/axis/guidot_y_axis.gd")
@@ -100,6 +100,9 @@ func _ready() -> void:
 	
 	# Self node signal
 	self.resized.connect(_on_display_frame_resized)
+	
+	# Use the guidot common mouse entered implementation
+	self.mouse_entered.connect(self._on_mouse_entered)
 
 	queue_redraw()
 
@@ -112,12 +115,8 @@ func _draw():
 	y_axis_node.draw_axis()
 	t_axis_node.draw_axis()
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-	pass
-
-func _on_mouse_entered() -> void:
-	print("Mouse entered")
+# func _on_mouse_entered() -> void:
+# 	print("Mouse entered")
 
 func _on_display_frame_resized() -> void:
 	setup_plot_node()
@@ -137,3 +136,28 @@ func _on_t_axis_changed() -> void:
 
 func _on_y_axis_changed() -> void:
 	plot_node.update_y_ticks_properties(y_axis_node.n_steps, y_axis_node.ticks_pos)
+
+func _input(event: InputEvent) -> void:
+	
+	# For hotkeys
+	if (event is InputEventKey):
+		pass
+
+	if (event is InputEventMouseButton):
+		
+		if (event.is_pressed() and _mouse_in):
+			_dragging_distance = self.position.distance_to(self.get_viewport().get_mouse_position())
+			_drag_direction = (self.get_viewport().get_mouse_position() - self.position).normalized()
+			_is_dragging = true
+			_new_position = self.get_viewport().get_mouse_position() - self._dragging_distance * _drag_direction
+
+		else:
+			_is_dragging = false
+
+	elif (event is InputEventMouseMotion):
+		if _is_dragging:
+			_new_position = self.get_viewport().get_mouse_position() - self._dragging_distance * _drag_direction
+
+func _process(delta: float) -> void:
+	if _is_dragging:
+		self.position = _new_position

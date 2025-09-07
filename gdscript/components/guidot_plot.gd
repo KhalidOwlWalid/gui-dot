@@ -26,6 +26,18 @@ var x_ticks_pos: PackedVector2Array
 var n_y_ticks: int
 var y_ticks_pos: PackedVector2Array
 
+var test_popup: PopupMenu
+
+func _ready() -> void:
+	test_popup = PopupMenu.new()
+	add_child(test_popup)
+	test_popup.add_check_item("test")
+	test_popup.hide_on_item_selection = true
+	test_popup.unresizable = true
+
+	# Use the guidot common mouse entered implementation
+	self.mouse_entered.connect(self._on_mouse_entered)
+
 func setup_plot_anchor() -> void:
 	pass
 
@@ -117,13 +129,15 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 
 		DataFetchMode.BOTH_INSIDE:
 			# Just draw the current dataset
-			print("Both inside")
+			# print("Both inside")
 			pass
 
 		DataFetchMode.HEAD_IN_TAIL_OUT:
 			var k: int = int((t_max - t_start)/approx_sample_t)
+			# n_slice_length ensures we are grabbing slight more then enough data to avoid discontinuity
+			# Clipping handles the excess, but this has better performance than drawing the whole plot outside the boundary
 			ts_data = ts_data.slice(0, k + n_slice_length)
-			print("Head in, Tail out")
+			# print("Head in, Tail out")
 		
 		DataFetchMode.HEAD_OUT_TAIL_IN:
 			# How much is the difference between t_start and t_min, just slice the starting point of t_min
@@ -131,14 +145,15 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 			# k/2 is to grabbed a few elements so that we do not have any discontinuity
 			# We do not return data that is out of screen, only render what is necessary to avoid drawing clipped data
 			ts_data = ts_data.slice(k - int(k/2), k + n_slice_length)
-			print("Head out, Tail in")
+			# print("Head out, Tail in")
 
 		DataFetchMode.OVERFLOW_BOTH_ENDS:
 			ts_data = PackedVector2Array()
-			print("Overflow")
+			# print("Overflow")
 
 		DataFetchMode.NOT_IMPLEMENTED:
-			print("Not implemented")
+			pass
+			# print("Not implemented")
 	
 	return ts_data
 
@@ -166,9 +181,6 @@ func update_y_ticks_properties(n_ticks: int, ticks_pos: PackedVector2Array) -> v
 	y_ticks_pos = ticks_pos
 	n_y_ticks = n_ticks
 
-func _ready() -> void:
-	pass
-
 func _draw_vertical_grids(n_ticks: int, ticks_pos: PackedVector2Array, color: Color) -> void:
 	for i in range(n_ticks + 1):
 		draw_line(Vector2(ticks_pos[i].x, self.bottom_right().y), Vector2(ticks_pos[i].x, self.top_right().y), color, -1, true)
@@ -186,3 +198,12 @@ func _draw() -> void:
 		# TODO (Khalid): Circle should only be drawn when it is at a certain window size
 		# I am not sure why but drawing a circle is very taxing, maybe due to how it is implemeted
 		draw_circle(pixel_data_points[i], 1, Color.RED)
+
+func _input(event: InputEvent) -> void:
+
+	if event is InputEventMouseButton and event.pressed:
+
+		if event.button_index == MOUSE_BUTTON_RIGHT:
+			var curr_mouse_pos : Vector2 = self.get_viewport().get_mouse_position()
+			test_popup.show()
+			print("popup created")
