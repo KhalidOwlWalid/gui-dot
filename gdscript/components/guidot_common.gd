@@ -1,6 +1,11 @@
 class_name Guidot_Common
 extends ColorRect
 
+const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG
+const LOG_WARNING = Guidot_Log.Log_Level.WARNING
+const LOG_INFO = Guidot_Log.Log_Level.INFO
+const LOG_ERROR = Guidot_Log.Log_Level.ERROR
+
 enum Origin {
 	PARENT = 0,
 	SELF = 1 # wrt to the child (inherited node) itself
@@ -117,3 +122,6 @@ func _move_display(event: InputEvent, in_moving_mode: bool) -> void:
 func _move_display_process() -> void:
 	if _is_dragging:
 		self.position = _new_position
+
+func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
+	Guidot_Log.gd_log(log_level, msg)
