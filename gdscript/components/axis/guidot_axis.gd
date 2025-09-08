@@ -107,14 +107,20 @@ func _input(event):
 	# Only allow the axis to be scaled only when mouse hovers on the axis
 	if (self._mouse_in):
 		var axis_diff: float = abs(self.max_val - self.min_val)
+		var zoom_factor: float = 1.1
+		var curr_axis_centre: float = (self.min_val + self.max_val)/2
+		var current_range: float = self.max_val - self.min_val
+		var new_range: float
 		if event is InputEventMouseButton and event.pressed:
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-				self.set_min(self.min_val + axis_diff)
-				self.set_max(self.max_val + axis_diff)
+				new_range = current_range / zoom_factor
+				self.set_min(curr_axis_centre - new_range / 2)
+				self.set_max(curr_axis_centre + new_range / 2)
 
 			if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-				self.set_min(self.min_val - axis_diff)
-				self.set_max(self.max_val - axis_diff)
+				new_range = current_range * zoom_factor
+				self.set_min(curr_axis_centre - new_range / 2)
+				self.set_max(curr_axis_centre + new_range / 2)
 
 			if event.button_index == MOUSE_BUTTON_RIGHT:
 				print("Mouse button right")

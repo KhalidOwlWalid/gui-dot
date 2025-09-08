@@ -40,7 +40,7 @@ func _draw_ticks() -> void:
 		var tick_label_y_offset = 20
 		var tick_label_x_pos: int = tick_x_pos - tick_label_x_offset
 		var tick_label_y_pos: int = tick_y_pos + tick_label_y_offset
-		var tick_label: String = str(self.min_val + i * tick_interval)
+		var tick_label: String = "{val}".format({"val":"%0.2f" % (self.min_val + i * tick_interval)})
 		self.draw_string(self.get_theme_default_font(), Vector2(tick_label_x_pos, tick_label_y_pos), tick_label, 0, -1, self.font_size, self.line_color)
 
 func draw_x_axis() -> void:

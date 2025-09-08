@@ -36,8 +36,9 @@ func _draw_ticks() -> void:
 		var tick_label_y_offset = 2
 		var tick_label_x_pos: int = tick_x_pos + tick_label_x_offset
 		var tick_label_y_pos: int = tick_y_pos + tick_label_y_offset
+		var tick_label: String = "{val}".format({"val":"%0.2f" % (self.max_val - i * tick_interval)})
 		self.draw_string(self.get_theme_default_font(), Vector2(tick_label_x_pos, tick_label_y_pos), \
-			str(self.max_val - i * tick_interval), 0, -1, self.font_size, self.line_color, 3, 0, 0)
+			tick_label, 0, -1, self.font_size, self.line_color, 3, 0, 0)
 
 func draw_y_axis() -> void:
 	# Draw the vertical line of the x-axis 
