@@ -7,7 +7,7 @@ enum Log_Level {
     ERROR   = 3,
 }
 
-static var global_log_level: Log_Level = Log_Level.INFO
+static var global_log_level: Log_Level = Log_Level.DEBUG
 
 static func gd_log(log_level: Log_Level, args: Array) -> void:
     var msg_parts: Array = []

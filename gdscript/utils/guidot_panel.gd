@@ -1,0 +1,4 @@
+class_name Guidot_Panel
+extends Control
+
+func _create_simple_panel

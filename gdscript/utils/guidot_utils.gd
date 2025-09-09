@@ -2,6 +2,11 @@
 class_name Guidot_Utils
 # extends Node
 
+const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG
+const LOG_WARNING = Guidot_Log.Log_Level.WARNING
+const LOG_INFO = Guidot_Log.Log_Level.INFO
+const LOG_ERROR = Guidot_Log.Log_Level.ERROR
+
 static func per_255(val: float) -> float:
 	return (val/255) 
 
@@ -33,3 +38,4 @@ static func add_action_with_keycode(action, key):
 	event.physical_keycode = key
 	InputMap.add_action(action)
 	InputMap.action_add_event(action, event)
+	Guidot_Log.gd_log(LOG_INFO, [action, " hotkeys registered"])

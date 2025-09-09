@@ -398,7 +398,7 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 
 			# We do not return data that is out of screen, only render what is necessary to avoid drawing clipped data
 			ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
-			# log_print(DEBUG, ["Head out, Tail in"])
+			self.log(LOG_DEBUG, ["Head out, tail in"])
 
 		DataFetchMode.OVERFLOW_BOTH_ENDS:
 			var k: int = floor(((t_min - ts_data[0].x)/approx_sample_t))
