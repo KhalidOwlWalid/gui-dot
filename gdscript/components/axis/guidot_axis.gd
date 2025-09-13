@@ -33,6 +33,8 @@ var right_offset
 var top_offset
 var bottom_offset
 
+var _axis_config_popup: PopupMenu
+
 func init_event_handler() -> void:
 	# Setup signal connection if user hovers above the axis
 	self.mouse_entered.connect(_on_mouse_entered)
@@ -63,6 +65,18 @@ func set_max(max: float) -> void:
 func draw_axis():
 	pass
 
+func _setup_axis_config_menu() -> void:
+	# Setup the axis configuration popup menu
+	_axis_config_popup = PopupMenu.new()
+	add_child(_axis_config_popup)
+	_axis_config_popup.name = "Axis Configuration Menu"
+	_axis_config_popup.add_check_item("Test check item")
+	_axis_config_popup.add_item("some item")
+	_axis_config_popup.hide_on_checkable_item_selection = false
+	_axis_config_popup.hide_on_item_selection = false
+	_axis_config_popup.hide_on_state_item_selection = false
+
+
 func _ready() -> void:
 	# Override this if necessary
 
@@ -72,6 +86,8 @@ func _ready() -> void:
 	self.last_box_color = self.color
 	self.last_line_color = self.line_color
 	font_size = 10
+
+	self._setup_axis_config_menu()
 	
 func _draw() -> void:
 	pass
@@ -111,20 +127,25 @@ func _input(event):
 		var curr_axis_centre: float = (self.min_val + self.max_val)/2
 		var current_range: float = self.max_val - self.min_val
 		var new_range: float
+		var r1: float = 0.5
+		var r2: float = 0.5
 		if event is InputEventMouseButton and event.pressed:
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 				new_range = current_range / zoom_factor
-				self.set_min(curr_axis_centre - new_range / 2)
-				self.set_max(curr_axis_centre + new_range / 2)
+				self.set_min(curr_axis_centre - new_range * r1)
+				self.set_max(curr_axis_centre + new_range * r2)
 
 			if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 				new_range = current_range * zoom_factor
-				self.set_min(curr_axis_centre - new_range / 2)
-				self.set_max(curr_axis_centre + new_range / 2)
+				self.set_min(curr_axis_centre - new_range * r2)
+				self.set_max(curr_axis_centre + new_range * r2)
 
 			if event.button_index == MOUSE_BUTTON_RIGHT:
-				print("Mouse button right")
-				var submenu = PopupMenu.new()
-				submenu.name = "SubMenu"  # Assign a name for identification
-				submenu.add_item("Sub Item 1")
-				submenu.add_item("Sub Item 2")
+				var curr_mouse_pos: Vector2 = self.get_viewport().get_mouse_position()	
+				var popup_size: Vector2 = Vector2(100, 100)
+				var popup_rect: Rect2i = Rect2i(curr_mouse_pos, popup_size)
+				_axis_config_popup.popup(popup_rect)
+				self.log(LOG_DEBUG, ["[", self.name, "]", _axis_config_popup.name, "open at position:", curr_mouse_pos])
+
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				self.log(LOG_DEBUG, ["Left button pressed, scale the axis here"])

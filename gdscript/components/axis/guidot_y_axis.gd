@@ -13,6 +13,8 @@ func _ready() -> void:
 		var tick_y_pos: int = self.top_right().y + i * increments
 		self.ticks_pos.append(Vector2(tick_x_pos, tick_y_pos))
 
+	self._setup_axis_config_menu()
+
 
 func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node: Node) -> void:
 	self.set_anchors_preset(Control.LayoutPreset.PRESET_CENTER)

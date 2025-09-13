@@ -20,9 +20,9 @@ static func gd_log(log_level: Log_Level, args: Array) -> void:
     var rich_msg: String
     match log_level:
         Log_Level.DEBUG:
-            rich_msg = "[color=#888888][DEBUG]" + final_msg  + "[/color]" # Gray
+            rich_msg = "[color=#888888][DEBUG] " + final_msg  + "[/color]" # Gray
         Log_Level.WARNING:
-            rich_msg = "[color=#FFAA00][WARNING]" + final_msg + "[/color]"  # Orange
+            rich_msg = "[color=#FFAA00][WARNING] " + final_msg + "[/color]"  # Orange
         Log_Level.INFO:
             rich_msg = "[color=#00FF00][INFO] " + final_msg + "[/color]" # Green
         Log_Level.ERROR:

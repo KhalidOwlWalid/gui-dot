@@ -1,6 +1,8 @@
 class_name Guidot_X_Axis
 extends Guidot_Axis
 
+var i: int
+
 func _ready() -> void:
 	self.line_color = Guidot_Utils.color_dict["white"]
 	self.last_line_color = self.line_color
@@ -11,6 +13,11 @@ func _ready() -> void:
 	for i in range(n_steps + 1):
 		var tick_x_pos: int = self.top_left().x + i * increments
 		self.ticks_pos.append(Vector2(tick_x_pos, tick_y_pos))
+
+	# temp
+	i = 0
+
+	self._setup_axis_config_menu()
 
 
 func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node: Node) -> void:

@@ -11,13 +11,6 @@ enum Origin {
 	SELF = 1 # wrt to the child (inherited node) itself
 }
 
-enum Graph_Buffer_Mode {
-	FIXED,      # If user wants to display a set window span. User will have to manually reset the time axes
-	SNAPSHOT,   # Alias of fixed (thats the plan for now)
-	REALTIME,  # Usually use for real-time DAQ. (aka sliding window). Will use a lot of memory since new data will be pushed back.
-	MOVING_PAGE,
-}
-
 @onready var _mouse_in: bool = false
 @onready var _new_position: Vector2 = Vector2()
 @onready var _drag_direction: Vector2 = Vector2()

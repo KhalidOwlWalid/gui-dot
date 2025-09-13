@@ -1,4 +1,5 @@
 # @tool
+class_name Guidot_T_Series_Graph
 extends Guidot_Common
 
 const Guidot_Axis := preload("res://gdscript/components/axis/guidot_axis.gd")
@@ -42,6 +43,8 @@ var window_color: Color
 @export var y_axis_min: float = 0
 @export var y_axis_max: float = 1
 @export var y_number_of_ticks: int = 10
+
+var test_panel: Guidot_Panel
 
 func setup_plot_node() -> void:
 	plot_node.init_plot(color_dict["gd_black"])
@@ -117,6 +120,9 @@ func _ready() -> void:
 	self.mouse_exited.connect(self._on_mouse_exited)
 
 	self._register_hotkeys()
+	
+	test_panel = Guidot_Panel.new()
+	add_child(test_panel)
 
 	queue_redraw()
 
@@ -165,6 +171,7 @@ func _input(event: InputEvent) -> void:
 	if (Input.is_action_just_pressed("nerd_stats")):
 		self._toggle_nerd_stats = !self._toggle_nerd_stats
 		self.log(LOG_DEBUG, ["Toggle for nerd stats: ", self._toggle_nerd_stats])
+		test_panel.show_panel(Vector2(100, 100))
 
 	if (Input.is_action_just_pressed("pause")):
 		self._is_pause = !self._is_pause
