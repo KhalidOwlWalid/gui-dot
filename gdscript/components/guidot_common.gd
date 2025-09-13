@@ -1,6 +1,13 @@
 class_name Guidot_Common
 extends ColorRect
 
+enum Graph_Buffer_Mode {
+	FIXED,      # If user wants to display a set window span. User will have to manually reset the time axes
+	SNAPSHOT,   # Alias of fixed (thats the plan for now)
+	REALTIME,  # Usually use for real-time DAQ. (aka sliding window). Will use a lot of memory since new data will be pushed back.
+	MOVING_PAGE, # Opens up a new "page" everytime the data passes the max axis limit
+}
+
 const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG
 const LOG_WARNING = Guidot_Log.Log_Level.WARNING
 const LOG_INFO = Guidot_Log.Log_Level.INFO

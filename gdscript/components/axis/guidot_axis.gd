@@ -62,6 +62,9 @@ func set_max(max: float) -> void:
 	axis_limit_changed.emit()
 	queue_redraw()
 
+func axis_diff() -> float:
+	return (self.max_val - self.min_val)
+
 func draw_axis():
 	pass
 
@@ -70,8 +73,7 @@ func _setup_axis_config_menu() -> void:
 	_axis_config_popup = PopupMenu.new()
 	add_child(_axis_config_popup)
 	_axis_config_popup.name = "Axis Configuration Menu"
-	_axis_config_popup.add_check_item("Test check item")
-	_axis_config_popup.add_item("some item")
+	_axis_config_popup.add_item("Axis Limit Settings")
 	_axis_config_popup.hide_on_checkable_item_selection = false
 	_axis_config_popup.hide_on_item_selection = false
 	_axis_config_popup.hide_on_state_item_selection = false

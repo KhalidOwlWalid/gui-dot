@@ -1,4 +1,4 @@
-# @tool
+@tool
 class_name Guidot_T_Series_Graph
 extends Guidot_Common
 
@@ -20,7 +20,8 @@ var window_color: Color
 # for different parts of the graph, but I kinda doubt that would happen
 @onready var font_node: SystemFont = SystemFont.new()
 
-@onready var mavlink_node = get_node('../Mavlink_Node')
+@onready var mavlink_node = get_node('../../Mavlink_Node')
+@onready var guidot_master_node = get_node('../../Guidot_Master_Node')
 
 @onready var default_window_size: Vector2 = Vector2(1720, 980)
 @onready var default_window_color: Color = color_dict["gd_black"]
@@ -44,7 +45,19 @@ var window_color: Color
 @export var y_axis_max: float = 1
 @export var y_number_of_ticks: int = 10
 
+var _current_buffer_mode: Graph_Buffer_Mode
+@onready var _sliding_window_s: float = 10
+
 var test_panel: Guidot_Panel
+
+func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
+	match buf_mode:
+		Graph_Buffer_Mode.FIXED:
+			return "Fixed"
+		Graph_Buffer_Mode.REALTIME:
+			return "Realtime"
+		_:
+			return "Not Implemented"
 
 func setup_plot_node() -> void:
 	plot_node.init_plot(color_dict["gd_black"])
@@ -83,6 +96,9 @@ func _register_hotkeys() -> void:
 	Guidot_Utils.add_action_with_keycode("nerd_stats", KEY_TAB)
 	Guidot_Utils.add_action_with_keycode("pause", KEY_SPACE)
 
+func _request_buffer_mode() -> void:
+	self._current_buffer_mode = guidot_master_node.get_graph_buffer_mode()
+	self.log(LOG_INFO, ["Current buffer mode: ", self.get_buffer_mode_str(self._current_buffer_mode)])
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -106,7 +122,9 @@ func _ready() -> void:
 	##########################
 
 	# Data oriented signal
+	# TODO (Khalid): Remove the use of mavlink node. Data server node should not be internally handled here but should be handled by the master
 	mavlink_node.data_received.connect(_on_data_received)
+	guidot_master_node.graph_buffer_mode_changed.connect(_on_graph_buffer_mode_changed)
 
 	# Axis node signal
 	t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
@@ -120,6 +138,7 @@ func _ready() -> void:
 	self.mouse_exited.connect(self._on_mouse_exited)
 
 	self._register_hotkeys()
+	self._request_buffer_mode()
 	
 	test_panel = Guidot_Panel.new()
 	add_child(test_panel)
@@ -148,6 +167,9 @@ func _on_data_received() -> void:
 	if (not self._is_pause):
 		plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 		queue_redraw()
+
+func _on_graph_buffer_mode_changed() -> void:
+	pass
 
 func _on_t_axis_changed() -> void:
 	t_axis_min = t_axis_node.min_val
@@ -184,3 +206,13 @@ func _input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	self._move_display_process()
+
+	# If the current buffer mode is fixed, then only update when the user changes the axis limits
+	match (self._current_buffer_mode):
+
+		Graph_Buffer_Mode.FIXED:
+			pass
+		
+		Graph_Buffer_Mode.REALTIME:
+			if (mavlink_node.data[-1].x > t_axis_node.max_val):
+				t_axis_node.set_max(mavlink_node.data[-1].x)
