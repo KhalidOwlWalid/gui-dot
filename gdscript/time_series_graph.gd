@@ -221,10 +221,14 @@ func _process(delta: float) -> void:
 		# In principle, the min val should stay constant unless the user specifies any desired min axis value,
 		# and the max axis value will keep moving
 		Graph_Buffer_Mode.REALTIME:
-			var moving_max_tick: bool = mavlink_node.data[-1].x > t_axis_node.max_val
-			if (moving_max_tick):
-				# Set the max axis value to be the last data point
-				t_axis_node.set_max(mavlink_node.data[-1].x)
-				# t_axis_node.set_min(mavlink_node.data[-1].x - _sliding_window_s)
+			if (mavlink_node.data.is_empty()):
+				pass
+			else:
+				var moving_max_tick: bool = mavlink_node.data[-1].x > t_axis_node.max_val
+			# If there is no data present at the moment, then we ignore it
+				if (moving_max_tick):
+					# Set the max axis value to be the last data point
+					t_axis_node.set_max(mavlink_node.data[-1].x)
+					# t_axis_node.set_min(mavlink_node.data[-1].x - _sliding_window_s)
 
-				# From here onwards, we have to do a lot of checks
+					# From here onwards, we have to do a lot of checks

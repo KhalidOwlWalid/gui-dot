@@ -115,15 +115,15 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	# 	approx_sample_t = approx_sample_t / (n_iter)
 
 	# Moving average of approximating the sample time of the data
-	# var n_iter: int = n_sampling - 1
-	# for i in range(n_iter):
-	# 	approx_sample_t += ts_data[-1 - i].x - ts_data[-2 - i].x
-	# approx_sample_t = approx_sample_t / n_iter
+	var n_iter: int = n_sampling - 1
+	for i in range(n_iter):
+		approx_sample_t += ts_data[-1 - i].x - ts_data[-2 - i].x
+	approx_sample_t = approx_sample_t / n_iter
 
 	# BUGFIX (Khalid): The main reason why I am leaving to this implementation for now is due to the
 	# fact that when you start zooming into the t-axis, it will cause an "out of bound" error
 	# since the calculation is just not good enough
-	approx_sample_t = 1.0/60.0
+	# approx_sample_t = 1.0/60.0
 
 	var t_min: float = t_range.x
 	var t_max: float = t_range.y
