@@ -95,7 +95,6 @@ func _handle_data_fetching(ts_data: PackedVector2Array, t_range: Vector2) -> voi
 	# Due to the above implementation being an approximation, if the approximate sample time is slightly off,
 	# we will fail to get an accurate position of where the min element lives, so the following implementation
 	# attempts to correct for this
-	# self.log(LOG_INFO, [t_min, t_start, approx_sample_t, k])
 	var cmp_t: float = ts_data[k].x
 	var cmp_t_diff: float = abs(cmp_t - t_min)
 	k_extra_slice = cmp_t_diff / approx_sample_t
@@ -125,7 +124,6 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	# fact that when you start zooming into the t-axis, it will cause an "out of bound" error
 	# since the calculation is just not good enough
 	approx_sample_t = 1.0/60.0
-	self.log(LOG_INFO, ["Approximate sample t:", approx_sample_t])
 
 	var t_min: float = t_range.x
 	var t_max: float = t_range.y
@@ -187,24 +185,35 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 		DataFetchMode.HEAD_OUT_TAIL_IN:
 			# How much is the difference between t_start and t_min, just slice the starting point of t_min
 			# self._handle_data_fetching()
-			self._handle_data_fetching(ts_data, t_range)
 			var k: int = floor(int((t_min - t_start)/approx_sample_t))
 
 			# Due to the above implementation being an approximation, if the approximate sample time is slightly off,
 			# we will fail to get an accurate position of where the min element lives, so the following implementation
 			# attempts to correct for this
 			# self.log(LOG_INFO, [t_min, t_start, approx_sample_t, k])
-			var cmp_t: float = ts_data[k].x
-			var cmp_t_diff: float = abs(cmp_t - t_min)
-			k_extra_slice = cmp_t_diff / approx_sample_t
-			
-			# Handles cases where it will cause a negative output, see notes above
-			k_lower_slice = k - k_extra_slice
-			if (k_lower_slice < 0):
-				k_lower_slice = 0
+			# assert(k <= ts_data.size(), "k is larger than the dataset. Out of bound error will occur")
 
-			# We do not return data that is out of screen, only render what is necessary to avoid drawing clipped data
-			ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
+			# In the case that the approximation fails, then we would have to manually find where the t_min is in the dataset
+			var nearest_t_min: float
+			if (k >= ts_data.size()):
+				var last_t: float = ts_data[-1].x
+				# This time around, using the approximated time, calculated backwards to precisely find
+				# the nearest time to t_min
+				nearest_t_min = ts_data[-n_slice_length].x
+				ts_data = ts_data.slice(-n_slice_length, ts_data.size())
+			else:
+				var cmp_t: float = ts_data[k].x
+				var cmp_t_diff: float = abs(cmp_t - t_min)
+				k_extra_slice = cmp_t_diff / approx_sample_t
+				
+				# Handles cases where it will cause a negative output, see notes above
+				k_lower_slice = k - k_extra_slice
+				if (k_lower_slice < 0):
+					k_lower_slice = 0
+
+				# We do not return data that is out of screen, only render what is necessary to avoid drawing clipped data
+				ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
+
 			self.log(LOG_DEBUG, ["Head out, tail in"])
 
 		DataFetchMode.OVERFLOW_BOTH_ENDS:
@@ -215,15 +224,46 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 			# we will fail to get an accurate position of where the min element lives, so the following implementation
 			# attempts to correct for this
 			# self.log(LOG_INFO, [t_min, t_start, approx_sample_t, k])
-			var cmp_t: float = ts_data[k].x
-			var cmp_t_diff: float = abs(cmp_t - t_min)
-			k_extra_slice = cmp_t_diff / approx_sample_t
+			# assert(k <= ts_data.size(), "k is larger than the dataset. Out of bound error will occur")
 
-			k_lower_slice = k - k_extra_slice
-			if (k_lower_slice < 0):
-				k = 0
+			# var nearest_t_min: float
+			# if (k >= ts_data.size()):
+			# 	var last_t: float = ts_data[-1].x
+			# 	# This time around, using the approximated time, calculated backwards to precisely find
+			# 	# the nearest time to t_min
+			# 	nearest_t_min = ts_data[-n_slice_length].x
 
-			ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
+			# var cmp_t: float = ts_data[k].x
+			# var cmp_t_diff: float = abs(cmp_t - t_min)
+			# k_extra_slice = cmp_t_diff / approx_sample_t
+
+			# k_lower_slice = k - k_extra_slice
+			# if (k_lower_slice < 0):
+			# 	k = 0
+
+			# ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
+
+			# In the case that the approximation fails, then we would have to manually find where the t_min is in the dataset
+			var nearest_t_min: float
+			if (k >= ts_data.size()):
+				var last_t: float = ts_data[-1].x
+				# This time around, using the approximated time, calculated backwards to precisely find
+				# the nearest time to t_min
+				nearest_t_min = ts_data[-n_slice_length].x
+				ts_data = ts_data.slice(-n_slice_length, ts_data.size())
+			else:
+				var cmp_t: float = ts_data[k].x
+				var cmp_t_diff: float = abs(cmp_t - t_min)
+				k_extra_slice = cmp_t_diff / approx_sample_t
+				
+				# Handles cases where it will cause a negative output, see notes above
+				k_lower_slice = k - k_extra_slice
+				if (k_lower_slice < 0):
+					k_lower_slice = 0
+
+				# We do not return data that is out of screen, only render what is necessary to avoid drawing clipped data
+				ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
+
 			self.log(LOG_DEBUG, ["Overflow both ends"])
 
 		DataFetchMode.BOTH_OUTSIDE:
@@ -275,8 +315,8 @@ func _draw() -> void:
 		draw_line(pixel_data_points[i - 1], pixel_data_points[i], Color.RED, 0.5, true)
 		# TODO (Khalid): Circle should only be drawn when it is at a certain window size
 		# I am not sure why but drawing a circle is very taxing, maybe due to how it is implemeted
-		#if (pixel_data_points.size() < 250):
-			#draw_circle(pixel_data_points[i], 4, Color.RED)
+		if (pixel_data_points.size() < 250):
+			draw_circle(pixel_data_points[i], 4, Color.RED)
 
 func _input(event: InputEvent) -> void:
 
