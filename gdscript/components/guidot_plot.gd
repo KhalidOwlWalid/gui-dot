@@ -18,7 +18,7 @@ enum DataFetchMode {
 }
 
 var approx_sample_t: float
-@onready var n_sampling: int = 20
+@onready var n_sampling: int = 200
 @onready var data_fetching_mode: DataFetchMode = DataFetchMode.BOTH_INSIDE
 
 # Axis properties
@@ -77,8 +77,28 @@ func _map_data_to_pixel(data_points: PackedVector2Array, t_axis_range: Vector2, 
 func _find_data_between(ts_data: PackedVector2Array, t_start: float, t_end: float) -> Vector2:
 	return Vector2()
 
-func _handle_data_fetching(ts_data: PackedVector2Array) -> void:
-	pass
+# TODO (Khalid): The lower the value of the approximated sample time, the higher the k value
+# This will cause out of bound error due to errors in the approximation calculation
+# We need to be able to handle this, and if that happens, then we reverse find which datapoint is what we need
+func _handle_data_fetching(ts_data: PackedVector2Array, t_range: Vector2) -> void:
+	var k_extra_slice 
+	var t_min: float = t_range.x
+	var t_max: float = t_range.y
+	var t_diff: float = t_max - t_min
+	var t_start: float = ts_data[0].x
+	var t_end: float = ts_data[-1].x
+
+	# How much is the difference between t_start and t_min, just slice the starting point of t_min
+	# self._handle_data_fetching()
+	var k: int = floor(int((t_min - t_start)/approx_sample_t))
+
+	# Due to the above implementation being an approximation, if the approximate sample time is slightly off,
+	# we will fail to get an accurate position of where the min element lives, so the following implementation
+	# attempts to correct for this
+	# self.log(LOG_INFO, [t_min, t_start, approx_sample_t, k])
+	var cmp_t: float = ts_data[k].x
+	var cmp_t_diff: float = abs(cmp_t - t_min)
+	k_extra_slice = cmp_t_diff / approx_sample_t
 
 func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVector2Array:
 
@@ -89,11 +109,23 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	# rate, potentially due to latency of the communication (e.g. via telemetry) whereby at certain point of time,
 	# you may get a burst of data at once, if the timestamp is handled by the server, will throw off the
 	# below calculations
-	if (approx_sample_t == null or approx_sample_t == 0):
-		var n_iter: int = n_sampling - 1
-		for i in range(n_iter):
-			approx_sample_t += (ts_data[i + 1].x - ts_data[i].x)
-		approx_sample_t = approx_sample_t / (n_iter)
+	# if (approx_sample_t == null or approx_sample_t == 0):
+	# 	var n_iter: int = n_sampling - 1
+	# 	for i in range(n_iter):
+	# 		approx_sample_t += (ts_data[i + 1].x - ts_data[i].x)
+	# 	approx_sample_t = approx_sample_t / (n_iter)
+
+	# Moving average of approximating the sample time of the data
+	# var n_iter: int = n_sampling - 1
+	# for i in range(n_iter):
+	# 	approx_sample_t += ts_data[-1 - i].x - ts_data[-2 - i].x
+	# approx_sample_t = approx_sample_t / n_iter
+
+	# BUGFIX (Khalid): The main reason why I am leaving to this implementation for now is due to the
+	# fact that when you start zooming into the t-axis, it will cause an "out of bound" error
+	# since the calculation is just not good enough
+	approx_sample_t = 1.0/60.0
+	self.log(LOG_INFO, ["Approximate sample t:", approx_sample_t])
 
 	var t_min: float = t_range.x
 	var t_max: float = t_range.y
@@ -102,9 +134,6 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	var t_end: float = ts_data[-1].x
 
 	var n_slice_length: int = int(t_diff / approx_sample_t)
-
-	# log_print(DEBUG, ["Data size before processed: ", ts_data.size()])
-	# log_print(DEBUG, ["(t_min, t_max): ", "(", t_min, ", ", t_max, ")", "(t_start, t_end): ", t_start, ", ", t_end])
 
 	# # TODO (Khalid): Figure out a clean way to do this
 	if (t_start >= t_min and t_end <= t_max):
@@ -153,15 +182,18 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 			# Clipping handles the excess, but this has better performance than drawing the whole plot outside the boundary
 			k_lower_slice = 0
 			ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
-			# log_print(DEBUG, ["Head in, Tail out"])
+			self.log(LOG_DEBUG, ["Head in, Tail out"])
 		
 		DataFetchMode.HEAD_OUT_TAIL_IN:
 			# How much is the difference between t_start and t_min, just slice the starting point of t_min
+			# self._handle_data_fetching()
+			self._handle_data_fetching(ts_data, t_range)
 			var k: int = floor(int((t_min - t_start)/approx_sample_t))
 
 			# Due to the above implementation being an approximation, if the approximate sample time is slightly off,
 			# we will fail to get an accurate position of where the min element lives, so the following implementation
 			# attempts to correct for this
+			# self.log(LOG_INFO, [t_min, t_start, approx_sample_t, k])
 			var cmp_t: float = ts_data[k].x
 			var cmp_t_diff: float = abs(cmp_t - t_min)
 			k_extra_slice = cmp_t_diff / approx_sample_t
@@ -176,11 +208,13 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 			self.log(LOG_DEBUG, ["Head out, tail in"])
 
 		DataFetchMode.OVERFLOW_BOTH_ENDS:
+			# self._handle_data_fetching()
 			var k: int = floor(((t_min - ts_data[0].x)/approx_sample_t))
 
 			# Due to the above implementation being an approximation, if the approximate sample time is slightly off,
 			# we will fail to get an accurate position of where the min element lives, so the following implementation
 			# attempts to correct for this
+			# self.log(LOG_INFO, [t_min, t_start, approx_sample_t, k])
 			var cmp_t: float = ts_data[k].x
 			var cmp_t_diff: float = abs(cmp_t - t_min)
 			k_extra_slice = cmp_t_diff / approx_sample_t
@@ -190,15 +224,14 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 				k = 0
 
 			ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
-			# print("Overflow")
+			self.log(LOG_DEBUG, ["Overflow both ends"])
 
 		DataFetchMode.BOTH_OUTSIDE:
 			ts_data = PackedVector2Array()
-			# log_print(DEBUG, ["Both outside"])
+			self.log(LOG_DEBUG, ["Both outside"])
 
 		DataFetchMode.NOT_IMPLEMENTED:
-			pass
-			# print("Not implemented")
+			self.log(LOG_DEBUG, ["Not implemented"])
 	
 	return ts_data
 
@@ -242,8 +275,8 @@ func _draw() -> void:
 		draw_line(pixel_data_points[i - 1], pixel_data_points[i], Color.RED, 0.5, true)
 		# TODO (Khalid): Circle should only be drawn when it is at a certain window size
 		# I am not sure why but drawing a circle is very taxing, maybe due to how it is implemeted
-		if (pixel_data_points.size() < 250):
-			draw_circle(pixel_data_points[i], 4, Color.RED)
+		#if (pixel_data_points.size() < 250):
+			#draw_circle(pixel_data_points[i], 4, Color.RED)
 
 func _input(event: InputEvent) -> void:
 

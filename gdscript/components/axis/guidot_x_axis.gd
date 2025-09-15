@@ -23,6 +23,8 @@ func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node:
 	self.offset_bottom = plot_frame_node.offset_bottom + self.axis_height
 
 func _draw_ticks() -> void:
+	
+	# This implementation is for a fixed grid
 	self.ticks_pos = PackedVector2Array()
 	var tick_y_pos: int = self.top_left().y
 	var axis_frame_size: Vector2 = self.get_component_size()
@@ -44,6 +46,14 @@ func _draw_ticks() -> void:
 		var tick_label_y_pos: int = tick_y_pos + tick_label_y_offset
 		var tick_label: String = "{val}".format({"val":"%0.2f" % (self.min_val + i * tick_interval)})
 		self.draw_string(self.get_theme_default_font(), Vector2(tick_label_x_pos, tick_label_y_pos), tick_label, 0, -1, self.font_size, self.line_color)
+
+	# if (buffer mode is realtime):
+	# 	what is the user specified t axis range? 10s? 20s?
+	# 	from the range, what is a reasonable multiples we can induce? best that we consider only numbers that are even
+	# 	how many ticks would be as a result of this? eg 10s with multiples of 2s gives you 5 ticks
+		
+	# 	for (number of ticks):
+	# 		from the data, based on the range, 
 
 func draw_x_axis() -> void:
 	# Draw the vertical line of the x-axis 

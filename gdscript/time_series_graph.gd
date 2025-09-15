@@ -175,6 +175,7 @@ func _on_t_axis_changed() -> void:
 	t_axis_min = t_axis_node.min_val
 	t_axis_max = t_axis_node.max_val
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
+	self.log(LOG_INFO, ["t axis changed: ", t_axis_min, t_axis_max])
 	plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 
 func _on_y_axis_changed() -> void:
@@ -204,6 +205,7 @@ func _input(event: InputEvent) -> void:
 	var moving_mode_flag: bool = true
 	self._move_display(event, moving_mode_flag)
 
+
 func _process(delta: float) -> void:
 	self._move_display_process()
 
@@ -212,7 +214,17 @@ func _process(delta: float) -> void:
 
 		Graph_Buffer_Mode.FIXED:
 			pass
-		
+	
+		# When handling real-time data, we want to be able to update the last tick to always be incrementing
+		# based on the last value data it receives, but to make a smooth sliding window, we will have to
+		# smoothly shift the ticks in between the min and max value
+		# In principle, the min val should stay constant unless the user specifies any desired min axis value,
+		# and the max axis value will keep moving
 		Graph_Buffer_Mode.REALTIME:
-			if (mavlink_node.data[-1].x > t_axis_node.max_val):
+			var moving_max_tick: bool = mavlink_node.data[-1].x > t_axis_node.max_val
+			if (moving_max_tick):
+				# Set the max axis value to be the last data point
 				t_axis_node.set_max(mavlink_node.data[-1].x)
+				# t_axis_node.set_min(mavlink_node.data[-1].x - _sliding_window_s)
+
+				# From here onwards, we have to do a lot of checks
