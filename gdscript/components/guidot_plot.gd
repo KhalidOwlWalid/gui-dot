@@ -18,7 +18,7 @@ enum DataFetchMode {
 }
 
 var approx_sample_t: float
-@onready var n_sampling: int = 200
+@onready var n_sampling: int = 100
 @onready var data_fetching_mode: DataFetchMode = DataFetchMode.BOTH_INSIDE
 
 # Axis properties
@@ -37,6 +37,8 @@ func _ready() -> void:
 	test_popup.hide_on_checkable_item_selection = false
 	test_popup.hide_on_item_selection = false
 	test_popup.hide_on_state_item_selection = false
+
+	self.set_component_tag_name("PLOT")
 
 	# Use the guidot common mouse entered implementation
 	self.mouse_entered.connect(self._on_mouse_entered)
@@ -108,22 +110,11 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	# rate, potentially due to latency of the communication (e.g. via telemetry) whereby at certain point of time,
 	# you may get a burst of data at once, if the timestamp is handled by the server, will throw off the
 	# below calculations
-	# if (approx_sample_t == null or approx_sample_t == 0):
-	# 	var n_iter: int = n_sampling - 1
-	# 	for i in range(n_iter):
-	# 		approx_sample_t += (ts_data[i + 1].x - ts_data[i].x)
-	# 	approx_sample_t = approx_sample_t / (n_iter)
-
 	# Moving average of approximating the sample time of the data
 	var n_iter: int = n_sampling - 1
 	for i in range(n_iter):
 		approx_sample_t += ts_data[-1 - i].x - ts_data[-2 - i].x
 	approx_sample_t = approx_sample_t / n_iter
-
-	# BUGFIX (Khalid): The main reason why I am leaving to this implementation for now is due to the
-	# fact that when you start zooming into the t-axis, it will cause an "out of bound" error
-	# since the calculation is just not good enough
-	# approx_sample_t = 1.0/60.0
 
 	var t_min: float = t_range.x
 	var t_max: float = t_range.y
@@ -134,6 +125,7 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	var n_slice_length: int = int(t_diff / approx_sample_t)
 
 	# # TODO (Khalid): Figure out a clean way to do this
+	self.log(LOG_DEBUG, [t_start, t_min, t_end, t_max])
 	if (t_start >= t_min and t_end <= t_max):
 		self.data_fetching_mode = DataFetchMode.BOTH_INSIDE
 	elif (t_start <= t_min and t_end <= t_min):
@@ -142,7 +134,7 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 		self.data_fetching_mode = DataFetchMode.HEAD_IN_TAIL_OUT
 	elif (t_start <= t_min and t_end <= t_max):
 		self.data_fetching_mode = DataFetchMode.HEAD_OUT_TAIL_IN
-	elif (t_start <= t_min and t_end >= t_max):
+	elif (t_start <= t_min and t_end > t_max):
 		self.data_fetching_mode = DataFetchMode.OVERFLOW_BOTH_ENDS
 	else:
 		# In the case that there are conditions I did not capture
@@ -167,13 +159,17 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	# For instance, if the first element is of n = 9, n - 10, equals to -1, which causes the the slicing to begin at -1
 	var k_extra_slice 
 	var k_lower_slice: int
+	var k_upper_slice: int
 	match self.data_fetching_mode:
 
 		DataFetchMode.BOTH_INSIDE:
 			# Just draw the current dataset
-			# log_print(DEBUG, ["Both inside"])
-			pass
+			self.log(LOG_DEBUG, ["Both inside"])
 
+		# BUGFIX (Khalid): Currently there is a bug where if I zoom in and out of the y-axis, it actually causes
+		# the plot to lag behind (as if it is not fetching enough data). To replicate this, try zooming in and out
+		# on the y-axis, and do the same on x-axis multiple times, it will go into head in, tail out condition
+		# which I think should never occur in the first place
 		DataFetchMode.HEAD_IN_TAIL_OUT:
 			var k: int = int((t_max - t_start)/approx_sample_t)
 			# n_slice_length ensures we are grabbing slight more then enough data to avoid discontinuity
@@ -212,57 +208,57 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 					k_lower_slice = 0
 
 				# We do not return data that is out of screen, only render what is necessary to avoid drawing clipped data
-				ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
+				# BUGFIX (Khalid): This does not slice enough data which when redrawn, the last few points wasn't drawn, so
+				# it looks like its lagging behind, this is the same as the overflow implementation
+				ts_data = ts_data.slice(k_lower_slice, ts_data.size())
 
 			self.log(LOG_DEBUG, ["Head out, tail in"])
 
 		DataFetchMode.OVERFLOW_BOTH_ENDS:
-			# self._handle_data_fetching()
-			var k: int = floor(((t_min - ts_data[0].x)/approx_sample_t))
+			# This helps us determine the number of data that has overflown
+			var k_min: int = floor(((t_min - t_start)/approx_sample_t))
+			var k_max: int = floor(((t_end - t_max)/approx_sample_t))
 
 			# Due to the above implementation being an approximation, if the approximate sample time is slightly off,
 			# we will fail to get an accurate position of where the min element lives, so the following implementation
 			# attempts to correct for this
-			# self.log(LOG_INFO, [t_min, t_start, approx_sample_t, k])
-			# assert(k <= ts_data.size(), "k is larger than the dataset. Out of bound error will occur")
-
-			# var nearest_t_min: float
-			# if (k >= ts_data.size()):
-			# 	var last_t: float = ts_data[-1].x
-			# 	# This time around, using the approximated time, calculated backwards to precisely find
-			# 	# the nearest time to t_min
-			# 	nearest_t_min = ts_data[-n_slice_length].x
-
-			# var cmp_t: float = ts_data[k].x
-			# var cmp_t_diff: float = abs(cmp_t - t_min)
-			# k_extra_slice = cmp_t_diff / approx_sample_t
-
-			# k_lower_slice = k - k_extra_slice
-			# if (k_lower_slice < 0):
-			# 	k = 0
-
-			# ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
-
 			# In the case that the approximation fails, then we would have to manually find where the t_min is in the dataset
 			var nearest_t_min: float
-			if (k >= ts_data.size()):
-				var last_t: float = ts_data[-1].x
-				# This time around, using the approximated time, calculated backwards to precisely find
+			if (k_min >= ts_data.size()):
+				# This time around, using the approximated time, calculated back_minwards to precisely find
 				# the nearest time to t_min
 				nearest_t_min = ts_data[-n_slice_length].x
 				ts_data = ts_data.slice(-n_slice_length, ts_data.size())
 			else:
-				var cmp_t: float = ts_data[k].x
+				var cmp_t: float = ts_data[k_min].x
 				var cmp_t_diff: float = abs(cmp_t - t_min)
 				k_extra_slice = cmp_t_diff / approx_sample_t
 				
 				# Handles cases where it will cause a negative output, see notes above
-				k_lower_slice = k - k_extra_slice
+				k_lower_slice = k_min - k_extra_slice
 				if (k_lower_slice < 0):
 					k_lower_slice = 0
 
+				k_upper_slice = k_min + n_slice_length
+
+				# Ensure we handle out of bound errors
+				if (k_upper_slice >= ts_data.size()):
+					k_upper_slice = ts_data.size()
+
+				# Assert that we are sure that the slice gives us more than enough data to drawn
+				# within the frame, if not, we will have "discontinuity" since we are not slicing enough data
+				# and this will cause our graph to look as if it is lagging
+				elif (ts_data[k_upper_slice].x > t_max):
+					pass
+				else:
+					cmp_t = ts_data[k_upper_slice].x
+					cmp_t_diff = abs(t_max - cmp_t)
+					k_extra_slice = cmp_t_diff / approx_sample_t
+
+				k_upper_slice = k_upper_slice + k_extra_slice
+
 				# We do not return data that is out of screen, only render what is necessary to avoid drawing clipped data
-				ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
+				ts_data = ts_data.slice(k_lower_slice, k_upper_slice)
 
 			self.log(LOG_DEBUG, ["Overflow both ends"])
 

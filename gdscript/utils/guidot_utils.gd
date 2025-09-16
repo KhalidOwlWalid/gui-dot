@@ -38,4 +38,4 @@ static func add_action_with_keycode(action, key):
 	event.physical_keycode = key
 	InputMap.add_action(action)
 	InputMap.action_add_event(action, event)
-	Guidot_Log.gd_log(LOG_INFO, [action, " hotkeys registered"])
+	Guidot_Log.gd_log(LOG_INFO, "UTILS", [action, " hotkeys registered"])

@@ -1,4 +1,4 @@
-@tool
+# @tool
 class_name Guidot_T_Series_Graph
 extends Guidot_Common
 
@@ -36,7 +36,7 @@ var window_color: Color
 @onready var _is_pause: bool = false
 
 @export_group("X-Axis")
-@export var t_axis_min: float = 0
+@export var t_axis_min: float = 1
 @export var t_axis_max: float = 30
 @export var x_number_of_ticks: int = 10
 
@@ -105,6 +105,7 @@ func _ready() -> void:
 	self.clip_contents = true
 	self.size = default_window_size
 	self.color = default_window_color
+	self._component_tag = "DISPLAY"
 	
 	# Add child node for the graph
 	init_plot_node()
@@ -165,6 +166,9 @@ func _on_display_frame_resized() -> void:
 ########################################
 func _on_data_received() -> void:
 	if (not self._is_pause):
+		t_axis_min = t_axis_node.min_val
+		t_axis_max = t_axis_node.max_val
+		self.log(LOG_DEBUG, ["Inside on data received: ", Vector2(t_axis_min, t_axis_max)])
 		plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 		queue_redraw()
 
@@ -175,13 +179,14 @@ func _on_t_axis_changed() -> void:
 	t_axis_min = t_axis_node.min_val
 	t_axis_max = t_axis_node.max_val
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
-	self.log(LOG_INFO, ["t axis changed: ", t_axis_min, t_axis_max])
+	self.log(LOG_DEBUG, ["Inside on t axis changed: ", Vector2(t_axis_min, t_axis_max)])
 	plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 
 func _on_y_axis_changed() -> void:
 	y_axis_min = y_axis_node.min_val
 	y_axis_max = y_axis_node.max_val
 	plot_node.update_y_ticks_properties(y_axis_node.n_steps, y_axis_node.ticks_pos)
+	self.log(LOG_DEBUG, ["Inside on y axis changed: ", Vector2(y_axis_min, y_axis_max)])
 	plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 
 func _nerd_stats_panel_update():

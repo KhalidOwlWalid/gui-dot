@@ -88,6 +88,7 @@ func _ready() -> void:
 	self.last_box_color = self.color
 	self.last_line_color = self.line_color
 	font_size = 10
+	self.set_component_tag_name("AXIS")
 
 	self._setup_axis_config_menu()
 	

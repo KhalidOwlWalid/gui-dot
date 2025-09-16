@@ -23,6 +23,7 @@ enum Origin {
 @onready var _drag_direction: Vector2 = Vector2()
 @onready var _is_dragging: bool = false
 @onready var _dragging_distance: float = 0
+@onready var _component_tag: String = "COMP_TAG"
 
 func _on_mouse_entered() -> void:
 	self._mouse_in = true
@@ -98,6 +99,9 @@ func setup_center_anchor(x_size: int, y_size) -> void:
 	self.set_offset(SIDE_TOP, -y_size)
 	self.set_offset(SIDE_BOTTOM, y_size)
 
+func set_component_tag_name(tag_name: String) -> void:
+	self._component_tag = tag_name
+
 # This is placed inside Guidot_Common since I want each child to be able to use this
 func _move_display(event: InputEvent, in_moving_mode: bool) -> void:
 	# Simple implementation of moving the window during runtime
@@ -124,4 +128,4 @@ func _move_display_process() -> void:
 		self.position = _new_position
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
-	Guidot_Log.gd_log(log_level, msg)
+	Guidot_Log.gd_log(log_level, self._component_tag, msg)
