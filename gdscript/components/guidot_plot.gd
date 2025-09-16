@@ -250,6 +250,8 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 				# and this will cause our graph to look as if it is lagging
 				elif (ts_data[k_upper_slice].x > t_max):
 					pass
+				# This implementation is similar like k_lower_slice implementation but the other way around,
+				# to ensure we capture enough data to draw within the frame
 				else:
 					cmp_t = ts_data[k_upper_slice].x
 					cmp_t_diff = abs(t_max - cmp_t)

@@ -28,4 +28,4 @@ func _ready() -> void:
 	self.log(LOG_INFO, ["Hello from Guidot Master"])
 
 func _process(delta: float) -> void:
-	var vec2_array: Array = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+	pass
