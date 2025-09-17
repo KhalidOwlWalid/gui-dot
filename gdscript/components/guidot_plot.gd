@@ -293,16 +293,16 @@ func update_y_ticks_properties(n_ticks: int, ticks_pos: PackedVector2Array) -> v
 	n_y_ticks = n_ticks
 
 func _draw_vertical_grids(n_ticks: int, ticks_pos: PackedVector2Array, grid_color: Color) -> void:
-	for i in range(n_ticks + 1):
+	for i in range(ticks_pos.size()):
 		draw_line(Vector2(ticks_pos[i].x, self.bottom_right().y), Vector2(ticks_pos[i].x, self.top_right().y), grid_color, -1, true)
 
 func _draw_horizontal_grids(n_ticks: int, ticks_pos: PackedVector2Array, grid_color: Color) -> void:
-	for i in range(n_ticks):
+	for i in range(ticks_pos.size()):
 		draw_line(Vector2(self.top_left().x, ticks_pos[i].y), Vector2(self.top_right().x, ticks_pos[i].y), grid_color, -1, true)
 	
 # Handle data line drawing here
 func _draw() -> void:
-	# _draw_vertical_grids(n_x_ticks, x_ticks_pos, Guidot_Utils.color_dict["gd_grey"])
+	_draw_vertical_grids(n_x_ticks, x_ticks_pos, Guidot_Utils.color_dict["gd_grey"])
 	_draw_horizontal_grids(n_y_ticks, y_ticks_pos, Guidot_Utils.color_dict["gd_grey"])
 	for i in range(1, pixel_data_points.size()):
 		draw_line(pixel_data_points[i - 1], pixel_data_points[i], Color.RED, 0.5, true)
