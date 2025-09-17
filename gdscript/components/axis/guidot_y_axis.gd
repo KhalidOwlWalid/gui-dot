@@ -25,22 +25,30 @@ func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node:
 	self.offset_bottom = plot_frame_node.offset_bottom
 
 func _draw_ticks() -> void:
+	
+	# Clear the axis to draw new ones
+	self.ticks_pos.clear()
+
 	var tick_x_pos: int = self.top_right().x
 	var axis_frame_size: Vector2 = self.get_component_size()
 	var increments: int  = axis_frame_size.y / n_steps
-	var tick_interval: float = (self.max_val - self.min_val) / n_steps
+	var tick_interval: float = (self.max_val - self.min_val) / self.n_steps
+
+	var tick_label_offset: Vector2 = Vector2(-25, 5)
 	for i in range(n_steps + 1):
 		var tick_y_pos: int = self.top_right().y + i * increments
-		draw_line(Vector2(tick_x_pos, tick_y_pos), Vector2(tick_x_pos - self.tick_length, tick_y_pos), self.line_color, 1.0, true)
-		self.ticks_pos.append(Vector2(tick_x_pos, tick_y_pos))
+		# draw_line(Vector2(tick_x_pos, tick_y_pos), Vector2(tick_x_pos - self.tick_length, tick_y_pos), self.line_color, 1.0, true)
+		var curr_tick_pixel_pos: Vector2 = Vector2(tick_x_pos, tick_y_pos)
 
-		var tick_label_x_offset = -25
-		var tick_label_y_offset = 2
-		var tick_label_x_pos: int = tick_x_pos + tick_label_x_offset
-		var tick_label_y_pos: int = tick_y_pos + tick_label_y_offset
+		# var tick_label_x_offset = -25
+		# var tick_label_y_offset = 2
+		# var tick_label_x_pos: int = tick_x_pos + tick_label_offset.x
+		# var tick_label_y_pos: int = tick_y_pos + tick_label_offset.y
+		# self.draw_string(self.get_theme_default_font(), tick_label_offset, \
+		# 	tick_label, 0, -1, self.font_size, self.line_color, 3, 0, 0)
+		
 		var tick_label: String = "{val}".format({"val":"%0.2f" % (self.max_val - i * tick_interval)})
-		self.draw_string(self.get_theme_default_font(), Vector2(tick_label_x_pos, tick_label_y_pos), \
-			tick_label, 0, -1, self.font_size, self.line_color, 3, 0, 0)
+		self._draw_single_tick_with_label(curr_tick_pixel_pos, tick_label, self.get_theme_default_font(), self.font_size, self.line_color, tick_label_offset)
 
 func draw_y_axis() -> void:
 	# Draw the vertical line of the x-axis 

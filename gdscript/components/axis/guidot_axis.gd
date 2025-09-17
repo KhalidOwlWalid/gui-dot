@@ -78,6 +78,19 @@ func _setup_axis_config_menu() -> void:
 	_axis_config_popup.hide_on_item_selection = false
 	_axis_config_popup.hide_on_state_item_selection = false
 
+# NOTE: If you use this function, please call "self.ticks_pos.clear()" to clear the old axis ticks, so we can draw new ones
+func _draw_single_tick_with_label(tick_pos: Vector2, label: String, font_type: Font, font_size: float, color: Color, label_offset: Vector2) -> void:
+
+	# Last tick position
+	var tick_label_x_pos: int = tick_pos.x + label_offset.x
+	var tick_label_y_pos: int = tick_pos.y + label_offset.y
+	
+	# This needs to be updated here to make sure that our plot is aware of the number of ticks we have
+	# It will use this as reference to draw its grids!
+	self.ticks_pos.append(tick_pos)
+	draw_line(tick_pos, Vector2(tick_pos.x, tick_pos.y + self.tick_length), color, 1.0, true)
+	self.draw_string(font_type, Vector2(tick_label_x_pos, tick_label_y_pos), label, 0, -1, font_size, color)
+
 
 func _ready() -> void:
 	# Override this if necessary

@@ -233,7 +233,7 @@ func _process(delta: float) -> void:
 				if (moving_max_tick):
 					# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
 					# even number
-					t_axis_node.set_max(mavlink_node.data[-1].x)
 					t_axis_node.set_min(mavlink_node.data[-1].x - t_axis_node._sliding_window_s)
+					t_axis_node.set_max(mavlink_node.data[-1].x)
 
 					# From here onwards, we have to do a lot of checks

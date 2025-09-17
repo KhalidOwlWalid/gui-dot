@@ -23,13 +23,6 @@ func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node:
 	self.offset_top = plot_frame_node.offset_bottom
 	self.offset_bottom = plot_frame_node.offset_bottom + self.axis_height
 
-func _draw_single_tick_with_label(tick_pos: Vector2, label: String, font_type: Font, font_size: float, color: Color, label_offset: Vector2) -> void:
-	# Last tick position
-	var tick_label_x_pos: int = tick_pos.x - label_offset.x
-	var tick_label_y_pos: int = tick_pos.y + label_offset.y
-	draw_line(tick_pos, Vector2(tick_pos.x, tick_pos.y + self.tick_length), color, 1.0, true)
-	self.draw_string(font_type, Vector2(tick_label_x_pos, tick_label_y_pos), label, 0, -1, font_size, color)
-
 func _draw_ticks() -> void:
 	
 	# This implementation is for a fixed grid

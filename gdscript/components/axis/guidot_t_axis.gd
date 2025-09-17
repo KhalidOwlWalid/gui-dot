@@ -12,8 +12,8 @@ func _draw_ticks() -> void:
 	# Clear up the ticks so we can redraw them
 	self.ticks_pos.clear()
 
-	# self.max_val, self.min_val
 	var t_increment: float = 5
+	# This calculation helps us re-shift the ticks to the correct multiples for the axis
 	var t1: float = ceil(self.min_val/t_increment) * t_increment
 	var t2: float = floor(self.max_val/t_increment) * t_increment
 	self.n_steps = (t2 - t1)/t_increment
@@ -23,18 +23,19 @@ func _draw_ticks() -> void:
 	var tick_label_offset = Vector2(5, 20)
 	for i in range(self.n_steps + 1):
 		var curr_tick_val: float = i * t_increment + t1
-		t_ticks_val.append(curr_tick_val)
+		
+		# Find the pixel position of the tick on the x-axis
 		var x_tick_pos: float = remap(curr_tick_val, self.min_val, self.max_val, self.top_left().x, self.top_right().x)
 		var curr_tick_pixel_pos: Vector2 = Vector2(x_tick_pos, self.top_right().y)
 		tick_label = "{val}".format({"val":"%0.2f" % (curr_tick_val)})
 		self._draw_single_tick_with_label(curr_tick_pixel_pos, tick_label, self.get_theme_default_font(), self.font_size, self.line_color, tick_label_offset) 
-		self.log(LOG_DEBUG, [curr_tick_val, self.min_val, self.max_val, self.top_left().x, self.top_right().x, x_tick_pos])
+
+	# First tick position
+	var first_tick_pos: Vector2 = self.top_left()
+	tick_label = "{val}".format({"val":"%0.2f" % (self.min_val)})
+	self._draw_single_tick_with_label(first_tick_pos, tick_label, self.get_theme_default_font(), self.font_size, self.line_color, tick_label_offset) 
 
 	# Last tick position
 	var last_tick_pos: Vector2 = self.top_right()
 	tick_label = "{val}".format({"val":"%0.2f" % (self.max_val)})
 	self._draw_single_tick_with_label(last_tick_pos, tick_label, self.get_theme_default_font(), self.font_size, self.line_color, tick_label_offset) 
-
-	last_tick_pos = self.top_left()
-	tick_label = "{val}".format({"val":"%0.2f" % (self.min_val)})
-	self._draw_single_tick_with_label(self.top_left(), tick_label, self.get_theme_default_font(), self.font_size, self.line_color, tick_label_offset) 
