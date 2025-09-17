@@ -29,3 +29,4 @@ func _mouse_cursor_data(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	_mouse_cursor_data(delta)
+	# pass

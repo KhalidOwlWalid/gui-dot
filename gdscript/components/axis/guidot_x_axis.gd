@@ -23,38 +23,39 @@ func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node:
 	self.offset_top = plot_frame_node.offset_bottom
 	self.offset_bottom = plot_frame_node.offset_bottom + self.axis_height
 
+func _draw_single_tick_with_label(tick_pos: Vector2, label: String, font_type: Font, font_size: float, color: Color, label_offset: Vector2) -> void:
+	# Last tick position
+	var tick_label_x_pos: int = tick_pos.x - label_offset.x
+	var tick_label_y_pos: int = tick_pos.y + label_offset.y
+	draw_line(tick_pos, Vector2(tick_pos.x, tick_pos.y + self.tick_length), color, 1.0, true)
+	self.draw_string(font_type, Vector2(tick_label_x_pos, tick_label_y_pos), label, 0, -1, font_size, color)
+
 func _draw_ticks() -> void:
 	
 	# This implementation is for a fixed grid
-	self.ticks_pos = PackedVector2Array()
-	var tick_y_pos: int = self.top_left().y
-	var axis_frame_size: Vector2 = self.get_component_size()
-	var increments: int  = axis_frame_size.x / n_steps
-	var tick_interval: float = (self.max_val - self.min_val) / n_steps
+	# self.ticks_pos = PackedVector2Array()
+	# var tick_y_pos: int = self.top_left().y
+	# var axis_frame_size: Vector2 = self.get_component_size()
+	# self.n_steps = 5
+	# var increments: int  = axis_frame_size.x / n_steps
+	# var tick_interval: float = (self.max_val - self.min_val) / n_steps
 
-	for i in range(n_steps + 1):
-		var tick_x_pos: int = self.top_left().x + i * increments
-		draw_line(Vector2(tick_x_pos, tick_y_pos), Vector2(tick_x_pos, tick_y_pos + self.tick_length), self.line_color, 1.0, true)
-		self.ticks_pos.append(Vector2(tick_x_pos, tick_y_pos))
+	# for i in range(n_steps + 1):
+	# 	var tick_x_pos: int = self.top_left().x + i * increments
+	# 	draw_line(Vector2(tick_x_pos, tick_y_pos), Vector2(tick_x_pos, tick_y_pos + self.tick_length), self.line_color, 1.0, true)
+	# 	self.ticks_pos.append(Vector2(tick_x_pos, tick_y_pos))
 
-		# Bugfix (Khalid): Idk why tf I cant define this as a @onready var, everytime I do, the system complains "bad address index"???
-		# This error causes the axis to not build, but y axis is fine, although it is the same implementation
-		# However, if you run the scene, it draws the axis fine?
-		# n count of me crashing out from this error: 20 WATAFAK
-		var tick_label_x_offset = 5
-		var tick_label_y_offset = 20
-		var tick_label_x_pos: int = tick_x_pos - tick_label_x_offset
-		var tick_label_y_pos: int = tick_y_pos + tick_label_y_offset
-		var tick_label: String = "{val}".format({"val":"%0.2f" % (self.min_val + i * tick_interval)})
-		self.draw_string(self.get_theme_default_font(), Vector2(tick_label_x_pos, tick_label_y_pos), tick_label, 0, -1, self.font_size, self.line_color)
-
-	# if (buffer mode is realtime):
-	# 	what is the user specified t axis range? 10s? 20s?
-	# 	from the range, what is a reasonable multiples we can induce? best that we consider only numbers that are even
-	# 	how many ticks would be as a result of this? eg 10s with multiples of 2s gives you 5 ticks
-		
-	# 	for (number of ticks):
-	# 		from the data, based on the range, 
+	# 	# Bugfix (Khalid): Idk why tf I cant define this as a @onready var, everytime I do, the system complains "bad address index"???
+	# 	# This error causes the axis to not build, but y axis is fine, although it is the same implementation
+	# 	# However, if you run the scene, it draws the axis fine?
+	# 	# n count of me crashing out from this error: 20 WATAFAK
+	# 	var tick_label_x_offset = 5
+	# 	var tick_label_y_offset = 20
+	# 	var tick_label_x_pos: int = tick_x_pos - tick_label_x_offset
+	# 	var tick_label_y_pos: int = tick_y_pos + tick_label_y_offset
+	# 	var tick_label: String = "{val}".format({"val":"%0.2f" % (self.min_val + i * tick_interval)})
+	# 	self.draw_string(self.get_theme_default_font(), Vector2(tick_label_x_pos, tick_label_y_pos), tick_label, 0, -1, self.font_size, self.line_color)
+	pass
 
 func draw_x_axis() -> void:
 	# Draw the vertical line of the x-axis 

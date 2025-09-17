@@ -74,11 +74,6 @@ func _map_data_to_pixel(data_points: PackedVector2Array, t_axis_range: Vector2, 
 		var y_pixel_coords: int = remap(data_points[i].y, y_axis_min, y_axis_max, self.get_component_size().y, 0)
 		pixel_data_points.append(Vector2(x_pixel_coords, y_pixel_coords))
 
-# Note (Khalid): For now, this data handles relative timestamps. Will need to implement absolute timestamps or time since epoch later on.
-# This function obtains the index of t_start and t_end
-func _find_data_between(ts_data: PackedVector2Array, t_start: float, t_end: float) -> Vector2:
-	return Vector2()
-
 # TODO (Khalid): The lower the value of the approximated sample time, the higher the k value
 # This will cause out of bound error due to errors in the approximation calculation
 # We need to be able to handle this, and if that happens, then we reverse find which datapoint is what we need
@@ -297,17 +292,17 @@ func update_y_ticks_properties(n_ticks: int, ticks_pos: PackedVector2Array) -> v
 	y_ticks_pos = ticks_pos
 	n_y_ticks = n_ticks
 
-func _draw_vertical_grids(n_ticks: int, ticks_pos: PackedVector2Array, color: Color) -> void:
+func _draw_vertical_grids(n_ticks: int, ticks_pos: PackedVector2Array, grid_color: Color) -> void:
 	for i in range(n_ticks + 1):
-		draw_line(Vector2(ticks_pos[i].x, self.bottom_right().y), Vector2(ticks_pos[i].x, self.top_right().y), color, -1, true)
+		draw_line(Vector2(ticks_pos[i].x, self.bottom_right().y), Vector2(ticks_pos[i].x, self.top_right().y), grid_color, -1, true)
 
-func _draw_horizontal_grids(n_ticks: int, ticks_pos: PackedVector2Array, color: Color) -> void:
+func _draw_horizontal_grids(n_ticks: int, ticks_pos: PackedVector2Array, grid_color: Color) -> void:
 	for i in range(n_ticks):
-		draw_line(Vector2(self.top_left().x, ticks_pos[i].y), Vector2(self.top_right().x, ticks_pos[i].y), color, -1, true)
+		draw_line(Vector2(self.top_left().x, ticks_pos[i].y), Vector2(self.top_right().x, ticks_pos[i].y), grid_color, -1, true)
 	
 # Handle data line drawing here
 func _draw() -> void:
-	_draw_vertical_grids(n_x_ticks, x_ticks_pos, Guidot_Utils.color_dict["gd_grey"])
+	# _draw_vertical_grids(n_x_ticks, x_ticks_pos, Guidot_Utils.color_dict["gd_grey"])
 	_draw_horizontal_grids(n_y_ticks, y_ticks_pos, Guidot_Utils.color_dict["gd_grey"])
 	for i in range(1, pixel_data_points.size()):
 		draw_line(pixel_data_points[i - 1], pixel_data_points[i], Color.RED, 0.5, true)

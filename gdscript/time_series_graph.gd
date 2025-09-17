@@ -46,7 +46,6 @@ var window_color: Color
 @export var y_number_of_ticks: int = 10
 
 var _current_buffer_mode: Graph_Buffer_Mode
-@onready var _sliding_window_s: float = 10
 
 var test_panel: Guidot_Panel
 
@@ -226,14 +225,15 @@ func _process(delta: float) -> void:
 		# In principle, the min val should stay constant unless the user specifies any desired min axis value,
 		# and the max axis value will keep moving
 		Graph_Buffer_Mode.REALTIME:
+			# If there is no data present at the moment, then we ignore it
 			if (mavlink_node.data.is_empty()):
 				pass
 			else:
 				var moving_max_tick: bool = mavlink_node.data[-1].x > t_axis_node.max_val
-			# If there is no data present at the moment, then we ignore it
 				if (moving_max_tick):
-					# Set the max axis value to be the last data point
+					# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
+					# even number
 					t_axis_node.set_max(mavlink_node.data[-1].x)
-					# t_axis_node.set_min(mavlink_node.data[-1].x - _sliding_window_s)
+					t_axis_node.set_min(mavlink_node.data[-1].x - t_axis_node._sliding_window_s)
 
 					# From here onwards, we have to do a lot of checks
