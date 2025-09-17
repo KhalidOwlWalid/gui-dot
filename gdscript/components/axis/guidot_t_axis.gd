@@ -5,7 +5,7 @@ extends Guidot_X_Axis
 # If we are plotting in real-time, then the plot will basically move like a sliding window
 # Hence, we override the _draw_ticks function from the Guidot_X_Axis class
 
-@onready var _sliding_window_s: float = 5
+@onready var _sliding_window_s: float = 10
 
 func _draw_ticks() -> void:
 
@@ -13,14 +13,15 @@ func _draw_ticks() -> void:
 	self.ticks_pos.clear()
 
 	# self.max_val, self.min_val
-	var t1: float = ceil(self.min_val)
-	var t2: float = floor(self.max_val)
-	var t_increment: float = (t2 - t1) / (self.n_steps - 1)
+	var t_increment: float = 5
+	var t1: float = ceil(self.min_val/t_increment) * t_increment
+	var t2: float = floor(self.max_val/t_increment) * t_increment
+	self.n_steps = (t2 - t1)/t_increment
 
 	var t_ticks_val: Array
 	var tick_label: String
 	var tick_label_offset = Vector2(5, 20)
-	for i in range(self.n_steps):
+	for i in range(self.n_steps + 1):
 		var curr_tick_val: float = i * t_increment + t1
 		t_ticks_val.append(curr_tick_val)
 		var x_tick_pos: float = remap(curr_tick_val, self.min_val, self.max_val, self.top_left().x, self.top_right().x)
