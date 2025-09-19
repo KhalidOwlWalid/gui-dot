@@ -273,11 +273,13 @@ func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_ra
 
 	var data: PackedVector2Array = data_points
 
+	self.log(LOG_DEBUG, ["Size of data before processed: ", data.size()])
 	# Pre-process the data that should be visible on the graph
 	if !(data_points.size() < n_sampling):
 		# We need at least 5 sets of data to be able to perform calculations for approximating the index of data we wish to plot
 		data = _data_processing(data, t_axis_range)
 
+	self.log(LOG_DEBUG, ["Size of data after processed: ", data.size()])
 	self._map_data_to_pixel(data, t_axis_range, y_axis_range)
 	queue_redraw()
 
@@ -308,8 +310,8 @@ func _draw() -> void:
 		draw_line(pixel_data_points[i - 1], pixel_data_points[i], Color.RED, 0.5, true)
 		# TODO (Khalid): Circle should only be drawn when it is at a certain window size
 		# I am not sure why but drawing a circle is very taxing, maybe due to how it is implemeted
-		if (pixel_data_points.size() < 250):
-			draw_circle(pixel_data_points[i], 4, Color.RED)
+		# if (pixel_data_points.size() < 250):
+		# 	draw_circle(pixel_data_points[i], 4, Color.RED)
 
 func _input(event: InputEvent) -> void:
 
