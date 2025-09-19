@@ -233,8 +233,12 @@ func _physics_process(delta: float) -> void:
 				if (true):
 					# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
 					# even number
+					# TODO (Khalid): Allow the user to use external clock source, the way that this is currently implemented
+					# is that the time series graph itself generates the clock, so if the user wish to plot and visualize
+					# their data in realtime, they will have to use Time.get_ticks_msec() function to have the correct
+					# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
+					# simply an increasing integer, or absolute or relative time etc.
 					var curr_s: float = float(Time.get_ticks_msec())/1000
-					self.log(LOG_DEBUG, [curr_s])
 					t_axis_node.set_min(curr_s - t_axis_node._sliding_window_s)
 					t_axis_node.set_max(curr_s)
 
