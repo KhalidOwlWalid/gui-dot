@@ -21,10 +21,11 @@ func _ready() -> void:
 
 func _mouse_cursor_data(delta: float) -> void:
 	var curr_ms: int = Time.get_ticks_msec()
+	var curr_s: float = float(curr_ms)/1000
 	if (curr_ms - last_update_ms > 10):
 		var relative_ms: int = curr_ms - init_ms
 		var curr_mouse_pos = self.get_viewport().get_mouse_position()
-		append_point(Vector2(float(relative_ms)/1000, curr_mouse_pos.x/1920))
+		append_point(Vector2(curr_s, curr_mouse_pos.x/1920))
 		last_update_ms = Time.get_ticks_msec()
 
 func _process(delta: float) -> void:

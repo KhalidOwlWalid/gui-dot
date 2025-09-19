@@ -23,7 +23,7 @@ var window_color: Color
 @onready var mavlink_node = get_node('../../Mavlink_Node')
 @onready var guidot_master_node = get_node('../../Guidot_Master_Node')
 
-@onready var default_window_size: Vector2 = Vector2(1720, 980)
+@onready var default_window_size: Vector2 = Vector2(620, 360)
 @onready var default_window_color: Color = color_dict["gd_black"]
 
 # Components used for building the graph 
@@ -210,7 +210,7 @@ func _input(event: InputEvent) -> void:
 	self._move_display(event, moving_mode_flag)
 
 
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	self._move_display_process()
 
 	# If the current buffer mode is fixed, then only update when the user changes the axis limits
@@ -230,10 +230,12 @@ func _process(delta: float) -> void:
 				pass
 			else:
 				var moving_max_tick: bool = mavlink_node.data[-1].x > t_axis_node.max_val
-				if (moving_max_tick):
+				if (true):
 					# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
 					# even number
-					t_axis_node.set_min(mavlink_node.data[-1].x - t_axis_node._sliding_window_s)
-					t_axis_node.set_max(mavlink_node.data[-1].x)
+					var curr_s: float = float(Time.get_ticks_msec())/1000
+					self.log(LOG_DEBUG, [curr_s])
+					t_axis_node.set_min(curr_s - t_axis_node._sliding_window_s)
+					t_axis_node.set_max(curr_s)
 
 					# From here onwards, we have to do a lot of checks
