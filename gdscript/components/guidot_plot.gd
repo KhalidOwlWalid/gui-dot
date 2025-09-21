@@ -320,6 +320,6 @@ func _input(event: InputEvent) -> void:
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			pass
 		
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			pass
-			# self._emit_focus_requested_signal()
+		if (self._mouse_in):
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				self._emit_focus_requested_signal()
