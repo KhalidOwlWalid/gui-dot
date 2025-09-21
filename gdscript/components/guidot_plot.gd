@@ -120,7 +120,6 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	var n_slice_length: int = int(t_diff / approx_sample_t)
 
 	# # TODO (Khalid): Figure out a clean way to do this
-	self.log(LOG_DEBUG, [t_start, t_min, t_end, t_max])
 	if (t_start >= t_min and t_end <= t_max):
 		self.data_fetching_mode = DataFetchMode.BOTH_INSIDE
 	elif (t_start <= t_min and t_end <= t_min):
@@ -159,7 +158,7 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 
 		DataFetchMode.BOTH_INSIDE:
 			# Just draw the current dataset
-			self.log(LOG_DEBUG, ["Both inside"])
+			self.log(LOG_DEBUG, ["DataFetchMode:", "Both inside"])
 
 		# BUGFIX (Khalid): Currently there is a bug where if I zoom in and out of the y-axis, it actually causes
 		# the plot to lag behind (as if it is not fetching enough data). To replicate this, try zooming in and out
@@ -171,7 +170,7 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 			# Clipping handles the excess, but this has better performance than drawing the whole plot outside the boundary
 			k_lower_slice = 0
 			ts_data = ts_data.slice(k_lower_slice, k + n_slice_length)
-			self.log(LOG_DEBUG, ["Head in, Tail out"])
+			self.log(LOG_DEBUG, ["DataFetchMode:", "Head in, Tail out"])
 		
 		DataFetchMode.HEAD_OUT_TAIL_IN:
 			# How much is the difference between t_start and t_min, just slice the starting point of t_min
@@ -207,7 +206,7 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 				# it looks like its lagging behind, this is the same as the overflow implementation
 				ts_data = ts_data.slice(k_lower_slice, ts_data.size())
 
-			self.log(LOG_DEBUG, ["Head out, tail in"])
+			self.log(LOG_DEBUG, ["DataFetchMode:", "Head out, tail in"])
 
 		DataFetchMode.OVERFLOW_BOTH_ENDS:
 			# This helps us determine the number of data that has overflown
@@ -257,14 +256,14 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 				# We do not return data that is out of screen, only render what is necessary to avoid drawing clipped data
 				ts_data = ts_data.slice(k_lower_slice, k_upper_slice)
 
-			self.log(LOG_DEBUG, ["Overflow both ends"])
+			self.log(LOG_DEBUG, ["DataFetchMode:", "Overflow both ends"])
 
 		DataFetchMode.BOTH_OUTSIDE:
 			ts_data = PackedVector2Array()
-			self.log(LOG_DEBUG, ["Both outside"])
+			self.log(LOG_DEBUG, ["DataFetchMode:", "Both outside"])
 
 		DataFetchMode.NOT_IMPLEMENTED:
-			self.log(LOG_DEBUG, ["Not implemented"])
+			self.log(LOG_DEBUG, ["DataFetchMode:", "Not implemented"])
 	
 	return ts_data
 
@@ -279,7 +278,7 @@ func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_ra
 		# We need at least 5 sets of data to be able to perform calculations for approximating the index of data we wish to plot
 		data = _data_processing(data, t_axis_range)
 
-	self.log(LOG_DEBUG, ["Size of data after processed: ", data.size()])
+	self.log(LOG_DEBUG, ["Size of data ready for rendering post processing: ", data.size()])
 	self._map_data_to_pixel(data, t_axis_range, y_axis_range)
 	queue_redraw()
 

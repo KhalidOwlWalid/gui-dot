@@ -15,11 +15,14 @@ func _ready() -> void:
 	self.add_child(guidot_graph)
 
 	_guidot_stylebox.bg_color = color_dict["gd_black"]
-	_guidot_stylebox.content_margin_left = margin_val
-	_guidot_stylebox.content_margin_right = margin_val
-	_guidot_stylebox.content_margin_bottom = margin_val
-	_guidot_stylebox.content_margin_top = margin_val
+	set_margin_size(margin_val)
 	add_theme_stylebox_override("panel", _guidot_stylebox)
 
 func set_stylebox_color(color: Color) -> void:
 	_guidot_stylebox.bg_color = color
+
+func set_margin_size(val: int) -> void:
+	_guidot_stylebox.content_margin_left = val
+	_guidot_stylebox.content_margin_right = val
+	_guidot_stylebox.content_margin_bottom = val
+	_guidot_stylebox.content_margin_top = val
