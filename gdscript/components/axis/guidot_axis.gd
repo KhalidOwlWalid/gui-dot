@@ -51,6 +51,8 @@ func setup_axis_node(name: String, color: Color) -> void:
 func setup_axis_limit(min: float, max: float) -> void:
 	self.min_val = min
 	self.max_val = max
+	axis_limit_changed.emit()
+	queue_redraw()
 
 func set_min(min: float) -> void:
 	self.min_val = min
@@ -164,4 +166,5 @@ func _input(event):
 				self.log(LOG_DEBUG, ["[", self.name, "]", _axis_config_popup.name, "open at position:", curr_mouse_pos])
 
 			if event.button_index == MOUSE_BUTTON_LEFT:
-				self.log(LOG_DEBUG, ["Left button pressed, scale the axis here"])
+				self._emit_focus_requested_signal()
+				self.log(LOG_INFO, ["Left button pressed, scale the axis here"])
