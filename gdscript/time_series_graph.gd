@@ -1,4 +1,3 @@
-# @tool
 class_name Guidot_T_Series_Graph
 extends Guidot_Common
 
@@ -51,7 +50,8 @@ var window_color: Color
 
 var _current_buffer_mode: Graph_Buffer_Mode
 
-var test_panel: Guidot_Panel
+# Helper tool
+var debug_panel: Guidot_Panel
 
 func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 	match buf_mode:
@@ -153,9 +153,8 @@ func _ready() -> void:
 	self._register_hotkeys()
 	self._request_buffer_mode()
 	
-	test_panel = Guidot_Panel.new()
-	# add_child(test_panel)
-	test_panel.add_child(self)
+	debug_panel = Guidot_Panel.new()
+	add_child(debug_panel)
 
 	self.log(LOG_INFO, ["Time series graph initialized"])
 
@@ -225,8 +224,12 @@ func _input(event: InputEvent) -> void:
 	# For hotkeys
 	if (Input.is_action_just_pressed("nerd_stats")):
 		self._toggle_nerd_stats = !self._toggle_nerd_stats
-		self.log(LOG_DEBUG, ["Toggle for nerd stats: ", self._toggle_nerd_stats])
-		test_panel.show_panel(Vector2(100, 100))
+		self.log(LOG_INFO, ["Toggle for nerd stats:", self._toggle_nerd_stats])
+
+		if (self._toggle_nerd_stats):
+			debug_panel.show()
+		else:
+			debug_panel.hide()
 
 	if (Input.is_action_just_pressed("pause")):
 		self._is_pause = !self._is_pause
