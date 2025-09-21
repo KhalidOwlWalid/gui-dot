@@ -216,10 +216,11 @@ func _nerd_stats_panel_update():
 
 func _input(event: InputEvent) -> void:
 
-	if event is InputEventMouseButton and event.pressed:
+	if (self._mouse_in):
+		if event is InputEventMouseButton and event.pressed:
 
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			self._emit_focus_requested_signal()
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				self._emit_focus_requested_signal()
 
 	# For hotkeys
 	if (Input.is_action_just_pressed("nerd_stats")):
