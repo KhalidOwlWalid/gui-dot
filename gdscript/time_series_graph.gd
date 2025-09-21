@@ -51,7 +51,7 @@ var window_color: Color
 var _current_buffer_mode: Graph_Buffer_Mode
 
 # Helper tool
-var debug_panel: Guidot_Panel
+var debug_panel: Guidot_Debug_Panel
 
 func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 	match buf_mode:
@@ -153,7 +153,7 @@ func _ready() -> void:
 	self._register_hotkeys()
 	self._request_buffer_mode()
 	
-	debug_panel = Guidot_Panel.new()
+	debug_panel = Guidot_Debug_Panel.new()
 	add_child(debug_panel)
 
 	self.log(LOG_INFO, ["Time series graph initialized"])
