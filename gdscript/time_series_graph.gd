@@ -25,6 +25,7 @@ var window_color: Color
 
 @onready var default_window_size: Vector2 = Vector2(620, 360)
 @onready var default_window_color: Color = color_dict["gd_black"]
+@onready var prev_display_color: Color = default_window_color
 
 # Components used for building the graph 
 @onready var plot_node: Guidot_Plot = Guidot_Plot.new()
@@ -129,6 +130,13 @@ func _ready() -> void:
 	# Axis node signal
 	t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
 	y_axis_node.axis_limit_changed.connect(_on_y_axis_changed)
+
+	t_axis_node.focus_requested.connect(_on_focus_requested)
+	y_axis_node.focus_requested.connect(_on_focus_requested)
+	plot_node.focus_requested.connect(_on_focus_requested)
+	focus_requested.connect(_on_focus_requested)
+
+	focus_entered.connect(_test)
 	
 	# Self node signal
 	self.resized.connect(_on_display_frame_resized)
@@ -141,9 +149,15 @@ func _ready() -> void:
 	self._request_buffer_mode()
 	
 	test_panel = Guidot_Panel.new()
-	add_child(test_panel)
+	# add_child(test_panel)
+	test_panel.add_child(self)
+
+	self.log(LOG_INFO, ["Time series graph initialized"])
 
 	queue_redraw()
+
+func _test() -> void:
+	self.log(LOG_INFO, ["Testing focus"])
 
 # TODO: Implement this with error detection
 func set_window_color(color: Color) -> void:
@@ -174,6 +188,9 @@ func _on_data_received() -> void:
 func _on_graph_buffer_mode_changed() -> void:
 	pass
 
+func _on_focus_requested() -> void:
+	self._is_in_focus = !self._is_in_focus
+
 func _on_t_axis_changed() -> void:
 	t_axis_min = t_axis_node.min_val
 	t_axis_max = t_axis_node.max_val
@@ -194,6 +211,11 @@ func _nerd_stats_panel_update():
 
 func _input(event: InputEvent) -> void:
 
+	if event is InputEventMouseButton and event.pressed:
+
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			self._emit_focus_requested_signal()
+
 	# For hotkeys
 	if (Input.is_action_just_pressed("nerd_stats")):
 		self._toggle_nerd_stats = !self._toggle_nerd_stats
@@ -213,6 +235,12 @@ func _input(event: InputEvent) -> void:
 func _physics_process(delta: float) -> void:
 	self._move_display_process()
 
+	if (self._is_in_focus):
+		self.color = color_dict["white"]
+	else:
+		# TODO (Khalid): This needs to be able to change back to previous color, not hardcoded color
+		self.color = color_dict["gd_black"]
+
 	# If the current buffer mode is fixed, then only update when the user changes the axis limits
 	match (self._current_buffer_mode):
 
@@ -230,7 +258,7 @@ func _physics_process(delta: float) -> void:
 				pass
 			else:
 				var moving_max_tick: bool = mavlink_node.data[-1].x > t_axis_node.max_val
-				if (true):
+				if (not self._is_pause):
 					# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
 					# even number
 					# TODO (Khalid): Allow the user to use external clock source, the way that this is currently implemented
@@ -239,7 +267,4 @@ func _physics_process(delta: float) -> void:
 					# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
 					# simply an increasing integer, or absolute or relative time etc.
 					var curr_s: float = float(Time.get_ticks_msec())/1000
-					t_axis_node.set_min(curr_s - t_axis_node._sliding_window_s)
-					t_axis_node.set_max(curr_s)
-
-					# From here onwards, we have to do a lot of checks
+					t_axis_node.setup_axis_limit(curr_s - t_axis_node._sliding_window_s, curr_s)

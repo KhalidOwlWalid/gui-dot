@@ -1,6 +1,8 @@
 class_name Guidot_Common
 extends ColorRect
 
+signal focus_requested
+
 enum Graph_Buffer_Mode {
 	FIXED,      # If user wants to display a set window span. User will have to manually reset the time axes
 	SNAPSHOT,   # Alias of fixed (thats the plan for now)
@@ -24,6 +26,11 @@ enum Origin {
 @onready var _is_dragging: bool = false
 @onready var _dragging_distance: float = 0
 @onready var _component_tag: String = "COMP_TAG"
+@onready var _is_in_focus: bool = false
+
+func _emit_focus_requested_signal() -> void:
+	focus_requested.emit()
+	self.log(LOG_INFO, ["Toggle focus request: ", self._is_in_focus])
 
 func _on_mouse_entered() -> void:
 	self._mouse_in = true
