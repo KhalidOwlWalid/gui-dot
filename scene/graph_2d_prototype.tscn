@@ -1,8 +1,15 @@
-[gd_scene load_steps=4 format=3 uid="uid://b7e2pd3t4pbfn"]
+[gd_scene load_steps=5 format=3 uid="uid://b7e2pd3t4pbfn"]
 
-[ext_resource type="Script" path="res://gdscript/time_series_graph.gd" id="1_0623l"]
 [ext_resource type="Script" path="res://gdscript/mavlink_node.gd" id="2_8j47k"]
 [ext_resource type="Script" path="res://gdscript/guidot_master_node.gd" id="3_gnnt3"]
+[ext_resource type="Script" path="res://gdscript/t_graph_with_panel.gd" id="5_ax30q"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0lbeu"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.1, 0.12, 0.15, 1)
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -19,13 +26,9 @@ script = ExtResource("2_8j47k")
 layout_mode = 0
 script = ExtResource("3_gnnt3")
 
-[node name="Guidot_T_Series_Graph" type="ColorRect" parent="Guidot_Master_Node"]
-clip_contents = true
-custom_minimum_size = Vector2(1820, 980)
+[node name="Guidot_Graph" type="PanelContainer" parent="Guidot_Master_Node"]
 layout_mode = 0
 offset_right = 620.0
 offset_bottom = 360.0
-color = Color(0.1, 0.12, 0.15, 1)
-script = ExtResource("1_0623l")
-t_axis_min = 0.0
-t_axis_max = 10.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_0lbeu")
+script = ExtResource("5_ax30q")

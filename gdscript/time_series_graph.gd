@@ -20,8 +20,11 @@ var window_color: Color
 # for different parts of the graph, but I kinda doubt that would happen
 @onready var font_node: SystemFont = SystemFont.new()
 
-@onready var mavlink_node = get_node('../../Mavlink_Node')
-@onready var guidot_master_node = get_node('../../Guidot_Master_Node')
+# TODO (Khalid): This should only be temporary for prototyping, but the plugin is created
+# I need to find a better way to interface this
+@onready var mavlink_node = get_node('/root/Control/Mavlink_Node')
+@onready var guidot_master_node = get_node('/root/Control/Guidot_Master_Node')
+@onready var guidot_graph = get_node('/root/Control/Guidot_Master_Node/Guidot_Graph')
 
 @onready var default_window_size: Vector2 = Vector2(620, 360)
 @onready var default_window_color: Color = color_dict["gd_black"]
@@ -102,6 +105,8 @@ func _request_buffer_mode() -> void:
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	self.name = "Graph_Display"
+	self.log(LOG_INFO, [mavlink_node])
 	self.clip_contents = true
 	self.size = default_window_size
 	self.color = default_window_color
@@ -236,10 +241,10 @@ func _physics_process(delta: float) -> void:
 	self._move_display_process()
 
 	if (self._is_in_focus):
-		self.color = color_dict["white"]
+		guidot_graph.set_stylebox_color(color_dict["red"])
 	else:
 		# TODO (Khalid): This needs to be able to change back to previous color, not hardcoded color
-		self.color = color_dict["gd_black"]
+		guidot_graph.set_stylebox_color(color_dict["gd_black"])
 
 	# If the current buffer mode is fixed, then only update when the user changes the axis limits
 	match (self._current_buffer_mode):
