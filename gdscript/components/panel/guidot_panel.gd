@@ -12,6 +12,13 @@ extends PanelContainer
 @onready var margin_val: int = 3
 @onready var _font_size: int = 10
 
+@onready var _component_tag = "PANEL"
+
+const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG
+const LOG_WARNING = Guidot_Log.Log_Level.WARNING
+const LOG_INFO = Guidot_Log.Log_Level.INFO
+const LOG_ERROR = Guidot_Log.Log_Level.ERROR
+
 func _ready() -> void:
 	self.name = "Guidot_Panel"
 	self.visible = true
@@ -37,3 +44,6 @@ func hide_panel() -> void:
 
 func _process(delta: float) -> void:
 	pass
+
+func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
+	Guidot_Log.gd_log(log_level, self._component_tag, msg)

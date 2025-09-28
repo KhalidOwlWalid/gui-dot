@@ -53,6 +53,21 @@ var _current_buffer_mode: Graph_Buffer_Mode
 # Helper tool
 var debug_panel: Guidot_Debug_Panel
 
+@onready var test_override_debug_info = {
+	"y_axis_min": str(y_axis_min),
+	"y_axis_max": str(y_axis_max),
+	"t_axis_min": str(t_axis_min),
+	"t_axis_max": str(t_axis_max),
+}
+
+func _update_debug_info() -> void:
+	test_override_debug_info = {
+		"y_axis_min": str(y_axis_min),
+		"y_axis_max": str(y_axis_max),
+		"t_axis_min": str(t_axis_min),
+		"t_axis_max": str(t_axis_max),
+	}
+
 func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 	match buf_mode:
 		Graph_Buffer_Mode.FIXED:
@@ -156,6 +171,9 @@ func _ready() -> void:
 	debug_panel = Guidot_Debug_Panel.new()
 	add_child(debug_panel)
 
+	# This needs to be overriden after the debug panel is added as a child to the graph
+	debug_panel.override_guidot_debug_info(test_override_debug_info)
+
 	self.log(LOG_INFO, ["Time series graph initialized"])
 
 	queue_redraw()
@@ -240,7 +258,6 @@ func _input(event: InputEvent) -> void:
 	var moving_mode_flag: bool = true
 	self._move_display(event, moving_mode_flag)
 
-
 func _physics_process(delta: float) -> void:
 	self._move_display_process()
 
@@ -277,3 +294,6 @@ func _physics_process(delta: float) -> void:
 					# simply an increasing integer, or absolute or relative time etc.
 					var curr_s: float = float(Time.get_ticks_msec())/1000
 					t_axis_node.setup_axis_limit(curr_s - t_axis_node._sliding_window_s, curr_s)
+
+	self._update_debug_info()
+	self.debug_panel._guidot_debug_info = test_override_debug_info
