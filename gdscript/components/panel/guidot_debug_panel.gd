@@ -3,17 +3,43 @@ class_name Guidot_Debug_Panel
 extends Guidot_Panel
 
 @onready var _debugging_text_window: PanelContainer = PanelContainer.new()
-@onready var _test_ver_box: VBoxContainer = VBoxContainer.new()
+@onready var _debug_panel_vbox_cont: VBoxContainer = VBoxContainer.new()
 @onready var _test_hor_box: HBoxContainer = HBoxContainer.new()
 
 @onready var inc: int = 0
 @onready var _hor_box_prefix: String = "GuidotDebugHorCont"
 
+signal new_data_received
+
 @onready var _guidot_debug_info = {
-	"Type of information": "Realtime",
-	"Number of data processed": str(inc),
-	"Number of data pre-processed": str(100.12),
+	"Name": "Khalid",
+	"Age": str(100)
 }
+
+func attach_data_to_debug_panel(debug_type: String, debug_val: String) -> void:
+	self._guidot_debug_info[debug_type] = debug_val
+
+func override_guidot_debug_info(new_dict: Dictionary) -> void:
+	self._guidot_debug_info = new_dict
+
+	if (_guidot_debug_info.size() != 0):
+		
+		if (_debug_panel_vbox_cont.get_child_count() != null):
+			var child_array: Array[Node] = _debug_panel_vbox_cont.get_children()
+			print(child_array)
+			for curr_child in child_array:
+				self.log(LOG_DEBUG, ["Removing node:", curr_child])
+				_debug_panel_vbox_cont.remove_child(curr_child)
+		else:
+			pass
+
+		var i: int = 0
+		for debug_type in self._guidot_debug_info:
+			var hbox_cont: HBoxContainer = self._create_debug_info_row(i, debug_type, self._guidot_debug_info[debug_type])
+			_debug_panel_vbox_cont.add_child(hbox_cont)
+
+func update_data_on_debug_panel(key: String, value: String) -> void:
+	pass
 
 func _create_debug_info_row(text_label_row: int, debug_info_type: String, debug_info_val: String) -> HBoxContainer:
 
@@ -60,6 +86,7 @@ func _ready() -> void:
 	self.position = self._init_pos
 	self.margin_val = 3
 	self._font_size = 10
+	self._component_tag = "DEBUG_PANEL"
 
 	_guidot_panel_stylebox.bg_color = color_dict["gd_grey"]
 	set_margin_size(self.margin_val)
@@ -70,19 +97,28 @@ func _ready() -> void:
 	_debugging_text_window.add_theme_stylebox_override("panel", _guidot_debugging_text_window)
 	self.add_child(self._debugging_text_window)
 
-	_debugging_text_window.add_child(_test_ver_box)
+	_debugging_text_window.add_child(_debug_panel_vbox_cont)
 
 	# This helps indexing each horizontal label container which benefits us in trying to find the correct node for updating
 	# necessary values in real-time
 	var curr_row: int = 0
-	for debug_info_type in self._guidot_debug_info:
-		var hbox_cont: HBoxContainer = self._create_debug_info_row(curr_row, debug_info_type, self._guidot_debug_info[debug_info_type])
-		_test_ver_box.add_child(hbox_cont)
-		curr_row += 1
+	var hbox_cont: HBoxContainer = HBoxContainer.new()
+	if (self._guidot_debug_info.size() == 0):
+		self.log(LOG_INFO, ["Guidot Debug Info is currently empty"])
+		# Just add the empty HBox Container
+		# _debug_panel_vbox_cont.add_child(hbox_cont)
+	else:
+		for debug_info_type in self._guidot_debug_info:
+			hbox_cont = self._create_debug_info_row(curr_row, debug_info_type, self._guidot_debug_info[debug_info_type])
+			_debug_panel_vbox_cont.add_child(hbox_cont)
+			curr_row += 1
 
 func _process(delta: float) -> void:
-	inc += 1
+	self.log(LOG_DEBUG, [self._guidot_debug_info])
 
-	var curr_hor_box = _test_ver_box.get_child(1)
-	var val_text_label  = curr_hor_box.get_child(1)
-	val_text_label.text = str(inc)
+	var hbox_array: Array[Node] = self._debug_panel_vbox_cont.get_children()
+	for i in range(self._guidot_debug_info.size()):
+		var key: String = self._guidot_debug_info.keys()[i]
+		var updated_val: String = self._guidot_debug_info[key]
+		var val_text_label: RichTextLabel = hbox_array[i].get_child(1)
+		val_text_label.text = updated_val
