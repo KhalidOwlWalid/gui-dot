@@ -27,7 +27,8 @@ static var color_dict: Dictionary = {
 	"gd_light_blue": Color(per_255(56), per_255(79), per_255(103), 1), 	# Same blue color as when files are highlighted when editing the file
 	"gd_dim_blue": Color(per_255(56), per_255(79), per_255(103), 0.15), 	# Same blue color as when files are highlighted when editing the file but more transparent
 	"gd_bright_yellow": rgba(240,223,152,255),  # Same as yellow color for the text in godot text editor
-	"gd_grey": rgba(145,149,155,25) # Same as godot's debugging message color
+	"gd_grey": rgba(145,149,155,25), # Same as godot's debugging message color,
+	"gd_grey_transparent": rgba(54, 61, 74, 125),
 }
 
 static var some_val: int = 10
