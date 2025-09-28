@@ -10,6 +10,7 @@ extends PanelContainer
 
 @onready var _guidot_panel_stylebox: StyleBoxFlat = StyleBoxFlat.new()
 @onready var margin_val: int = 3
+@onready var _font_size: int = 10
 
 func _ready() -> void:
 	self.name = "Guidot_Panel"
