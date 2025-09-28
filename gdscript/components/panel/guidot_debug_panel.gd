@@ -1,4 +1,4 @@
-@tool
+# @tool
 class_name Guidot_Debug_Panel
 extends Guidot_Panel
 
@@ -12,8 +12,6 @@ extends Guidot_Panel
 signal new_data_received
 
 @onready var _guidot_debug_info = {
-	"Name": "Khalid",
-	"Age": str(100)
 }
 
 func attach_data_to_debug_panel(debug_type: String, debug_val: String) -> void:
@@ -117,8 +115,17 @@ func _process(delta: float) -> void:
 	self.log(LOG_DEBUG, [self._guidot_debug_info])
 
 	var hbox_array: Array[Node] = self._debug_panel_vbox_cont.get_children()
-	for i in range(self._guidot_debug_info.size()):
-		var key: String = self._guidot_debug_info.keys()[i]
-		var updated_val: String = self._guidot_debug_info[key]
-		var val_text_label: RichTextLabel = hbox_array[i].get_child(1)
-		val_text_label.text = updated_val
+
+	# TODO (Khalid): Make sure we do a lot of checks to ensure we are updating the correct key with its respective value
+	if (hbox_array.size() == self._guidot_debug_info.size()):
+		for i in range(self._guidot_debug_info.size()):
+			var key: String = self._guidot_debug_info.keys()[i]
+			var updated_val: String = self._guidot_debug_info[key]
+			var val_text_label: RichTextLabel = hbox_array[i].get_child(1)
+			val_text_label.text = updated_val
+	else:
+		# As of now, the implementation actually relies on the HBoxContainer and the debug info to match in terms of its size
+		# I simply use index to be able to update the value accordingly. Obviously, this implementation is not the best and may
+		# introduce bug in the future, but I am happy with this implementation for now
+		self.log(LOG_WARNING, ["The size of the HBoxContainer and the Debug Info dictionary does not match. Aborting update for the debug panel."])
+		self.log(LOG_WARNING, ["HBoxContainer Size:", hbox_array.size(), " | Debug Info Dictionary Size: ", self._guidot_debug_info.size()])

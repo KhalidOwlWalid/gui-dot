@@ -53,20 +53,28 @@ var _current_buffer_mode: Graph_Buffer_Mode
 # Helper tool
 var debug_panel: Guidot_Debug_Panel
 
-@onready var test_override_debug_info = {
-	"y_axis_min": str(y_axis_min),
-	"y_axis_max": str(y_axis_max),
-	"t_axis_min": str(t_axis_min),
-	"t_axis_max": str(t_axis_max),
-}
+@onready var test_override_debug_info = {}
 
 func _update_debug_info() -> void:
 	test_override_debug_info = {
-		"y_axis_min": str(y_axis_min),
-		"y_axis_max": str(y_axis_max),
-		"t_axis_min": str(t_axis_min),
-		"t_axis_max": str(t_axis_max),
+		"Current buffer Mode": self.get_buffer_mode_str(self._current_buffer_mode),
+		"t_axis_min": "{val}".format({"val":"%0.4f" % t_axis_min}),
+		"t_axis_max": "{val}".format({"val":"%0.4f" % t_axis_max}),
+		"y_axis_min": "{val}".format({"val":"%0.4f" % y_axis_min}),
+		"y_axis_max": "{val}".format({"val":"%0.4f" % y_axis_max}),
+		"Last Data": str(get_last_data_point()),
 	}
+
+# WARNING: This is temporary for testing the debug info
+func get_last_data_point() -> Vector2:
+	var tmp: Vector2 = Vector2()
+	if (mavlink_node.data == null):
+		return tmp
+	elif (mavlink_node.data.size() == 0):
+		return tmp
+	else:
+		tmp = mavlink_node.data[-1]
+	return tmp
 
 func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 	match buf_mode:
@@ -172,6 +180,7 @@ func _ready() -> void:
 	add_child(debug_panel)
 
 	# This needs to be overriden after the debug panel is added as a child to the graph
+	self._update_debug_info()
 	debug_panel.override_guidot_debug_info(test_override_debug_info)
 
 	self.log(LOG_INFO, ["Time series graph initialized"])
