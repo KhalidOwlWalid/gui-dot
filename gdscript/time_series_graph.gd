@@ -58,14 +58,17 @@ var debug_panel: Guidot_Debug_Panel
 func _update_debug_info() -> void:
 	test_override_debug_info = {
 		"Current buffer Mode": self.get_buffer_mode_str(self._current_buffer_mode),
-		"t_axis_min": "{val}".format({"val":"%0.4f" % t_axis_min}),
-		"t_axis_max": "{val}".format({"val":"%0.4f" % t_axis_max}),
-		"y_axis_min": "{val}".format({"val":"%0.4f" % y_axis_min}),
-		"y_axis_max": "{val}".format({"val":"%0.4f" % y_axis_max}),
+		# "t_axis_min": "{val}".format({"val":"%0.4f" % t_axis_min}),
+		# "t_axis_max": "{val}".format({"val":"%0.4f" % t_axis_max}),
+		# "y_axis_min": "{val}".format({"val":"%0.4f" % y_axis_min}),
+		# "y_axis_max": "{val}".format({"val":"%0.4f" % y_axis_max}),
 		"Last Data": str(get_last_data_point()),
+		"Current Fetch Mode": get_current_data_fetch_mode_str(),
 	}
 
 # WARNING: This is temporary for testing the debug info
+
+### HELPER FUNCTIONS #####
 func get_last_data_point() -> Vector2:
 	var tmp: Vector2 = Vector2()
 	if (mavlink_node.data == null):
@@ -75,6 +78,11 @@ func get_last_data_point() -> Vector2:
 	else:
 		tmp = mavlink_node.data[-1]
 	return tmp
+
+func get_current_data_fetch_mode_str() -> String:
+	return plot_node.data_fetching_mode_str[plot_node.data_fetching_mode]
+
+##########################
 
 func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 	match buf_mode:
@@ -304,5 +312,6 @@ func _physics_process(delta: float) -> void:
 					var curr_s: float = float(Time.get_ticks_msec())/1000
 					t_axis_node.setup_axis_limit(curr_s - t_axis_node._sliding_window_s, curr_s)
 
-	self._update_debug_info()
-	self.debug_panel._guidot_debug_info = test_override_debug_info
+	if (not self._is_pause):
+		self._update_debug_info()
+		self.debug_panel._guidot_debug_info = test_override_debug_info

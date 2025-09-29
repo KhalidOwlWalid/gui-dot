@@ -21,6 +21,21 @@ var approx_sample_t: float
 @onready var n_sampling: int = 100
 @onready var data_fetching_mode: DataFetchMode = DataFetchMode.BOTH_INSIDE
 
+# @onready var data_fetching_mode_str: Dictionary = {
+# 	DataFetchMode.BOTH_INSIDE: "Both Inside",
+# 	DataFetchMode.BOTH_OUTSIDE: "Both Outside",
+# 	DataFetchMode.HEAD_OUT_TAIL_IN: "Both Outside",
+# }
+
+@onready var data_fetching_mode_str: Dictionary = {
+	DataFetchMode.BOTH_INSIDE: "Both Inside",
+	DataFetchMode.BOTH_OUTSIDE: "Both Outside",
+	DataFetchMode.HEAD_OUT_TAIL_IN: "Head Out, Tail In",
+	DataFetchMode.HEAD_IN_TAIL_OUT: "Head In, Tail Out",
+	DataFetchMode.OVERFLOW_BOTH_ENDS: "Overflow Both Ends",
+	DataFetchMode.NOT_IMPLEMENTED: "Not Implemented",
+}
+
 # Axis properties
 var n_x_ticks: int
 var x_ticks_pos: PackedVector2Array
