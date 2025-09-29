@@ -6,6 +6,13 @@ extends Guidot_Common
 @onready var default_norm_size: int = 0.8
 @onready var pixel_data_points: PackedVector2Array = PackedVector2Array()
 
+
+# Used for debugging signals
+@onready var n_preprocessed_data: int = 0
+@onready var n_postprocessed_data: int = 0
+@onready var head_vec2: Vector2 = Vector2()
+@onready var tail_vec2: Vector2 = Vector2()
+
 # Data specific properties
 # Visualize the data as if it is a snake
 enum DataFetchMode {
@@ -20,12 +27,6 @@ enum DataFetchMode {
 var approx_sample_t: float
 @onready var n_sampling: int = 100
 @onready var data_fetching_mode: DataFetchMode = DataFetchMode.BOTH_INSIDE
-
-# @onready var data_fetching_mode_str: Dictionary = {
-# 	DataFetchMode.BOTH_INSIDE: "Both Inside",
-# 	DataFetchMode.BOTH_OUTSIDE: "Both Outside",
-# 	DataFetchMode.HEAD_OUT_TAIL_IN: "Both Outside",
-# }
 
 @onready var data_fetching_mode_str: Dictionary = {
 	DataFetchMode.BOTH_INSIDE: "Both Inside",
@@ -288,10 +289,16 @@ func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_ra
 	var data: PackedVector2Array = data_points
 
 	self.log(LOG_DEBUG, ["Size of data before processed: ", data.size()])
+	n_preprocessed_data = data.size()
 	# Pre-process the data that should be visible on the graph
 	if !(data_points.size() < n_sampling):
 		# We need at least 5 sets of data to be able to perform calculations for approximating the index of data we wish to plot
 		data = _data_processing(data, t_axis_range)
+		self.head_vec2 = data[0]
+		self.tail_vec2 = data[-1]
+
+	n_postprocessed_data = data.size()
+	
 
 	self.log(LOG_DEBUG, ["Size of data ready for rendering post processing: ", data.size()])
 	self._map_data_to_pixel(data, t_axis_range, y_axis_range)
