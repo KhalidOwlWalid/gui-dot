@@ -264,6 +264,8 @@ func _input(event: InputEvent) -> void:
 		self.log(LOG_INFO, ["Toggle for nerd stats:", self._toggle_nerd_stats])
 
 		if (self._toggle_nerd_stats):
+			var curr_mouse_pos: Vector2 = self.get_viewport().get_mouse_position()
+			debug_panel.set_position(curr_mouse_pos)
 			debug_panel.show()
 		else:
 			debug_panel.hide()
