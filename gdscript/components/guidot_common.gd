@@ -28,6 +28,8 @@ enum Origin {
 @onready var _component_tag: String = "COMP_TAG"
 @onready var _is_in_focus: bool = false
 
+@onready var debug_signals_to_trace = {}
+
 func _emit_focus_requested_signal() -> void:
 	focus_requested.emit()
 	self.log(LOG_INFO, ["Toggle focus request: ", self._is_in_focus])
@@ -136,3 +138,6 @@ func _move_display_process() -> void:
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
 	Guidot_Log.gd_log(log_level, self._component_tag, msg)
+
+func update_debug_info() -> void:
+	pass

@@ -53,10 +53,10 @@ var _current_buffer_mode: Graph_Buffer_Mode
 # Helper tool
 var debug_panel: Guidot_Debug_Panel
 
-@onready var final_debug_trace_signals = {}
+@onready var final_debug_trace_signals: Dictionary = {}
 
 func update_debug_info() -> void:
-	final_debug_trace_signals = {
+	self.debug_signals_to_trace = {
 		"Current buffer Mode": self.get_buffer_mode_str(self._current_buffer_mode),
 		"t_axis": str(Vector2(t_axis_min, t_axis_max)),
 		"y_axis": str(Vector2(y_axis_min, y_axis_max)),
@@ -67,6 +67,17 @@ func update_debug_info() -> void:
 		"Head Position": str(plot_node.head_vec2),
 		"Tail Position": str(plot_node.tail_vec2),
 	}
+
+func _update_final_debug_trace() -> void:
+	self.update_debug_info()
+	plot_node.update_debug_info()
+	self.final_debug_trace_signals.clear()
+
+	var child_array: Array[Guidot_Common] = [self, plot_node] 
+
+	for child in child_array:
+		for debug_signal in child.debug_signals_to_trace:
+			self.final_debug_trace_signals[debug_signal] = child.debug_signals_to_trace[debug_signal]
 
 # WARNING: This is temporary for testing the debug info
 
@@ -190,8 +201,8 @@ func _ready() -> void:
 	add_child(debug_panel)
 
 	# This needs to be overriden after the debug panel is added as a child to the graph
-	self.update_debug_info()
-	debug_panel.override_guidot_debug_info(final_debug_trace_signals)
+	self._update_final_debug_trace()
+	debug_panel.override_guidot_debug_info(self.final_debug_trace_signals)
 
 	self.log(LOG_INFO, ["Time series graph initialized"])
 
@@ -317,5 +328,5 @@ func _physics_process(delta: float) -> void:
 					t_axis_node.setup_axis_limit(curr_s - t_axis_node._sliding_window_s, curr_s)
 
 	if (not self._is_pause):
-		self.update_debug_info()
-		self.debug_panel._guidot_debug_info = final_debug_trace_signals
+		self._update_final_debug_trace()
+		self.debug_panel._guidot_debug_info = self.final_debug_trace_signals	

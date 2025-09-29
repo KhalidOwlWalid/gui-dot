@@ -37,6 +37,23 @@ var approx_sample_t: float
 	DataFetchMode.NOT_IMPLEMENTED: "Not Implemented",
 }
 
+##### HELPER FUNCTION FOR DEBUG SIGNALS ######
+@onready var ds_k = 0
+@onready var ds_cmp_t_diff = 0
+@onready var ds_approx_sample_t = 0
+@onready var ds_cmp_t = 0
+
+func update_debug_info() -> void:
+	self.debug_signals_to_trace = {
+		"k": str(ds_k),
+		"cmp_t_diff": str(ds_cmp_t_diff),
+		"ds_approx_sample_t": str(ds_approx_sample_t),
+		"ds_cmp_t": str(ds_cmp_t),
+	}
+
+
+##############################################
+
 # Axis properties
 var n_x_ticks: int
 var x_ticks_pos: PackedVector2Array
@@ -192,6 +209,7 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 			# How much is the difference between t_start and t_min, just slice the starting point of t_min
 			# self._handle_data_fetching()
 			var k: int = floor(int((t_min - t_start)/approx_sample_t))
+			ds_k = k
 
 			# Due to the above implementation being an approximation, if the approximate sample time is slightly off,
 			# we will fail to get an accurate position of where the min element lives, so the following implementation
@@ -211,6 +229,10 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 				var cmp_t: float = ts_data[k].x
 				var cmp_t_diff: float = abs(cmp_t - t_min)
 				k_extra_slice = cmp_t_diff / approx_sample_t
+
+				ds_cmp_t_diff = cmp_t_diff
+				ds_approx_sample_t = approx_sample_t
+				ds_cmp_t = cmp_t
 				
 				# Handles cases where it will cause a negative output, see notes above
 				k_lower_slice = k - k_extra_slice
