@@ -85,6 +85,7 @@ func _ready() -> void:
 	self.margin_val = 3
 	self._font_size = 10
 	self._component_tag = "DEBUG_PANEL"
+	self.top_level = true
 
 	_guidot_panel_stylebox.bg_color = color_dict["gd_grey"]
 	set_margin_size(self.margin_val)

@@ -58,12 +58,14 @@ var debug_panel: Guidot_Debug_Panel
 func _update_debug_info() -> void:
 	test_override_debug_info = {
 		"Current buffer Mode": self.get_buffer_mode_str(self._current_buffer_mode),
-		# "t_axis_min": "{val}".format({"val":"%0.4f" % t_axis_min}),
-		# "t_axis_max": "{val}".format({"val":"%0.4f" % t_axis_max}),
-		# "y_axis_min": "{val}".format({"val":"%0.4f" % y_axis_min}),
-		# "y_axis_max": "{val}".format({"val":"%0.4f" % y_axis_max}),
+		"t_axis": str(Vector2(t_axis_min, t_axis_max)),
+		"y_axis": str(Vector2(y_axis_min, y_axis_max)),
 		"Last Data": str(get_last_data_point()),
 		"Current Fetch Mode": get_current_data_fetch_mode_str(),
+		"Preprocess data size": str(plot_node.n_preprocessed_data),
+		"Postprocess data size": str(plot_node.n_postprocessed_data),
+		"Head Position": str(plot_node.head_vec2),
+		"Tail Position": str(plot_node.tail_vec2),
 	}
 
 # WARNING: This is temporary for testing the debug info
