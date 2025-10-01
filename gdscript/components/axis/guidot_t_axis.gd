@@ -5,7 +5,7 @@ extends Guidot_X_Axis
 # If we are plotting in real-time, then the plot will basically move like a sliding window
 # Hence, we override the _draw_ticks function from the Guidot_X_Axis class
 
-@onready var _sliding_window_s: float = 3
+@onready var _sliding_window_s: float = 5
 
 func _draw_ticks() -> void:
 

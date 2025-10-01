@@ -7,7 +7,7 @@ var min_val: float
 var max_val: float
 @onready var n_steps: int = 5
 @onready var axis_name: String = "axis_common"
-@onready var tick_length: int = 5
+@onready var tick_length: int = 0
 
 # Keep a reference to the plot node, useful for dynamic resizing etc.
 var plot_node_ref: Node
@@ -80,6 +80,9 @@ func _setup_axis_config_menu() -> void:
 	_axis_config_popup.hide_on_item_selection = false
 	_axis_config_popup.hide_on_state_item_selection = false
 
+func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node: Node) -> void:
+	pass
+
 # NOTE: If you use this function, please call "self.ticks_pos.clear()" to clear the old axis ticks, so we can draw new ones
 func _draw_single_tick_with_label(tick_pos: Vector2, label: String, font_type: Font, font_size: float, color: Color, label_offset: Vector2) -> void:
 
@@ -106,6 +109,8 @@ func _ready() -> void:
 	self.set_component_tag_name("AXIS")
 
 	self._setup_axis_config_menu()
+
+	norm_comp_size = 0.2
 	
 func _draw() -> void:
 	pass

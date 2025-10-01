@@ -17,7 +17,10 @@ func _ready() -> void:
 
 func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node: Node) -> void:
 	self.set_anchors_preset(Control.LayoutPreset.PRESET_CENTER)
+	
 	self.axis_height = (display_frame_node.size.y - plot_frame_node.size.y)/2
+
+	# Set the position of the edges of the axis position from the center anchor of the parent
 	self.offset_left = plot_frame_node.offset_left
 	self.offset_right = plot_frame_node.offset_right
 	self.offset_top = plot_frame_node.offset_bottom
