@@ -1,21 +1,14 @@
 @tool
-class_name Guidot_Temp
-extends PopupMenu
+extends ColorRect
 
-var test_popup: PopupMenu
+var axis_height: int
 
-func _process(delta: float) -> void:
-	test_popup = PopupMenu.new()
-	add_child(test_popup)
-	test_popup.add_check_item("test")
-	test_popup.hide_on_item_selection = true
-	test_popup.unresizable = true
-
-func _input(event: InputEvent) -> void:
-
-	if event is InputEventMouseButton and event.pressed:
-
-		if event.button_index == MOUSE_BUTTON_RIGHT:
-			var curr_mouse_pos : Vector2 = self.get_viewport().get_mouse_position()
-			test_popup.show()
-			print("popup created")
+func _ready() -> void:
+	self.color = Color.BLACK
+	# self.offset_left = 50
+	self.set_anchors_preset(Control.LayoutPreset.PRESET_CENTER)
+	self.axis_height = 10
+	self.offset_left = 10
+	self.offset_right = 20
+	self.offset_top = 10
+	self.offset_bottom = 10 + self.axis_height

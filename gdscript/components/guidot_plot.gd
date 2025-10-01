@@ -49,6 +49,7 @@ func update_debug_info() -> void:
 		"cmp_t_diff": str(ds_cmp_t_diff),
 		"ds_approx_sample_t": str(ds_approx_sample_t),
 		"ds_cmp_t": str(ds_cmp_t),
+		"ds_data_fetching_mode": self.data_fetching_mode_str[self.data_fetching_mode]
 	}
 
 
@@ -71,6 +72,8 @@ func _ready() -> void:
 	test_popup.hide_on_item_selection = false
 	test_popup.hide_on_state_item_selection = false
 
+	norm_comp_size = 0.9
+
 	self.set_component_tag_name("PLOT")
 
 	# Use the guidot common mouse entered implementation
@@ -88,12 +91,17 @@ func init_plot(color: Color = Guidot_Utils.color_dict["gd_black"]) -> void:
 
 # Setup the plot relative to the size of the graph display frame
 # The plot size 
-func setup_plot(frame_size: Vector2, norm_size: float) -> void:
+func setup_plot(frame_size: Vector2) -> void:
 	# Find the necessary offset relative to the graph area
-	var plot_size_scaled: Vector2 = norm_size * frame_size
+	var plot_size_scaled: Vector2 = self.norm_comp_size * frame_size
 	var plot_x_size_scaled: int = plot_size_scaled.x/2
 	var plot_y_size_scaled: int = plot_size_scaled.y/2
-	self.setup_center_anchor(plot_x_size_scaled, plot_y_size_scaled)
+	# self.setup_center_anchor(plot_x_size_scaled, plot_y_size_scaled)
+	self.set_anchors_preset(Control.LayoutPreset.PRESET_CENTER)
+	self.set_offset(SIDE_LEFT, -plot_x_size_scaled)
+	self.set_offset(SIDE_RIGHT, plot_x_size_scaled)
+	self.set_offset(SIDE_TOP, -plot_y_size_scaled)
+	self.set_offset(SIDE_BOTTOM, plot_y_size_scaled)
 	
 func _map_data_to_pixel(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2) -> void:
 	pixel_data_points = PackedVector2Array()
@@ -143,6 +151,7 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	for i in range(n_iter):
 		approx_sample_t += ts_data[-1 - i].x - ts_data[-2 - i].x
 	approx_sample_t = approx_sample_t / n_iter
+	approx_sample_t = float(1.0/60.0)
 
 	var t_min: float = t_range.x
 	var t_max: float = t_range.y
@@ -354,7 +363,7 @@ func _draw() -> void:
 		# TODO (Khalid): Circle should only be drawn when it is at a certain window size
 		# I am not sure why but drawing a circle is very taxing, maybe due to how it is implemeted
 		# if (pixel_data_points.size() < 250):
-		# 	draw_circle(pixel_data_points[i], 4, Color.RED)
+		# 	draw_circle(pixel_data_points[i], 2, Color.RED)
 
 func _input(event: InputEvent) -> void:
 

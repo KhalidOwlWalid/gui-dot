@@ -1,3 +1,4 @@
+@tool
 class_name Guidot_T_Series_Graph
 extends Guidot_Common
 
@@ -53,6 +54,7 @@ var _current_buffer_mode: Graph_Buffer_Mode
 # Helper tool
 var debug_panel: Guidot_Debug_Panel
 
+# Final debug trace signals are used to encapsulate all of the debug tace signals of each of our components
 @onready var final_debug_trace_signals: Dictionary = {}
 
 func update_debug_info() -> void:
@@ -73,6 +75,8 @@ func _update_final_debug_trace() -> void:
 	plot_node.update_debug_info()
 	self.final_debug_trace_signals.clear()
 
+	# TODO (Khalid): At the moment, I am leaving this hard-coded because this isn't really a user feature
+	# Only developer should be using this
 	var child_array: Array[Guidot_Common] = [self, plot_node] 
 
 	for child in child_array:
@@ -108,7 +112,7 @@ func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 
 func setup_plot_node() -> void:
 	plot_node.init_plot(color_dict["gd_black"])
-	plot_node.setup_plot(Vector2(self.size.x, self.size.y), 0.9)
+	plot_node.setup_plot(Vector2(self.size.x, self.size.y))
 
 func init_plot_node():
 	setup_plot_node()

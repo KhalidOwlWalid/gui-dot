@@ -20,6 +20,15 @@ enum Origin {
 	SELF = 1 # wrt to the child (inherited node) itself
 }
 
+# Normalized component size will help in making sure we respect the resolution size
+# while scaling each components accordingly
+# The total normalized size should be equivalent to 1
+# e.g. in the vertical direction, title section + plot area + time axis = 1
+# e.g. in the horizontal direction, n * y_axis + plot area + margin = 1
+# Failure to comply with the following will cause the components to get clipped by the parent
+# In drawing each component, the parent will have a center anchor which will be used as a reference to draw
+@onready var norm_comp_size: float = 1
+
 @onready var _mouse_in: bool = false
 @onready var _new_position: Vector2 = Vector2()
 @onready var _drag_direction: Vector2 = Vector2()

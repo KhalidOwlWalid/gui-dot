@@ -38,15 +38,7 @@ func _draw_ticks() -> void:
 	var tick_label_offset: Vector2 = Vector2(-25, 5)
 	for i in range(n_steps + 1):
 		var tick_y_pos: int = self.top_right().y + i * increments
-		# draw_line(Vector2(tick_x_pos, tick_y_pos), Vector2(tick_x_pos - self.tick_length, tick_y_pos), self.line_color, 1.0, true)
 		var curr_tick_pixel_pos: Vector2 = Vector2(tick_x_pos, tick_y_pos)
-
-		# var tick_label_x_offset = -25
-		# var tick_label_y_offset = 2
-		# var tick_label_x_pos: int = tick_x_pos + tick_label_offset.x
-		# var tick_label_y_pos: int = tick_y_pos + tick_label_offset.y
-		# self.draw_string(self.get_theme_default_font(), tick_label_offset, \
-		# 	tick_label, 0, -1, self.font_size, self.line_color, 3, 0, 0)
 		
 		var tick_label: String = "{val}".format({"val":"%0.2f" % (self.max_val - i * tick_interval)})
 		self._draw_single_tick_with_label(curr_tick_pixel_pos, tick_label, self.get_theme_default_font(), self.font_size, self.line_color, tick_label_offset)
