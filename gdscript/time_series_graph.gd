@@ -112,7 +112,7 @@ func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 
 func setup_plot_node() -> void:
 	plot_node.init_plot(color_dict["gd_black"])
-	plot_node.setup_plot(Vector2(self.size.x, self.size.y))
+	plot_node.setup_plot(Vector2(self.size.x, self.size.y), Vector2(t_axis_node.norm_comp_size, y_axis_node.norm_comp_size))
 
 func init_plot_node():
 	setup_plot_node()

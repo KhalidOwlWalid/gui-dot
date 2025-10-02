@@ -11,7 +11,7 @@ const Guidot_T_Series_Graph := preload("res://gdscript/time_series_graph.gd")
 
 func _ready() -> void:
 	self.name = "Guidot_Graph"
-	var factor: int = 1
+	var factor: float = 0.9
 	self.size = Vector2(620*factor, 360*factor)
 	self.add_child(guidot_graph)
 
