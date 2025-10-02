@@ -126,18 +126,12 @@ func _on_mouse_entered() -> void:
 	self.line_color = Guidot_Utils.color_dict["gd_bright_yellow"]
 
 	self._mouse_in = true
-	print("Inside ", self.name, " mouse in: ", self._mouse_in)
-	
-	print("Mouse entered inside ", self.name)
 	queue_redraw()
 
 func _on_mouse_exited() -> void:
 	self.color = self.last_box_color
 	self.line_color = self.last_line_color
-	print("Mouse exited inside ", self.name)
-
 	self._mouse_in = false
-	print("Inside ", self.name, " mouse in: ", self._mouse_in)
 
 	queue_redraw()
 

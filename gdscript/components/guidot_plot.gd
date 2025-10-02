@@ -42,14 +42,16 @@ var approx_sample_t: float
 @onready var ds_cmp_t_diff = 0
 @onready var ds_approx_sample_t = 0
 @onready var ds_cmp_t = 0
+@onready var ds_offset = 0
 
 func update_debug_info() -> void:
 	self.debug_signals_to_trace = {
-		"k": str(ds_k),
-		"cmp_t_diff": str(ds_cmp_t_diff),
-		"ds_approx_sample_t": str(ds_approx_sample_t),
-		"ds_cmp_t": str(ds_cmp_t),
-		"ds_data_fetching_mode": self.data_fetching_mode_str[self.data_fetching_mode]
+		# "k": str(ds_k),
+		# "cmp_t_diff": str(ds_cmp_t_diff),
+		# "ds_approx_sample_t": str(ds_approx_sample_t),
+		# "ds_cmp_t": str(ds_cmp_t),
+		# "ds_data_fetching_mode": self.data_fetching_mode_str[self.data_fetching_mode]
+		"ds_offset": str(ds_offset),
 	}
 
 
@@ -91,17 +93,19 @@ func init_plot(color: Color = Guidot_Utils.color_dict["gd_black"]) -> void:
 
 # Setup the plot relative to the size of the graph display frame
 # The plot size 
-func setup_plot(frame_size: Vector2) -> void:
+func setup_plot(frame_size: Vector2, axis_norm_comp_size: Vector2) -> void:
 	# Find the necessary offset relative to the graph area
 	var plot_size_scaled: Vector2 = self.norm_comp_size * frame_size
-	var plot_x_size_scaled: int = plot_size_scaled.x/2
-	var plot_y_size_scaled: int = plot_size_scaled.y/2
 	# self.setup_center_anchor(plot_x_size_scaled, plot_y_size_scaled)
-	self.set_anchors_preset(Control.LayoutPreset.PRESET_CENTER)
-	self.set_offset(SIDE_LEFT, -plot_x_size_scaled)
-	self.set_offset(SIDE_RIGHT, plot_x_size_scaled)
-	self.set_offset(SIDE_TOP, -plot_y_size_scaled)
-	self.set_offset(SIDE_BOTTOM, plot_y_size_scaled)
+	# Temporary to handle margin
+	var b: float = 0.05
+	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
+	var left_offset: int = int(axis_norm_comp_size.x * frame_size.x)
+	var top_offset: int = int(b * frame_size.y)
+	self.set_offset(SIDE_LEFT, left_offset)
+	self.set_offset(SIDE_RIGHT, left_offset + plot_size_scaled.x)
+	self.set_offset(SIDE_TOP, top_offset)
+	self.set_offset(SIDE_BOTTOM, frame_size.y - axis_norm_comp_size.y * frame_size.y)
 	
 func _map_data_to_pixel(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2) -> void:
 	pixel_data_points = PackedVector2Array()

@@ -15,8 +15,10 @@ func _ready() -> void:
 	self._setup_axis_config_menu()
 	self.set_component_tag_name("X-AXIS")
 
+	self.norm_comp_size = 0.05
+
 func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node: Node) -> void:
-	self.set_anchors_preset(Control.LayoutPreset.PRESET_CENTER)
+	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
 	
 	self.axis_height = (display_frame_node.size.y - plot_frame_node.size.y)/2
 
