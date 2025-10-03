@@ -57,6 +57,9 @@ var debug_panel: Guidot_Debug_Panel
 # Final debug trace signals are used to encapsulate all of the debug tace signals of each of our components
 @onready var final_debug_trace_signals: Dictionary = {}
 
+#### SIGNAL TRACE #####
+@onready var mouse_pressed_flag: bool = false
+
 func update_debug_info() -> void:
 	self.debug_signals_to_trace = {
 		"Current buffer Mode": self.get_buffer_mode_str(self._current_buffer_mode),
@@ -68,6 +71,8 @@ func update_debug_info() -> void:
 		"Postprocess data size": str(plot_node.n_postprocessed_data),
 		"Head Position": str(plot_node.head_vec2),
 		"Tail Position": str(plot_node.tail_vec2),
+		"mouse pressed": str(mouse_pressed_flag),
+		"mouse in": str(self._mouse_in),
 	}
 
 func _update_final_debug_trace() -> void:
@@ -187,7 +192,7 @@ func _ready() -> void:
 	t_axis_node.focus_requested.connect(_on_focus_requested)
 	y_axis_node.focus_requested.connect(_on_focus_requested)
 	plot_node.focus_requested.connect(_on_focus_requested)
-	focus_requested.connect(_on_focus_requested)
+	self.focus_requested.connect(_on_focus_requested)
 
 	focus_entered.connect(_test)
 	
@@ -267,12 +272,13 @@ func _nerd_stats_panel_update():
 
 func _input(event: InputEvent) -> void:
 
-	if (self._mouse_in):
-		if event is InputEventMouseButton and event.pressed:
-
+	# if (self._mouse_in):
+	if event is InputEventMouseButton:
+		
+		if event.pressed:
 			if event.button_index == MOUSE_BUTTON_LEFT:
 				self._emit_focus_requested_signal()
-
+	
 	# For hotkeys
 	if (Input.is_action_just_pressed("nerd_stats")):
 		self._toggle_nerd_stats = !self._toggle_nerd_stats
@@ -289,10 +295,6 @@ func _input(event: InputEvent) -> void:
 		self._is_pause = !self._is_pause
 		self.log(LOG_DEBUG, ["Last data value: ", mavlink_node.data[-1].x, ", ", mavlink_node.data[-1].y])
 		self.log(LOG_DEBUG, ["Pause button pressed: ", self._is_pause])
-
-	# TODO (Khalid): Move this flag globally, and only allow the window to be moved in design mode
-	var moving_mode_flag: bool = true
-	self._move_display(event, moving_mode_flag)
 
 func _physics_process(delta: float) -> void:
 	self._move_display_process()
