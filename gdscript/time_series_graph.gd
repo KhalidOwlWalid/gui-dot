@@ -54,6 +54,8 @@ var _current_buffer_mode: Graph_Buffer_Mode
 # Helper tool
 var debug_panel: Guidot_Debug_Panel
 
+signal parent_focus_requested
+
 # Final debug trace signals are used to encapsulate all of the debug tace signals of each of our components
 @onready var final_debug_trace_signals: Dictionary = {}
 
@@ -251,6 +253,7 @@ func _on_graph_buffer_mode_changed() -> void:
 
 func _on_focus_requested() -> void:
 	self._is_in_focus = !self._is_in_focus
+	self.parent_focus_requested.emit()
 
 func _on_t_axis_changed() -> void:
 	t_axis_min = t_axis_node.min_val
@@ -299,12 +302,6 @@ func _input(event: InputEvent) -> void:
 
 func _physics_process(delta: float) -> void:
 	self._move_display_process()
-
-	if (self._is_in_focus):
-		guidot_graph.set_stylebox_color(color_dict["red"])
-	else:
-		# TODO (Khalid): This needs to be able to change back to previous color, not hardcoded color
-		guidot_graph.set_stylebox_color(color_dict["gd_black"])
 
 	# If the current buffer mode is fixed, then only update when the user changes the axis limits
 	match (self._current_buffer_mode):
