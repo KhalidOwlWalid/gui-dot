@@ -19,7 +19,7 @@ const Guidot_T_Series_Graph := preload("res://gdscript/time_series_graph.gd")
 
 func _ready() -> void:
 	self.name = "Guidot_Graph"
-	var factor: float = 0.9
+	var factor: float = 1
 	self.size = Vector2(620*factor, 360*factor)
 	self.add_child(guidot_graph)
 
@@ -63,23 +63,7 @@ func _input(event: InputEvent) -> void:
 		self._last_mouse_position = curr_mouse_pos
 		self._last_position = self.position
 
-func _move_display_process() -> void:
-	if _is_dragging:
-		var curr_mouse_offset: Vector2
-		var curr_mouse_pos: Vector2 = self.get_viewport().get_mouse_position()
-
-		if (curr_mouse_pos != self._last_mouse_position):
-			curr_mouse_offset = curr_mouse_pos - self.position
-			self.position = self._last_mouse_position + curr_mouse_offset
-
-		# self.log(Guidot_Log.Log_Level.INFO, ["Currentt mouse position", curr_mouse_pos])
-		# self.log(Guidot_Log.Log_Level.INFO, ["Current Position", self.position])
-		# self.log(Guidot_Log.Log_Level.INFO, ["Current Mouse Offset", curr_mouse_offset])
-		self._last_mouse_position = curr_mouse_pos
-		self._last_position = self.position
-
 func _process(delta: float) -> void:
-	# self._move_display_process()
 	pass
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
