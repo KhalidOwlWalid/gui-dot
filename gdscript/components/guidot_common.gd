@@ -45,11 +45,11 @@ func _emit_focus_requested_signal() -> void:
 
 func _on_mouse_entered() -> void:
 	self._mouse_in = true
-	print("Inside guidot common, mouse_in: ", self._mouse_in)
+	self.log(LOG_INFO, ["Inside guidot common, mouse_in: ", self._mouse_in])
 
 func _on_mouse_exited() -> void:
 	self._mouse_in = false
-	print("Inside guidot common, mouse_in: ", self._mouse_in)
+	self.log(LOG_INFO, ["Inside guidot common, mouse_in: ", self._mouse_in])
 
 func get_component_size() -> Vector2:
 	return self.size

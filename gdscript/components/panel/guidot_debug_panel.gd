@@ -33,7 +33,7 @@ func override_guidot_debug_info(new_dict: Dictionary) -> void:
 
 		var i: int = 0
 		for debug_type in self._guidot_debug_info:
-			var hbox_cont: HBoxContainer = self._create_debug_info_row(i, debug_type, self._guidot_debug_info[debug_type])
+			var hbox_cont: HBoxContainer = self._create_debug_info_row(i, debug_type, str(self._guidot_debug_info[debug_type]))
 			_debug_panel_vbox_cont.add_child(hbox_cont)
 
 func update_data_on_debug_panel(key: String, value: String) -> void:
@@ -108,7 +108,7 @@ func _ready() -> void:
 		# _debug_panel_vbox_cont.add_child(hbox_cont)
 	else:
 		for debug_info_type in self._guidot_debug_info:
-			hbox_cont = self._create_debug_info_row(curr_row, debug_info_type, self._guidot_debug_info[debug_info_type])
+			hbox_cont = self._create_debug_info_row(curr_row, debug_info_type, str(self._guidot_debug_info[debug_info_type]))
 			_debug_panel_vbox_cont.add_child(hbox_cont)
 			curr_row += 1
 
@@ -121,7 +121,7 @@ func _process(delta: float) -> void:
 	if (hbox_array.size() == self._guidot_debug_info.size()):
 		for i in range(self._guidot_debug_info.size()):
 			var key: String = self._guidot_debug_info.keys()[i]
-			var updated_val: String = self._guidot_debug_info[key]
+			var updated_val: String = str(self._guidot_debug_info[key])
 			var val_text_label: RichTextLabel = hbox_array[i].get_child(1)
 			val_text_label.text = updated_val
 	else:

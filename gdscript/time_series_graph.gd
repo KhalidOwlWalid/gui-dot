@@ -64,27 +64,28 @@ signal parent_focus_requested
 
 func update_debug_info() -> void:
 	self.debug_signals_to_trace = {
-		"Current buffer Mode": self.get_buffer_mode_str(self._current_buffer_mode),
-		"t_axis": str(Vector2(t_axis_min, t_axis_max)),
-		"y_axis": str(Vector2(y_axis_min, y_axis_max)),
-		"Last Data": str(get_last_data_point()),
-		"Current Fetch Mode": get_current_data_fetch_mode_str(),
-		"Preprocess data size": str(plot_node.n_preprocessed_data),
-		"Postprocess data size": str(plot_node.n_postprocessed_data),
-		"Head Position": str(plot_node.head_vec2),
-		"Tail Position": str(plot_node.tail_vec2),
-		"mouse pressed": str(mouse_pressed_flag),
-		"mouse in": str(self._mouse_in),
+		# "Current buffer Mode": self.get_buffer_mode_str(self._current_buffer_mode),
+		# "t_axis": str(Vector2(t_axis_min, t_axis_max)),
+		# "y_axis": str(Vector2(y_axis_min, y_axis_max)),
+		# "Last Data": str(get_last_data_point()),
+		# "Current Fetch Mode": get_current_data_fetch_mode_str(),
+		# "Preprocess data size": str(plot_node.n_preprocessed_data),
+		# "Postprocess data size": str(plot_node.n_postprocessed_data),
+		# "Head Position": str(plot_node.head_vec2),
+		# "Tail Position": str(plot_node.tail_vec2),
+		# "mouse pressed": str(mouse_pressed_flag),
+		# "mouse in": str(self._mouse_in),
 	}
 
 func _update_final_debug_trace() -> void:
 	self.update_debug_info()
 	plot_node.update_debug_info()
+	t_axis_node.update_debug_info()
 	self.final_debug_trace_signals.clear()
 
 	# TODO (Khalid): At the moment, I am leaving this hard-coded because this isn't really a user feature
 	# Only developer should be using this
-	var child_array: Array[Guidot_Common] = [self, plot_node] 
+	var child_array: Array[Guidot_Common] = [self, plot_node, t_axis_node] 
 
 	for child in child_array:
 		for debug_signal in child.debug_signals_to_trace:
