@@ -74,7 +74,7 @@ func update_debug_info() -> void:
 		# "Head Position": str(plot_node.head_vec2),
 		# "Tail Position": str(plot_node.tail_vec2),
 		# "mouse pressed": str(mouse_pressed_flag),
-		# "mouse in": str(self._mouse_in),
+		"Guidot Plot: mouse in": self._mouse_in,
 	}
 
 func _update_final_debug_trace() -> void:
@@ -335,3 +335,6 @@ func _physics_process(delta: float) -> void:
 	if (not self._is_pause):
 		self._update_final_debug_trace()
 		self.debug_panel._guidot_debug_info = self.final_debug_trace_signals	
+
+	if (self._is_in_focus):
+		self.set_mouse_filter(MOUSE_FILTER_IGNORE)
