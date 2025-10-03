@@ -46,12 +46,8 @@ var approx_sample_t: float
 
 func update_debug_info() -> void:
 	self.debug_signals_to_trace = {
-		# "k": str(ds_k),
-		# "cmp_t_diff": str(ds_cmp_t_diff),
-		# "ds_approx_sample_t": str(ds_approx_sample_t),
-		# "ds_cmp_t": str(ds_cmp_t),
-		# "ds_data_fetching_mode": self.data_fetching_mode_str[self.data_fetching_mode]
 		"ds_offset": str(ds_offset),
+		"plot: mouse_in": self._mouse_in,
 	}
 
 
@@ -80,6 +76,7 @@ func _ready() -> void:
 
 	# Use the guidot common mouse entered implementation
 	self.mouse_entered.connect(self._on_mouse_entered)
+	self.mouse_exited.connect(self._on_mouse_exited)
 
 func setup_plot_anchor() -> void:
 	pass
