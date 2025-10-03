@@ -1,6 +1,11 @@
 class_name Guidot_X_Axis
 extends Guidot_Axis
 
+func update_debug_info() -> void:
+	self.debug_signals_to_trace = {
+		"t axis: mouse_in": self._mouse_in,
+	}
+
 func _ready() -> void:
 	self.line_color = Guidot_Utils.color_dict["white"]
 	self.last_line_color = self.line_color
