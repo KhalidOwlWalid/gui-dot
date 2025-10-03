@@ -80,6 +80,7 @@ func _ready() -> void:
 
 	# Use the guidot common mouse entered implementation
 	self.mouse_entered.connect(self._on_mouse_entered)
+	# self.set_mouse_filter(MouseFilter.MOUSE_FILTER_IGNORE)
 
 func setup_plot_anchor() -> void:
 	pass
