@@ -24,6 +24,15 @@ const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 
 @onready var _is_in_focus: bool = false
 
+enum UI_Mode {
+	SELECTED,
+	DATA_DISPLAY,
+	PREVIEW,
+	SETTINGS,
+}
+
+@onready var _current_ui_mode: UI_Mode = UI_Mode.DATA_DISPLAY 
+
 func _ready() -> void:
 	self.name = "Guidot_Graph"
 	var factor: float = 1
@@ -64,7 +73,7 @@ var _drag_offset: Vector2
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:	
-		if event.is_pressed() and self._is_in_focus:
+		if event.is_pressed() and self._current_ui_mode == UI_Mode.SELECTED:
 			# Start dragging - calculate the offset from mouse to panel position
 			_is_dragging = true
 			_drag_offset = get_global_mouse_position() - self.global_position
@@ -72,18 +81,21 @@ func _input(event: InputEvent) -> void:
 		else:
 			_is_dragging = false
 
-	if event is InputEventMouseMotion and self._is_dragging and self._is_in_focus:
-		self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging"])
-		var curr_mouse_pos: Vector2 = get_global_mouse_position()
-		
-		# Move panel while maintaining the original mouse offset
-		self.global_position = curr_mouse_pos - _drag_offset
-		
-		self._last_mouse_position = curr_mouse_pos
-		self._last_position = self.position
+	if (self._current_ui_mode == UI_Mode.SELECTED):
+		if event is InputEventMouseMotion and self._is_dragging:
+			self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging"])
+			var curr_mouse_pos: Vector2 = get_global_mouse_position()
+			
+			# Move panel while maintaining the original mouse offset
+			self.global_position = curr_mouse_pos - _drag_offset
+			
+			self._last_mouse_position = curr_mouse_pos
+			self._last_position = self.position
 
 func _process(delta: float) -> void:
-	pass
+	
+	if (self._is_in_focus):
+		self._current_ui_mode = UI_Mode.SELECTED
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
 	Guidot_Log.gd_log(log_level, "MASTER_PANEL", msg)

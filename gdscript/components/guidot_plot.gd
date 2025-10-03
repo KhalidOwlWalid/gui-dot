@@ -376,3 +376,4 @@ func _input(event: InputEvent) -> void:
 		if (self._mouse_in):
 			if event.button_index == MOUSE_BUTTON_LEFT:
 				self._emit_focus_requested_signal()
+				self.set_mouse_filter(MOUSE_FILTER_IGNORE)
