@@ -189,10 +189,10 @@ func _ready() -> void:
 	t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
 	y_axis_node.axis_limit_changed.connect(_on_y_axis_changed)
 
-	t_axis_node.focus_requested.connect(_on_focus_requested)
-	y_axis_node.focus_requested.connect(_on_focus_requested)
+	# t_axis_node.focus_requested.connect(_on_focus_requested)
+	# y_axis_node.focus_requested.connect(_on_focus_requested)
 	plot_node.focus_requested.connect(_on_focus_requested)
-	self.focus_requested.connect(_on_focus_requested)
+	# self.focus_requested.connect(_on_focus_requested)
 
 	focus_entered.connect(_test)
 	
@@ -277,7 +277,8 @@ func _input(event: InputEvent) -> void:
 		
 		if event.pressed:
 			if event.button_index == MOUSE_BUTTON_LEFT:
-				self._emit_focus_requested_signal()
+				# self._emit_focus_requested_signal()
+				pass
 	
 	# For hotkeys
 	if (Input.is_action_just_pressed("nerd_stats")):
