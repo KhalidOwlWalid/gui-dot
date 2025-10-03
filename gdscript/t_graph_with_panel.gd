@@ -3,6 +3,11 @@ extends PanelContainer
 
 const Guidot_T_Series_Graph := preload("res://gdscript/time_series_graph.gd")
 
+const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG
+const LOG_WARNING = Guidot_Log.Log_Level.WARNING
+const LOG_INFO = Guidot_Log.Log_Level.INFO
+const LOG_ERROR = Guidot_Log.Log_Level.ERROR
+
 @onready var guidot_graph = Guidot_T_Series_Graph.new()
 @onready var _guidot_stylebox: StyleBoxFlat = StyleBoxFlat.new()
 @onready var margin_val: int = 1
@@ -17,6 +22,8 @@ const Guidot_T_Series_Graph := preload("res://gdscript/time_series_graph.gd")
 @onready var _dragging_distance: float = 0
 @onready var _last_position: Vector2 = Vector2()
 
+@onready var _is_in_focus: bool = false
+
 func _ready() -> void:
 	self.name = "Guidot_Graph"
 	var factor: float = 1
@@ -28,6 +35,18 @@ func _ready() -> void:
 	add_theme_stylebox_override("panel", _guidot_stylebox)
 	self._last_position = self.position
 	self._last_mouse_position = self.get_viewport().get_mouse_position()
+
+	guidot_graph.parent_focus_requested.connect(_on_parent_focused)
+
+func _on_parent_focused() -> void:
+	self._is_in_focus = !self._is_in_focus
+	self.log(LOG_INFO, ["On parent focused", self._is_in_focus])
+
+	if (self._is_in_focus):
+		self.set_stylebox_color(color_dict["red"])
+	else:
+		# TODO (Khalid): This needs to be able to change back to previous color, not hardcoded color
+		self.set_stylebox_color(color_dict["gd_black"])
 
 func set_stylebox_color(color: Color) -> void:
 	_guidot_stylebox.bg_color = color
@@ -45,7 +64,7 @@ var _drag_offset: Vector2
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:	
-		if event.is_pressed():
+		if event.is_pressed() and self._is_in_focus:
 			# Start dragging - calculate the offset from mouse to panel position
 			_is_dragging = true
 			_drag_offset = get_global_mouse_position() - self.global_position
@@ -53,8 +72,8 @@ func _input(event: InputEvent) -> void:
 		else:
 			_is_dragging = false
 
-	if event is InputEventMouseMotion and self._is_dragging:
-		self.log(Guidot_Log.Log_Level.INFO, ["Dragging"])
+	if event is InputEventMouseMotion and self._is_dragging and self._is_in_focus:
+		self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging"])
 		var curr_mouse_pos: Vector2 = get_global_mouse_position()
 		
 		# Move panel while maintaining the original mouse offset
