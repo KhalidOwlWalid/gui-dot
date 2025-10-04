@@ -15,6 +15,7 @@ const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 @onready var color_dict: Dictionary = Guidot_Utils.color_dict
 
 @onready var _last_mouse_position: Vector2 = Vector2()
+@onready var _mouse_in: bool = false
 
 @onready var _new_position: Vector2 = Vector2()
 @onready var _drag_direction: Vector2 = Vector2()
@@ -45,7 +46,16 @@ func _ready() -> void:
 	self._last_position = self.position
 	self._last_mouse_position = self.get_viewport().get_mouse_position()
 
+	# Signals connection
 	guidot_graph.parent_focus_requested.connect(_on_parent_focused)
+	self.mouse_entered.connect(_on_mouse_entered)
+	self.mouse_exited.connect(_on_mouse_exited)
+
+func _on_mouse_entered() -> void:
+	self._mouse_in = true
+
+func _on_mouse_exited() -> void:
+	self._mouse_in = false
 
 func _on_parent_focused() -> void:
 	self._is_in_focus = !self._is_in_focus
@@ -72,25 +82,32 @@ func set_panel_size(new_size: Vector2) -> void:
 var _drag_offset: Vector2
 
 func _input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:	
-		if event.is_pressed() and self._current_ui_mode == UI_Mode.SELECTED:
-			# Start dragging - calculate the offset from mouse to panel position
-			_is_dragging = true
-			_drag_offset = get_global_mouse_position() - self.global_position
-			self._last_position = self.position
-		else:
-			_is_dragging = false
 
-	if (self._current_ui_mode == UI_Mode.SELECTED):
-		if event is InputEventMouseMotion and self._is_dragging:
-			self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging"])
-			var curr_mouse_pos: Vector2 = get_global_mouse_position()
-			
-			# Move panel while maintaining the original mouse offset
-			self.global_position = curr_mouse_pos - _drag_offset
-			
-			self._last_mouse_position = curr_mouse_pos
-			self._last_position = self.position
+	if event is InputEventMouseButton:
+		if event.button_index == MOUSE_BUTTON_LEFT:	
+			if event.is_pressed() and self._current_ui_mode == UI_Mode.SELECTED:
+				# Start dragging - calculate the offset from mouse to panel position
+				_is_dragging = true
+				# This allows the user to grab the panel anywhere within the panel and drag it
+				# anywhere
+				_drag_offset = get_global_mouse_position() - self.global_position
+				self._last_position = self.position
+			else:
+				_is_dragging = false
+
+	if (self._current_ui_mode == UI_Mode.SELECTED):	
+		if event is InputEventMouseMotion:
+
+			# Only allow the user to drag when the mouse is inside the panel
+			if self._is_dragging and self._mouse_in:
+				self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging"])
+				var curr_mouse_pos: Vector2 = get_global_mouse_position()
+				
+				# Move panel while maintaining the original mouse offset
+				self.global_position = curr_mouse_pos - _drag_offset
+				
+				self._last_mouse_position = curr_mouse_pos
+				self._last_position = self.position
 
 func _process(delta: float) -> void:
 	

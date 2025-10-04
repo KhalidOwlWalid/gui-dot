@@ -24,7 +24,6 @@ var window_color: Color
 # I need to find a better way to interface this
 @onready var mavlink_node = get_node('/root/Control/Mavlink_Node')
 @onready var guidot_master_node = get_node('/root/Control/Guidot_Master_Node')
-@onready var guidot_graph = get_node('/root/Control/Guidot_Master_Node/Guidot_Graph')
 
 @onready var default_window_size: Vector2 = Vector2(620, 360)
 @onready var default_window_color: Color = color_dict["gd_black"]
