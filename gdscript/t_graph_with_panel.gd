@@ -138,9 +138,8 @@ var _drag_offset: Vector2
 func _is_point_near(from: Vector2, target: Vector2, margin: int) -> bool:
 	return from.distance_to(target) <= margin
 
-func _get_hovered_resize_corner() -> Resize_Corner:
+func _get_hovered_resize_corner(hover_margin: int) -> Resize_Corner:
 	var curr_local_mouse_pos: Vector2 = self.get_local_mouse_position()
-	var hover_margin: int = 10
 
 	if (self._is_point_near(curr_local_mouse_pos, self.top_left(), hover_margin)):
 		return Resize_Corner.TOP_LEFT
@@ -174,8 +173,7 @@ func _input(event: InputEvent) -> void:
 	if (self._current_ui_mode == UI_Mode.SELECTED):	
 		if event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_LEFT:	
-
-				if event.is_pressed() and self._current_ui_mode == UI_Mode.SELECTED:
+				if event.is_pressed() and self._curr_edit_mode == Edit_Mode.MOVE:
 					# Start dragging - calculate the offset from mouse to panel position
 					_is_dragging = true
 					# This allows the user to grab the panel anywhere within the panel and drag it
@@ -202,29 +200,35 @@ func _input(event: InputEvent) -> void:
 				self.set_default_cursor_shape(Control.CURSOR_ARROW)
 
 func _draw() -> void:
+	var resizing_circle_size: int  = 4
+	var resizing_hover_circle_size: int = 10
 	if (self._current_ui_mode == UI_Mode.SELECTED):
-		var resizing_circle_size: int  = 4
 		self.draw_circle(self.top_left(), resizing_circle_size, Color.RED)
 		self.draw_circle(self.top_right(), resizing_circle_size, Color.RED)
 		self.draw_circle(self.bottom_left(), resizing_circle_size, Color.RED)
 		self.draw_circle(self.bottom_right(), resizing_circle_size, Color.RED)
 
-		var resize_corner: Resize_Corner = self._get_hovered_resize_corner()
+		var resize_corner: Resize_Corner = self._get_hovered_resize_corner(20)
 
 		match (resize_corner):
 			Resize_Corner.NONE:
 				self.set_default_cursor_shape(Control.CURSOR_ARROW)
 
 			Resize_Corner.TOP_LEFT:
-				self.draw_circle(self.top_left(), 10, Color.RED, false)
+				self.draw_circle(self.top_left(), resizing_hover_circle_size, Color.RED, false)
 				self._curr_edit_mode = Edit_Mode.RESIZE
 
 			Resize_Corner.TOP_RIGHT:
-				self.draw_circle(self.top_right(), 10, Color.RED, false)
+				self.draw_circle(self.top_right(), resizing_hover_circle_size, Color.RED, false)
 				self._curr_edit_mode = Edit_Mode.RESIZE
 
-			Resize_Corner.TOP_LEFT:
-				pass
+			Resize_Corner.BOTTOM_LEFT:
+				self.draw_circle(self.bottom_left(), resizing_hover_circle_size, Color.RED, false)
+				self._curr_edit_mode = Edit_Mode.RESIZE
+
+			Resize_Corner.BOTTOM_RIGHT:
+				self.draw_circle(self.bottom_right(), resizing_hover_circle_size, Color.RED, false)
+				self._curr_edit_mode = Edit_Mode.RESIZE
 	
 func _process(delta: float) -> void:
 	
@@ -232,12 +236,12 @@ func _process(delta: float) -> void:
 		self._current_ui_mode = UI_Mode.SELECTED
 		self.queue_redraw()
 
-		self._is_trying_to_resize(self.top_left(), 10)
-		# self._is_trying_to_resize(self.top_right(), 10)
-
 		match (self._curr_edit_mode):
 			Edit_Mode.RESIZE:
 				self.set_default_cursor_shape(Control.CURSOR_HSIZE)
+
+			Edit_Mode.MOVE:
+				self.set_default_cursor_shape(Control.CURSOR_DRAG)
 			
 			Edit_Mode.NONE:
 				self.set_default_cursor_shape(Control.CURSOR_ARROW)
