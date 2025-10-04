@@ -150,3 +150,8 @@ func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
 
 func update_debug_info() -> void:
 	pass
+
+# NOTE: This function needs to be called in _ready() in order for the signal to be traced during runtime
+func add_debug_info(key: String, value) -> void:
+	self.debug_signals_to_trace[key] = value
+	self.log(LOG_INFO, ["Adding debug info", self.debug_signals_to_trace])
