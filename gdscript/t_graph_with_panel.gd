@@ -32,6 +32,42 @@ enum UI_Mode {
 	SETTINGS,
 }
 
+func get_component_size() -> Vector2:
+	return self.size
+
+func top_left() -> Vector2:
+	# Godot's origin system works from the top left
+	# So, we know that the top left should always be (0, 0)
+	var _top_left: Vector2 = Vector2(0, 0)
+	return _top_left
+
+func top_right() -> Vector2:
+	var _top_right: Vector2
+	var x_new: float
+	var y_new: float
+	x_new = self.get_component_size().x
+	y_new = 0
+	_top_right = Vector2(x_new, y_new)
+	return _top_right
+	
+func bottom_left() -> Vector2:
+	var _bot_left: Vector2
+	var x_new: float
+	var y_new: float
+	x_new = 0
+	y_new = self.get_component_size().y
+	_bot_left = Vector2(x_new, y_new)
+	return _bot_left
+
+func bottom_right() -> Vector2:
+	var _bot_right: Vector2
+	var x_new: float
+	var y_new: float
+	x_new = self.get_component_size().x
+	y_new = self.get_component_size().y
+	_bot_right = Vector2(x_new, y_new)
+	return _bot_right
+
 @onready var _current_ui_mode: UI_Mode = UI_Mode.DATA_DISPLAY 
 
 func _ready() -> void:
@@ -102,17 +138,26 @@ func _input(event: InputEvent) -> void:
 			if self._is_dragging and self._mouse_in:
 				self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging"])
 				var curr_mouse_pos: Vector2 = get_global_mouse_position()
-				
+		
 				# Move panel while maintaining the original mouse offset
 				self.global_position = curr_mouse_pos - _drag_offset
 				
 				self._last_mouse_position = curr_mouse_pos
 				self._last_position = self.position
 
+func _draw() -> void:
+	if (self._current_ui_mode == UI_Mode.SELECTED):
+		var resizing_circle_size: int  = 4
+		self.draw_circle(self.top_left(), resizing_circle_size, Color.RED)
+		self.draw_circle(self.top_right(), resizing_circle_size, Color.RED)
+		self.draw_circle(self.bottom_left(), resizing_circle_size, Color.RED)
+		self.draw_circle(self.bottom_right(), resizing_circle_size, Color.RED)
+
 func _process(delta: float) -> void:
 	
 	if (self._is_in_focus):
 		self._current_ui_mode = UI_Mode.SELECTED
+		self.queue_redraw()
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
 	Guidot_Log.gd_log(log_level, "MASTER_PANEL", msg)
