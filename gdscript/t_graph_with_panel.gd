@@ -23,6 +23,8 @@ const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 @onready var _dragging_distance: float = 0
 @onready var _last_position: Vector2 = Vector2()
 
+@onready var _is_resizing: bool = false
+
 @onready var _is_in_focus: bool = false
 
 enum UI_Mode {
@@ -31,6 +33,22 @@ enum UI_Mode {
 	PREVIEW,
 	SETTINGS,
 }
+
+enum Resize_Corner {
+	NONE,
+	TOP_LEFT,
+	TOP_RIGHT,
+	BOTTOM_LEFT,
+	BOTTOM_RIGHT,
+}
+
+enum Edit_Mode {
+	NONE,
+	RESIZE,
+	MOVE,
+}
+
+@onready var _curr_edit_mode: Edit_Mode = Edit_Mode.NONE
 
 func get_component_size() -> Vector2:
 	return self.size
@@ -117,22 +135,56 @@ func set_panel_size(new_size: Vector2) -> void:
 
 var _drag_offset: Vector2
 
+func _is_point_near(from: Vector2, target: Vector2, margin: int) -> bool:
+	return from.distance_to(target) <= margin
+
+func _get_hovered_resize_corner() -> Resize_Corner:
+	var curr_local_mouse_pos: Vector2 = self.get_local_mouse_position()
+	var hover_margin: int = 10
+
+	if (self._is_point_near(curr_local_mouse_pos, self.top_left(), hover_margin)):
+		return Resize_Corner.TOP_LEFT
+	elif (self._is_point_near(curr_local_mouse_pos, self.top_right(), hover_margin)):
+		return Resize_Corner.TOP_RIGHT
+	elif (self._is_point_near(curr_local_mouse_pos, self.bottom_left(), hover_margin)):
+		return Resize_Corner.BOTTOM_LEFT
+	elif (self._is_point_near(curr_local_mouse_pos, self.bottom_right(), hover_margin)):
+		return Resize_Corner.BOTTOM_RIGHT
+	else:
+		pass
+	# Return this only if we cant detect the mouse hovering on top of any of those points
+	return Resize_Corner.NONE
+
+func _is_trying_to_resize(corner_pos: Vector2, margin_size: int) -> void:
+	var within_horizontal_boundaries: bool = self.get_local_mouse_position().x < corner_pos.x + margin_size \
+		and self.get_local_mouse_position().x > corner_pos.x - margin_size
+
+	var within_vertical_boundaries: bool = self.get_local_mouse_position().y < corner_pos.y + margin_size \
+		and self.get_local_mouse_position().y > corner_pos.y - margin_size
+
+	if (within_horizontal_boundaries and within_vertical_boundaries):
+		self._is_resizing = true
+	else:
+		self._is_resizing = false
+
+	print("is resizing: ", self._is_resizing)
+
 func _input(event: InputEvent) -> void:
 
-	if event is InputEventMouseButton:
-		if event.button_index == MOUSE_BUTTON_LEFT:	
-
-			if event.is_pressed() and self._current_ui_mode == UI_Mode.SELECTED:
-				# Start dragging - calculate the offset from mouse to panel position
-				_is_dragging = true
-				# This allows the user to grab the panel anywhere within the panel and drag it
-				# anywhere
-				_drag_offset = get_global_mouse_position() - self.global_position
-				self._last_position = self.position
-			else:
-				_is_dragging = false
-
 	if (self._current_ui_mode == UI_Mode.SELECTED):	
+		if event is InputEventMouseButton:
+			if event.button_index == MOUSE_BUTTON_LEFT:	
+
+				if event.is_pressed() and self._current_ui_mode == UI_Mode.SELECTED:
+					# Start dragging - calculate the offset from mouse to panel position
+					_is_dragging = true
+					# This allows the user to grab the panel anywhere within the panel and drag it
+					# anywhere
+					_drag_offset = get_global_mouse_position() - self.global_position
+					self._last_position = self.position
+				else:
+					_is_dragging = false
+
 		if event is InputEventMouseMotion:
 
 			# Only allow the user to drag when the mouse is inside the panel
@@ -146,7 +198,7 @@ func _input(event: InputEvent) -> void:
 				self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging panel from", self._last_position, "to", self.global_position])
 				self._last_mouse_position = curr_mouse_pos
 				self._last_position = self.position
-			else:
+			elif not self._is_dragging:
 				self.set_default_cursor_shape(Control.CURSOR_ARROW)
 
 func _draw() -> void:
@@ -157,11 +209,39 @@ func _draw() -> void:
 		self.draw_circle(self.bottom_left(), resizing_circle_size, Color.RED)
 		self.draw_circle(self.bottom_right(), resizing_circle_size, Color.RED)
 
+		var resize_corner: Resize_Corner = self._get_hovered_resize_corner()
+
+		match (resize_corner):
+			Resize_Corner.NONE:
+				self.set_default_cursor_shape(Control.CURSOR_ARROW)
+
+			Resize_Corner.TOP_LEFT:
+				self.draw_circle(self.top_left(), 10, Color.RED, false)
+				self._curr_edit_mode = Edit_Mode.RESIZE
+
+			Resize_Corner.TOP_RIGHT:
+				self.draw_circle(self.top_right(), 10, Color.RED, false)
+				self._curr_edit_mode = Edit_Mode.RESIZE
+
+			Resize_Corner.TOP_LEFT:
+				pass
+	
 func _process(delta: float) -> void:
 	
 	if (self._is_in_focus):
 		self._current_ui_mode = UI_Mode.SELECTED
 		self.queue_redraw()
+
+		self._is_trying_to_resize(self.top_left(), 10)
+		# self._is_trying_to_resize(self.top_right(), 10)
+
+		match (self._curr_edit_mode):
+			Edit_Mode.RESIZE:
+				self.set_default_cursor_shape(Control.CURSOR_HSIZE)
+			
+			Edit_Mode.NONE:
+				self.set_default_cursor_shape(Control.CURSOR_ARROW)
+
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
 	Guidot_Log.gd_log(log_level, "MASTER_PANEL", msg)
