@@ -121,6 +121,7 @@ func _input(event: InputEvent) -> void:
 
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:	
+
 			if event.is_pressed() and self._current_ui_mode == UI_Mode.SELECTED:
 				# Start dragging - calculate the offset from mouse to panel position
 				_is_dragging = true
@@ -136,14 +137,17 @@ func _input(event: InputEvent) -> void:
 
 			# Only allow the user to drag when the mouse is inside the panel
 			if self._is_dragging and self._mouse_in:
-				self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging"])
+				self.set_default_cursor_shape(Control.CURSOR_DRAG)
 				var curr_mouse_pos: Vector2 = get_global_mouse_position()
 		
 				# Move panel while maintaining the original mouse offset
-				self.global_position = curr_mouse_pos - _drag_offset
-				
+				var new_pos = curr_mouse_pos - _drag_offset
+				self.global_position = new_pos
+				self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging panel from", self._last_position, "to", self.global_position])
 				self._last_mouse_position = curr_mouse_pos
 				self._last_position = self.position
+			else:
+				self.set_default_cursor_shape(Control.CURSOR_ARROW)
 
 func _draw() -> void:
 	if (self._current_ui_mode == UI_Mode.SELECTED):
