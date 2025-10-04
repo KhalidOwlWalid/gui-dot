@@ -75,6 +75,7 @@ func update_debug_info() -> void:
 		# "mouse pressed": str(mouse_pressed_flag),
 		"Guidot Plot: mouse in": self._mouse_in,
 	}
+	# self.debug_signals_to_trace = self.debug_signals_to_trace
 
 func _update_final_debug_trace() -> void:
 	self.update_debug_info()
@@ -217,6 +218,20 @@ func _ready() -> void:
 
 	self.log(LOG_INFO, ["Time series graph initialized"])
 
+	# self.debug_signals_to_trace = {
+	# 	# "Current buffer Mode": self.get_buffer_mode_str(self._current_buffer_mode),
+	# 	# "t_axis": str(Vector2(t_axis_min, t_axis_max)),
+	# 	# "y_axis": str(Vector2(y_axis_min, y_axis_max)),
+	# 	# "Last Data": str(get_last_data_point()),
+	# 	# "Current Fetch Mode": get_current_data_fetch_mode_str(),
+	# 	# "Preprocess data size": str(plot_node.n_preprocessed_data),
+	# 	# "Postprocess data size": str(plot_node.n_postprocessed_data),
+	# 	# "Head Position": str(plot_node.head_vec2),
+	# 	# "Tail Position": str(plot_node.tail_vec2),
+	# 	# "mouse pressed": str(mouse_pressed_flag),
+	# 	"Guidot Plot: mouse in": self._mouse_in,
+	# }
+
 	queue_redraw()
 
 func _test() -> void:
@@ -337,3 +352,5 @@ func _physics_process(delta: float) -> void:
 
 	if (self._is_in_focus):
 		self.set_mouse_filter(MOUSE_FILTER_IGNORE)
+
+	self.log(LOG_INFO, [self.debug_signals_to_trace])

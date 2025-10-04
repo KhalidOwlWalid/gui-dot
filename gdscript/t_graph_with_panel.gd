@@ -22,6 +22,7 @@ const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 @onready var _is_dragging: bool = false
 @onready var _dragging_distance: float = 0
 @onready var _last_position: Vector2 = Vector2()
+var _drag_offset: Vector2
 
 @onready var _is_resizing: bool = false
 
@@ -100,6 +101,10 @@ func _ready() -> void:
 	self._last_position = self.position
 	self._last_mouse_position = self.get_viewport().get_mouse_position()
 
+	self.log(LOG_INFO, ["Before", guidot_graph.debug_signals_to_trace])
+	guidot_graph.add_debug_info("test", "hello")
+	self.log(LOG_INFO, ["After", guidot_graph.debug_signals_to_trace])
+
 	# Signals connection
 	guidot_graph.parent_focus_requested.connect(_on_parent_focused)
 	self.mouse_entered.connect(_on_mouse_entered)
@@ -133,8 +138,6 @@ func set_margin_size(val: int) -> void:
 func set_panel_size(new_size: Vector2) -> void:
 	pass
 
-var _drag_offset: Vector2
-
 func _is_point_near(from: Vector2, target: Vector2, margin: int) -> bool:
 	return from.distance_to(target) <= margin
 
@@ -154,28 +157,17 @@ func _get_hovered_resize_corner(hover_margin: int) -> Resize_Corner:
 	# Return this only if we cant detect the mouse hovering on top of any of those points
 	return Resize_Corner.NONE
 
-func _is_trying_to_resize(corner_pos: Vector2, margin_size: int) -> void:
-	var within_horizontal_boundaries: bool = self.get_local_mouse_position().x < corner_pos.x + margin_size \
-		and self.get_local_mouse_position().x > corner_pos.x - margin_size
-
-	var within_vertical_boundaries: bool = self.get_local_mouse_position().y < corner_pos.y + margin_size \
-		and self.get_local_mouse_position().y > corner_pos.y - margin_size
-
-	if (within_horizontal_boundaries and within_vertical_boundaries):
-		self._is_resizing = true
-	else:
-		self._is_resizing = false
-
-	print("is resizing: ", self._is_resizing)
-
 func _input(event: InputEvent) -> void:
 
 	if (self._current_ui_mode == UI_Mode.SELECTED):	
 		if event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_LEFT:	
-				if event.is_pressed() and self._curr_edit_mode == Edit_Mode.MOVE:
+				if event.is_pressed() and self._curr_edit_mode == Edit_Mode.RESIZE:
+					pass
+				elif event.is_pressed():
 					# Start dragging - calculate the offset from mouse to panel position
 					_is_dragging = true
+					self._curr_edit_mode == Edit_Mode.MOVE
 					# This allows the user to grab the panel anywhere within the panel and drag it
 					# anywhere
 					_drag_offset = get_global_mouse_position() - self.global_position
@@ -212,7 +204,7 @@ func _draw() -> void:
 
 		match (resize_corner):
 			Resize_Corner.NONE:
-				self.set_default_cursor_shape(Control.CURSOR_ARROW)
+				pass
 
 			Resize_Corner.TOP_LEFT:
 				self.draw_circle(self.top_left(), resizing_hover_circle_size, Color.RED, false)
@@ -245,6 +237,8 @@ func _process(delta: float) -> void:
 			
 			Edit_Mode.NONE:
 				self.set_default_cursor_shape(Control.CURSOR_ARROW)
+	else:
+		self._current_ui_mode = UI_Mode.DATA_DISPLAY
 
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
