@@ -2,6 +2,7 @@ class_name Guidot_Common
 extends ColorRect
 
 signal focus_requested
+signal focus_escaped
 
 enum Graph_Buffer_Mode {
 	FIXED,      # If user wants to display a set window span. User will have to manually reset the time axes
@@ -119,6 +120,9 @@ func setup_center_anchor(x_size: int, y_size) -> void:
 
 func set_component_tag_name(tag_name: String) -> void:
 	self._component_tag = tag_name
+
+func set_focus_flag(flag: bool) -> void:
+	self._is_in_focus = flag
 
 # This is placed inside Guidot_Common since I want each child to be able to use this
 func _move_display(event: InputEvent, in_moving_mode: bool) -> void:
