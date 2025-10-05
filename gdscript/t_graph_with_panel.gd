@@ -158,19 +158,26 @@ func _is_point_near(from: Vector2, target: Vector2, margin: int) -> bool:
 
 func _get_hovered_resize_corner(hover_margin: int) -> Resize_Corner:
 	var curr_local_mouse_pos: Vector2 = self.get_local_mouse_position()
+	var curr_resize_corner: Resize_Corner
 
-	if (self._is_point_near(curr_local_mouse_pos, self.top_left(), hover_margin)):
-		return Resize_Corner.TOP_LEFT
-	elif (self._is_point_near(curr_local_mouse_pos, self.top_right(), hover_margin)):
-		return Resize_Corner.TOP_RIGHT
-	elif (self._is_point_near(curr_local_mouse_pos, self.bottom_left(), hover_margin)):
-		return Resize_Corner.BOTTOM_LEFT
-	elif (self._is_point_near(curr_local_mouse_pos, self.bottom_right(), hover_margin)):
-		return Resize_Corner.BOTTOM_RIGHT
+	if (self._is_holding_left_click and self._curr_edit_mode == Edit_Mode.RESIZE):
+		# If we are currently resizing that corner, then let the user finish the resizing process first
+		# before we allow them to perform it for other corners
+		self._last_active_resize_corner = self._active_resize_corner
+		curr_resize_corner = _last_active_resize_corner
 	else:
-		pass
+		if (self._is_point_near(curr_local_mouse_pos, self.top_left(), hover_margin)):
+			curr_resize_corner =  Resize_Corner.TOP_LEFT
+		elif (self._is_point_near(curr_local_mouse_pos, self.top_right(), hover_margin)):
+			curr_resize_corner =  Resize_Corner.TOP_RIGHT
+		elif (self._is_point_near(curr_local_mouse_pos, self.bottom_left(), hover_margin)):
+			curr_resize_corner =  Resize_Corner.BOTTOM_LEFT
+		elif (self._is_point_near(curr_local_mouse_pos, self.bottom_right(), hover_margin)):
+			curr_resize_corner =  Resize_Corner.BOTTOM_RIGHT
+		else:
+			curr_resize_corner = Resize_Corner.NONE
 	# Return this only if we cant detect the mouse hovering on top of any of those points
-	return Resize_Corner.NONE
+	return curr_resize_corner
 
 func _input(event: InputEvent) -> void:
 
@@ -209,12 +216,29 @@ func _input(event: InputEvent) -> void:
 		if event is InputEventMouseMotion:
 
 			var curr_mouse_pos: Vector2 = get_global_mouse_position()
+			var mouse_delta = self._last_mouse_position - curr_mouse_pos
+			var new_size: Vector2
+			var new_pos: Vector2
 			# Only allow the user to drag when the mouse is inside the panel
 			if self._curr_edit_mode == Edit_Mode.RESIZE and self._is_holding_left_click:
-				
-				var mouse_delta = self._last_mouse_position - curr_mouse_pos
-				var new_size = self.size + mouse_delta
-				var new_pos = Vector2(self.global_position.x - mouse_delta.x, self.global_position.y - mouse_delta.y)
+	
+				match (self._active_resize_corner):
+					Resize_Corner.TOP_LEFT:
+						new_size = self.size + mouse_delta
+						new_pos = Vector2(self.global_position.x - mouse_delta.x, self.global_position.y - mouse_delta.y)
+					Resize_Corner.TOP_RIGHT:
+						new_size = self.size + mouse_delta
+						new_pos = self.global_position + mouse_delta
+					Resize_Corner.BOTTOM_LEFT:
+						new_size = self.size
+						new_pos = self.global_position
+					Resize_Corner.BOTTOM_RIGHT:
+						new_size = self.size
+						new_pos = self.global_position
+					Resize_Corner.NONE:
+						new_size = self.size
+						new_pos = self.global_position
+
 				self.size = new_size
 				self.global_position = curr_mouse_pos
 				self._last_mouse_position = curr_mouse_pos
@@ -223,7 +247,7 @@ func _input(event: InputEvent) -> void:
 				self.set_default_cursor_shape(Control.CURSOR_DRAG)
 		
 				# Move panel while maintaining the original mouse offset
-				var new_pos = curr_mouse_pos - _drag_offset
+				new_pos = curr_mouse_pos - _drag_offset
 				self.global_position = new_pos
 				self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging panel from", self._last_position, "to", self.global_position])
 				self._last_mouse_position = curr_mouse_pos
