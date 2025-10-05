@@ -60,6 +60,8 @@ enum Edit_Mode {
 	Edit_Mode.MOVE: "MOVE",
 }
 
+@onready var _current_ui_mode: UI_Mode = UI_Mode.DATA_DISPLAY 
+
 @onready var _curr_edit_mode: Edit_Mode = Edit_Mode.NONE
 @onready var _last_edit_mode: Edit_Mode = self._curr_edit_mode
 
@@ -102,7 +104,8 @@ func bottom_right() -> Vector2:
 	_bot_right = Vector2(x_new, y_new)
 	return _bot_right
 
-@onready var _current_ui_mode: UI_Mode = UI_Mode.DATA_DISPLAY 
+func _register_hotkeys() -> void:
+	Guidot_Utils.add_action_with_keycode("escape", KEY_ESCAPE) 
 
 func _ready() -> void:
 	self.name = "Guidot_Graph"
@@ -125,6 +128,9 @@ func _ready() -> void:
 	self.mouse_entered.connect(_on_mouse_entered)
 	self.mouse_exited.connect(_on_mouse_exited)
 
+	# Hotkeys
+	self._register_hotkeys()
+
 func _on_mouse_entered() -> void:
 	self._mouse_in = true
 
@@ -132,14 +138,8 @@ func _on_mouse_exited() -> void:
 	self._mouse_in = false
 
 func _on_parent_focused() -> void:
-	self._is_in_focus = !self._is_in_focus
+	self._is_in_focus = true
 	self.log(LOG_INFO, ["On parent focused", self._is_in_focus])
-
-	if (self._is_in_focus):
-		self.set_stylebox_color(color_dict["red"])
-	else:
-		# TODO (Khalid): This needs to be able to change back to previous color, not hardcoded color
-		self.set_stylebox_color(color_dict["gd_black"])
 
 func set_stylebox_color(color: Color) -> void:
 	_guidot_stylebox.bg_color = color
@@ -180,6 +180,14 @@ func _get_hovered_resize_corner(hover_margin: int) -> Resize_Corner:
 	return curr_resize_corner
 
 func _input(event: InputEvent) -> void:
+
+	if (Input.is_action_just_pressed("escape")):
+		self.log(LOG_INFO, ["Escape key just pressed"])
+		self._is_in_focus = false
+		guidot_graph.set_focus_flag(self._is_in_focus)
+
+	if (self._curr_edit_mode == UI_Mode.DATA_DISPLAY):
+		pass
 
 	if (self._current_ui_mode == UI_Mode.SELECTED):	
 		if event is InputEventMouseButton:
@@ -320,6 +328,12 @@ func _draw() -> void:
 		self._draw_resizing_hover_circle(resizing_hover_circle_size)
 	
 func _process(delta: float) -> void:
+
+	if (self._is_in_focus):
+		self.set_stylebox_color(color_dict["red"])
+	else:
+		# TODO (Khalid): This needs to be able to change back to previous color, not hardcoded color
+		self.set_stylebox_color(color_dict["gd_black"])
 	
 	if (self._is_in_focus):
 		self._current_ui_mode = UI_Mode.SELECTED

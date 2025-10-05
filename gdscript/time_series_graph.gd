@@ -73,7 +73,9 @@ func update_debug_info() -> void:
 		# "Head Position": str(plot_node.head_vec2),
 		# "Tail Position": str(plot_node.tail_vec2),
 		# "mouse pressed": str(mouse_pressed_flag),
-		"Guidot Plot: mouse in": self._mouse_in,
+		"Graph: mouse in": self._mouse_in,
+		"Graph: in focus": self._is_in_focus,
+		"Graph: mouse filter": self.get_mouse_filter()
 	}
 	# self.debug_signals_to_trace = self.debug_signals_to_trace
 
@@ -192,12 +194,8 @@ func _ready() -> void:
 	t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
 	y_axis_node.axis_limit_changed.connect(_on_y_axis_changed)
 
-	# t_axis_node.focus_requested.connect(_on_focus_requested)
-	# y_axis_node.focus_requested.connect(_on_focus_requested)
 	plot_node.focus_requested.connect(_on_focus_requested)
 	# self.focus_requested.connect(_on_focus_requested)
-
-	focus_entered.connect(_test)
 	
 	# Self node signal
 	self.resized.connect(_on_display_frame_resized)
@@ -218,24 +216,7 @@ func _ready() -> void:
 
 	self.log(LOG_INFO, ["Time series graph initialized"])
 
-	# self.debug_signals_to_trace = {
-	# 	# "Current buffer Mode": self.get_buffer_mode_str(self._current_buffer_mode),
-	# 	# "t_axis": str(Vector2(t_axis_min, t_axis_max)),
-	# 	# "y_axis": str(Vector2(y_axis_min, y_axis_max)),
-	# 	# "Last Data": str(get_last_data_point()),
-	# 	# "Current Fetch Mode": get_current_data_fetch_mode_str(),
-	# 	# "Preprocess data size": str(plot_node.n_preprocessed_data),
-	# 	# "Postprocess data size": str(plot_node.n_postprocessed_data),
-	# 	# "Head Position": str(plot_node.head_vec2),
-	# 	# "Tail Position": str(plot_node.tail_vec2),
-	# 	# "mouse pressed": str(mouse_pressed_flag),
-	# 	"Guidot Plot: mouse in": self._mouse_in,
-	# }
-
 	queue_redraw()
-
-func _test() -> void:
-	self.log(LOG_INFO, ["Testing focus"])
 
 # TODO: Implement this with error detection
 func set_window_color(color: Color) -> void:
@@ -250,7 +231,7 @@ func _on_display_frame_resized() -> void:
 	setup_plot_node()
 	setup_axis(y_axis_node, "y_axis", y_axis_node.color, y_axis_min, y_axis_max)
 	setup_axis(t_axis_node, "t_axis", t_axis_node.color, t_axis_min, t_axis_max)
-	print("Display frame resized")
+	self.log(LOG_DEBUG, ["Display frame resized"])
 
 ########################################
 #    SIGNAL CALLBACK IMPLEMENTATION    #
@@ -259,7 +240,6 @@ func _on_data_received() -> void:
 	if (not self._is_pause):
 		t_axis_min = t_axis_node.min_val
 		t_axis_max = t_axis_node.max_val
-		self.log(LOG_DEBUG, ["Inside on data received: ", Vector2(t_axis_min, t_axis_max)])
 		plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 		queue_redraw()
 
@@ -274,14 +254,12 @@ func _on_t_axis_changed() -> void:
 	t_axis_min = t_axis_node.min_val
 	t_axis_max = t_axis_node.max_val
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
-	self.log(LOG_DEBUG, ["Inside on t axis changed: ", Vector2(t_axis_min, t_axis_max)])
 	plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 
 func _on_y_axis_changed() -> void:
 	y_axis_min = y_axis_node.min_val
 	y_axis_max = y_axis_node.max_val
 	plot_node.update_y_ticks_properties(y_axis_node.n_steps, y_axis_node.ticks_pos)
-	self.log(LOG_DEBUG, ["Inside on y axis changed: ", Vector2(y_axis_min, y_axis_max)])
 	plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 
 func _nerd_stats_panel_update():
@@ -295,7 +273,11 @@ func _input(event: InputEvent) -> void:
 		
 		if event.pressed:
 			if event.button_index == MOUSE_BUTTON_LEFT:
+				# TODO (Khalid): At the moment, this does not work because if we click on the plot,
+				# the display also captures this signal, resulting in "double emit focus" signal generated
 				# self._emit_focus_requested_signal()
+				if (self._is_in_focus):
+					plot_node._is_in_focus = false
 				pass
 	
 	# For hotkeys
@@ -351,4 +333,9 @@ func _physics_process(delta: float) -> void:
 		self.debug_panel._guidot_debug_info = self.final_debug_trace_signals	
 
 	if (self._is_in_focus):
+		# Allow the master panel to be able to see the entire mouse movement within the whole node
 		self.set_mouse_filter(MOUSE_FILTER_IGNORE)
+		plot_node.set_mouse_filter(MOUSE_FILTER_IGNORE)
+	else:
+		self.set_mouse_filter(MOUSE_FILTER_STOP)
+		plot_node.set_mouse_filter(MOUSE_FILTER_STOP)

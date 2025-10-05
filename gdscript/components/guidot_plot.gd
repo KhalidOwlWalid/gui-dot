@@ -6,13 +6,6 @@ extends Guidot_Common
 @onready var default_norm_size: int = 0.8
 @onready var pixel_data_points: PackedVector2Array = PackedVector2Array()
 
-
-# Used for debugging signals
-@onready var n_preprocessed_data: int = 0
-@onready var n_postprocessed_data: int = 0
-@onready var head_vec2: Vector2 = Vector2()
-@onready var tail_vec2: Vector2 = Vector2()
-
 # Data specific properties
 # Visualize the data as if it is a snake
 enum DataFetchMode {
@@ -44,12 +37,18 @@ var approx_sample_t: float
 @onready var ds_cmp_t = 0
 @onready var ds_offset = 0
 
+# Used for debugging signals
+@onready var n_preprocessed_data: int = 0
+@onready var n_postprocessed_data: int = 0
+@onready var head_vec2: Vector2 = Vector2()
+@onready var tail_vec2: Vector2 = Vector2()
+
 func update_debug_info() -> void:
 	self.debug_signals_to_trace = {
-		"ds_offset": str(ds_offset),
-		"plot: mouse_in": self._mouse_in,
+		# "ds_offset": str(ds_offset),
+		# "plot: mouse_in": self._mouse_in,
+		"Plot: in focus": self._is_in_focus,
 	}
-
 
 ##############################################
 
@@ -152,6 +151,8 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	for i in range(n_iter):
 		approx_sample_t += ts_data[-1 - i].x - ts_data[-2 - i].x
 	approx_sample_t = approx_sample_t / n_iter
+	
+	# TODO (Khalid): Remove this, THIS IS TEMPORARY to solve the lag issue!
 	approx_sample_t = float(1.0/60.0)
 
 	var t_min: float = t_range.x
@@ -304,14 +305,11 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 				# We do not return data that is out of screen, only render what is necessary to avoid drawing clipped data
 				ts_data = ts_data.slice(k_lower_slice, k_upper_slice)
 
-			self.log(LOG_DEBUG, ["DataFetchMode:", "Overflow both ends"])
-
 		DataFetchMode.BOTH_OUTSIDE:
 			ts_data = PackedVector2Array()
-			self.log(LOG_DEBUG, ["DataFetchMode:", "Both outside"])
 
 		DataFetchMode.NOT_IMPLEMENTED:
-			self.log(LOG_DEBUG, ["DataFetchMode:", "Not implemented"])
+			pass
 	
 	return ts_data
 
@@ -320,7 +318,6 @@ func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_ra
 
 	var data: PackedVector2Array = data_points
 
-	self.log(LOG_DEBUG, ["Size of data before processed: ", data.size()])
 	n_preprocessed_data = data.size()
 	# Pre-process the data that should be visible on the graph
 	if !(data_points.size() < n_sampling):
@@ -330,9 +327,7 @@ func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_ra
 		self.tail_vec2 = data[-1]
 
 	n_postprocessed_data = data.size()
-	
 
-	self.log(LOG_DEBUG, ["Size of data ready for rendering post processing: ", data.size()])
 	self._map_data_to_pixel(data, t_axis_range, y_axis_range)
 	queue_redraw()
 
@@ -375,5 +370,7 @@ func _input(event: InputEvent) -> void:
 		
 		if (self._mouse_in):
 			if event.button_index == MOUSE_BUTTON_LEFT:
-				self._emit_focus_requested_signal()
-				self.set_mouse_filter(MOUSE_FILTER_IGNORE)
+				
+				if (not self._is_in_focus):
+					self._emit_focus_requested_signal()
+					self.log(LOG_INFO, ["Emit focus requested signal"])
