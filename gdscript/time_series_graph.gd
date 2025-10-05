@@ -313,7 +313,7 @@ func _input(event: InputEvent) -> void:
 	if (Input.is_action_just_pressed("pause")):
 		self._is_pause = !self._is_pause
 		self.log(LOG_DEBUG, ["Last data value: ", mavlink_node.data[-1].x, ", ", mavlink_node.data[-1].y])
-		self.log(LOG_DEBUG, ["Pause button pressed: ", self._is_pause])
+		self.log(LOG_INFO, ["Pause button pressed: ", self._is_pause])
 
 func _physics_process(delta: float) -> void:
 	self._move_display_process()
@@ -352,5 +352,3 @@ func _physics_process(delta: float) -> void:
 
 	if (self._is_in_focus):
 		self.set_mouse_filter(MOUSE_FILTER_IGNORE)
-
-	self.log(LOG_INFO, [self.debug_signals_to_trace])
