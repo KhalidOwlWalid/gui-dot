@@ -215,45 +215,56 @@ func _input(event: InputEvent) -> void:
 
 		if event is InputEventMouseMotion:
 
-			var curr_mouse_pos: Vector2 = get_global_mouse_position()
-			var mouse_delta = self._last_mouse_position - curr_mouse_pos
+			var curr_mouse_pos_global: Vector2 = get_global_mouse_position()
+			var curr_mouse_pos_local: Vector2 = get_local_mouse_position()
+			# var mouse_delta = self._last_mouse_position - curr_mouse_pos_global
 			var new_size: Vector2
 			var new_pos: Vector2
+			var mouse_offset: Vector2
 			# Only allow the user to drag when the mouse is inside the panel
 			if self._curr_edit_mode == Edit_Mode.RESIZE and self._is_holding_left_click:
+				self._last_position = self.global_position
 	
 				match (self._active_resize_corner):
 					Resize_Corner.TOP_LEFT:
-						new_size = self.size + mouse_delta
-						new_pos = Vector2(self.global_position.x - mouse_delta.x, self.global_position.y - mouse_delta.y)
+						new_pos = self._last_position + curr_mouse_pos_local
+						# new_size = self.size - (new_pos - self._last_position)
+						new_size = self.size - curr_mouse_pos_local
 					Resize_Corner.TOP_RIGHT:
-						new_size = self.size + mouse_delta
-						new_pos = self.global_position + mouse_delta
+						mouse_offset = Vector2(curr_mouse_pos_local.x - self.size.x, curr_mouse_pos_local.y)
+						new_pos = self.global_position
+						new_size = self.size
 					Resize_Corner.BOTTOM_LEFT:
+						mouse_offset = Vector2(curr_mouse_pos_local.x - self.size.x, curr_mouse_pos_local.y)
 						new_size = self.size
 						new_pos = self.global_position
 					Resize_Corner.BOTTOM_RIGHT:
-						new_size = self.size
+						mouse_offset = curr_mouse_pos_local - self.size
+						new_size = self.size + mouse_offset
 						new_pos = self.global_position
 					Resize_Corner.NONE:
 						new_size = self.size
 						new_pos = self.global_position
 
+				self.log(LOG_DEBUG, ["Corner: ", self._active_resize_corner])
+				self.log(LOG_DEBUG, ["Current size: ", self.size, "| New size: ", new_size, "| Current pos: ", self.global_position, "| New pos: ", new_pos, " | Mouse delta: ", curr_mouse_pos_global])
+				self.global_position = new_pos
 				self.size = new_size
-				self.global_position = curr_mouse_pos
-				self._last_mouse_position = curr_mouse_pos
+				self._last_mouse_position = curr_mouse_pos_global
 
 			if self._is_dragging and self._mouse_in:
 				self.set_default_cursor_shape(Control.CURSOR_DRAG)
 		
 				# Move panel while maintaining the original mouse offset
-				new_pos = curr_mouse_pos - _drag_offset
+				new_pos = curr_mouse_pos_global - _drag_offset
 				self.global_position = new_pos
 				self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging panel from", self._last_position, "to", self.global_position])
-				self._last_mouse_position = curr_mouse_pos
+				self._last_mouse_position = curr_mouse_pos_global
 				self._last_position = self.position
 			elif not self._is_dragging:
 				self.set_default_cursor_shape(Control.CURSOR_ARROW)
+
+			self.log(LOG_DEBUG, ["Mouse delta: ", curr_mouse_pos_local])
 
 func _draw_resizing_hover_circle(circle_size: int) -> void:
 	var circle_pos_to_draw: Vector2 = Vector2()
