@@ -232,12 +232,28 @@ func _input(event: InputEvent) -> void:
 						new_size = self.size - curr_mouse_pos_local
 					Resize_Corner.TOP_RIGHT:
 						mouse_offset = Vector2(curr_mouse_pos_local.x - self.size.x, curr_mouse_pos_local.y)
-						new_pos = self.global_position
-						new_size = self.size
+						new_pos = Vector2(self._last_position.x, self._last_position.y + mouse_offset.y)
+						
+						# This helps handle the negative offset when the user is trying to scale down the graph with the top right corner
+						if (mouse_offset.y < 0):
+							new_size = Vector2(self.size.x + mouse_offset.x, self.size.y + abs(mouse_offset.y))
+						else:
+							new_size = Vector2(self.size.x + mouse_offset.x, self.size.y - abs(mouse_offset.y))
+
 					Resize_Corner.BOTTOM_LEFT:
-						mouse_offset = Vector2(curr_mouse_pos_local.x - self.size.x, curr_mouse_pos_local.y)
-						new_size = self.size
-						new_pos = self.global_position
+						mouse_offset = Vector2(curr_mouse_pos_local.x, curr_mouse_pos_local.y - self.size.y)
+						new_pos = Vector2(self._last_position.x + mouse_offset.x, self._last_position.y)
+
+						if (mouse_offset.x < 0):
+							new_size.x = self.size.x + abs(mouse_offset.x)
+						else:
+							new_size.x = self.size.x - abs(mouse_offset.x)
+
+						if (mouse_offset.y < 0):
+							new_size.y = self.size.y - abs(mouse_offset.y)
+						else:
+							new_size.y = self.size.y + abs(mouse_offset.y)
+
 					Resize_Corner.BOTTOM_RIGHT:
 						mouse_offset = curr_mouse_pos_local - self.size
 						new_size = self.size + mouse_offset
@@ -264,7 +280,6 @@ func _input(event: InputEvent) -> void:
 			elif not self._is_dragging:
 				self.set_default_cursor_shape(Control.CURSOR_ARROW)
 
-			self.log(LOG_DEBUG, ["Mouse delta: ", curr_mouse_pos_local])
 
 func _draw_resizing_hover_circle(circle_size: int) -> void:
 	var circle_pos_to_draw: Vector2 = Vector2()
@@ -348,7 +363,7 @@ func _process(delta: float) -> void:
 		self.log(LOG_DEBUG, ["I have released my left click"])
 		pass
 
-	self.log(LOG_DEBUG, ["Current edit mode: ", self.edit_mode_str[self._curr_edit_mode]])
+	self.log(LOG_DEBUG, ["Mouse pos local: ", self.get_local_mouse_position()])
 
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
