@@ -27,6 +27,7 @@ var _drag_offset: Vector2
 @onready var _is_resizing: bool = false
 
 @onready var _is_in_focus: bool = false
+@onready var _is_holding_left_click: bool = false
 
 enum UI_Mode {
 	SELECTED,
@@ -45,11 +46,24 @@ enum Resize_Corner {
 
 enum Edit_Mode {
 	NONE,
+	POSSIBLE_RESIZING,
 	RESIZE,
+	POSSIBLE_MOVING,
 	MOVE,
 }
 
+@onready var edit_mode_str: Dictionary = {
+	Edit_Mode.NONE: "NONE",
+	Edit_Mode.POSSIBLE_RESIZING: "POSSIBLE_RESIZING",
+	Edit_Mode.RESIZE: "RESIZE",
+	Edit_Mode.POSSIBLE_MOVING: "POSSIBLE_MOVING",
+	Edit_Mode.MOVE: "MOVE",
+}
+
 @onready var _curr_edit_mode: Edit_Mode = Edit_Mode.NONE
+@onready var _last_edit_mode: Edit_Mode = self._curr_edit_mode
+
+@onready var _active_resize_corner: Resize_Corner = Resize_Corner.NONE
 
 func get_component_size() -> Vector2:
 	return self.size
@@ -162,8 +176,19 @@ func _input(event: InputEvent) -> void:
 	if (self._current_ui_mode == UI_Mode.SELECTED):	
 		if event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_LEFT:	
-				if event.is_pressed() and self._curr_edit_mode == Edit_Mode.RESIZE:
-					pass
+				# Allow the user to be able to start resizing the graph
+				if event.is_pressed() and self._curr_edit_mode == Edit_Mode.POSSIBLE_RESIZING:
+					self.log(LOG_DEBUG, ["Graph panel ready to be resize"])
+					self._last_edit_mode = self._curr_edit_mode
+					self._curr_edit_mode = Edit_Mode.RESIZE
+					self._is_holding_left_click = true
+				# Go back to possible resizing if the user releases the left mouse
+				elif not event.is_pressed() \
+					and (self._last_edit_mode == Edit_Mode.POSSIBLE_RESIZING and self._curr_edit_mode == Edit_Mode.RESIZE):
+					self._last_edit_mode = self._curr_edit_mode
+					self._curr_edit_mode = Edit_Mode.RESIZE
+					self._is_holding_left_click = false
+					self.log(LOG_DEBUG, ["Left click resizing released"])
 				elif event.is_pressed():
 					# Start dragging - calculate the offset from mouse to panel position
 					_is_dragging = true
@@ -174,6 +199,13 @@ func _input(event: InputEvent) -> void:
 					self._last_position = self.position
 				else:
 					_is_dragging = false
+
+				if event.is_pressed():
+					self.log(LOG_DEBUG, ["I am pressing my left button"])
+					self._is_holding_left_click = true
+				else:
+					self.log(LOG_DEBUG, ["I am releasing my left button"])
+					self._is_holding_left_click = false
 
 		if event is InputEventMouseMotion:
 
@@ -191,6 +223,27 @@ func _input(event: InputEvent) -> void:
 			elif not self._is_dragging:
 				self.set_default_cursor_shape(Control.CURSOR_ARROW)
 
+func _draw_resizing_hover_circle(circle_size: int) -> void:
+	match (self._active_resize_corner):
+		Resize_Corner.NONE:
+			self._curr_edit_mode = Edit_Mode.NONE
+
+		Resize_Corner.TOP_LEFT:
+			self.draw_circle(self.top_left(), circle_size, Color.RED, false)
+			self._curr_edit_mode = Edit_Mode.POSSIBLE_RESIZING
+
+		Resize_Corner.TOP_RIGHT:
+			self.draw_circle(self.top_right(), circle_size, Color.RED, false)
+			self._curr_edit_mode = Edit_Mode.POSSIBLE_RESIZING
+
+		Resize_Corner.BOTTOM_LEFT:
+			self.draw_circle(self.bottom_left(), circle_size, Color.RED, false)
+			self._curr_edit_mode = Edit_Mode.POSSIBLE_RESIZING
+
+		Resize_Corner.BOTTOM_RIGHT:
+			self.draw_circle(self.bottom_right(), circle_size, Color.RED, false)
+			self._curr_edit_mode = Edit_Mode.POSSIBLE_RESIZING
+
 func _draw() -> void:
 	var resizing_circle_size: int  = 4
 	var resizing_hover_circle_size: int = 10
@@ -200,27 +253,8 @@ func _draw() -> void:
 		self.draw_circle(self.bottom_left(), resizing_circle_size, Color.RED)
 		self.draw_circle(self.bottom_right(), resizing_circle_size, Color.RED)
 
-		var resize_corner: Resize_Corner = self._get_hovered_resize_corner(20)
-
-		match (resize_corner):
-			Resize_Corner.NONE:
-				pass
-
-			Resize_Corner.TOP_LEFT:
-				self.draw_circle(self.top_left(), resizing_hover_circle_size, Color.RED, false)
-				self._curr_edit_mode = Edit_Mode.RESIZE
-
-			Resize_Corner.TOP_RIGHT:
-				self.draw_circle(self.top_right(), resizing_hover_circle_size, Color.RED, false)
-				self._curr_edit_mode = Edit_Mode.RESIZE
-
-			Resize_Corner.BOTTOM_LEFT:
-				self.draw_circle(self.bottom_left(), resizing_hover_circle_size, Color.RED, false)
-				self._curr_edit_mode = Edit_Mode.RESIZE
-
-			Resize_Corner.BOTTOM_RIGHT:
-				self.draw_circle(self.bottom_right(), resizing_hover_circle_size, Color.RED, false)
-				self._curr_edit_mode = Edit_Mode.RESIZE
+		self._active_resize_corner = self._get_hovered_resize_corner(20)
+		self._draw_resizing_hover_circle(resizing_hover_circle_size)
 	
 func _process(delta: float) -> void:
 	
@@ -229,6 +263,9 @@ func _process(delta: float) -> void:
 		self.queue_redraw()
 
 		match (self._curr_edit_mode):
+			Edit_Mode.POSSIBLE_RESIZING:
+				self.set_default_cursor_shape(Control.CURSOR_HSIZE)
+
 			Edit_Mode.RESIZE:
 				self.set_default_cursor_shape(Control.CURSOR_HSIZE)
 
@@ -239,6 +276,15 @@ func _process(delta: float) -> void:
 				self.set_default_cursor_shape(Control.CURSOR_ARROW)
 	else:
 		self._current_ui_mode = UI_Mode.DATA_DISPLAY
+
+	if (self._is_holding_left_click):
+		self.log(LOG_DEBUG, ["I am holding my left click still"])
+		pass
+	else:
+		self.log(LOG_DEBUG, ["I have released my left click"])
+		pass
+
+	self.log(LOG_DEBUG, ["Current edit mode: ", self.edit_mode_str[self._curr_edit_mode]])
 
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
