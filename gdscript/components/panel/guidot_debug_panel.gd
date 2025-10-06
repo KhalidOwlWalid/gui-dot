@@ -79,7 +79,7 @@ func _ready() -> void:
 	self._panel_size = Vector2(300, 100)
 
 	self.name = "Guidot_Debug_Panel"
-	self.visible = true
+	self.visible = false
 	self.size = _panel_size
 	self.position = self._init_pos
 	self.margin_val = 3
