@@ -1,4 +1,4 @@
-@tool
+# @tool
 class_name Guidot_T_Series_Graph
 extends Guidot_Common
 
@@ -7,7 +7,7 @@ const Guidot_Y_Axis := preload("res://gdscript/components/axis/guidot_y_axis.gd"
 const Guidot_T_Axis := preload("res://gdscript/components/axis/guidot_t_axis.gd")
 const Guidot_Plot := preload("res://gdscript/components/guidot_plot.gd")
 const Guidot_Line := preload("res://gdscript/components/guidot_line.gd")
-const Guidot_Data_Core := preload("res://gdscript/components/guidot_data.gd")
+# const Guidot_Data_Core := preload("res://gdscript/components/guidot_data.gd")
 
 @onready var color_dict: Dictionary = Guidot_Utils.color_dict
 
@@ -75,7 +75,7 @@ func update_debug_info() -> void:
 		# "mouse pressed": str(mouse_pressed_flag),
 		"Graph: mouse in": self._mouse_in,
 		"Graph: in focus": self._is_in_focus,
-		"Graph: mouse filter": self.get_mouse_filter()
+		"Graph: mouse filter": self.get_mouse_filter(),
 	}
 	# self.debug_signals_to_trace = self.debug_signals_to_trace
 

@@ -48,6 +48,9 @@ func update_debug_info() -> void:
 		# "ds_offset": str(ds_offset),
 		# "plot: mouse_in": self._mouse_in,
 		"Plot: in focus": self._is_in_focus,
+		"Pre-processed data size": self.n_preprocessed_data,
+		"Post-processed data size": self.n_postprocessed_data,
+		"Approximated sample time": self.approx_sample_t,
 	}
 
 ##############################################
