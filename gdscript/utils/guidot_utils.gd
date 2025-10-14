@@ -40,3 +40,8 @@ static func add_action_with_keycode(action, key):
 	InputMap.add_action(action)
 	InputMap.action_add_event(action, event)
 	Guidot_Log.gd_log(LOG_INFO, "UTILS", [action, " hotkeys registered"])
+
+static func generate_unique_name(node: Node, type: String) -> String:
+	print("My instance id is ", node.get_instance_id())
+	var name: String = type + "[" + str(node.get_instance_id()) + "]"
+	return name
