@@ -20,15 +20,25 @@ var _clock_node: Node
 @onready var _clock_src_type: ClockSourceType = ClockSourceType.GUIDOT_CLOCK
 
 @onready var _metadata: Dictionary = {
-	"unique_name": self.name,
+	"unique_name": "",
 	"unique_id": self.get_instance_id(),
 	"description": "",
 	"unit": "",
 	"data_name": "",
 }
 
+func get_metadata() -> Dictionary:
+	return self._metadata
+
+func set_unique_name(unique_name: String) -> void:
+	self.name = unique_name
+	self._metadata["unique_name"] = unique_name
+
 func get_unique_name() -> String:
 	return self._metadata["unique_name"]
+
+func set_unique_id() -> void:
+	self._metadata["unique_id"] = self.get_instance_id()
 
 func get_unique_id() -> int:
 	return self._metadata["unique_id"]
@@ -40,16 +50,16 @@ func _physics_process(delta: float) -> void:
 	pass
 
 func set_unit(unit: String) -> void:
-	pass
+	self._metadata["unit"] = unit
 
 func get_unit() -> String:
-	return String()
+	return self._metadata["unit"]
 
 func set_description(description: String) -> void:
-	pass
+	self._metadata["description"] = description
 
 func get_description() -> String:
-	return String()
+	return self._metadata["description"]
 
 func set_frequency(freq: float) -> void:
 	pass
