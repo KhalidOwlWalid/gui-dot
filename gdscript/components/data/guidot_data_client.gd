@@ -58,20 +58,12 @@ func set_update_rate_hz(freq: float) -> void:
 	else:
 		self._update_rate_hz = freq
 
-@onready var last_update_ms: int = Time.get_ticks_msec()
-@onready var init_ms: int = Time.get_ticks_msec()
-
-func _mouse_cursor_data(delta: float) -> void:
-	var curr_ms: int = Time.get_ticks_msec()
-	var curr_s: float = float(curr_ms)/1000
-	if (curr_ms - last_update_ms > 10):
-		var relative_ms: int = curr_ms - init_ms
-		var curr_mouse_pos = self.get_viewport().get_mouse_position()
-		self._server_node.add_data_point(self.get_instance_id(), curr_mouse_pos.x)
-		last_update_ms = Time.get_ticks_msec()
-
 func _physics_process(delta: float) -> void:
-	self._mouse_cursor_data(delta)
+	pass
+
+# TODO (Khalid): Error handling if data point is not compatible (e.g string)
+func add_data_point(data_point) -> void:
+	self._server_node.add_data_point(self.get_instance_id(), data_point)
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
 	Guidot_Log.gd_log(log_level, self._comp_tag, msg)
