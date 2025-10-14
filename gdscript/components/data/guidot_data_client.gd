@@ -16,16 +16,31 @@ var _update_rate_hz: float
 @onready var _comp_tag: String = "GUIDOT_DATA_CLIENT"
 
 func _ready() -> void:
-	self.generate_unique_name("Guidot_Data_Client")
+	self.init_client()
+	self.scan_for_server()
+	
+func scan_for_server() -> void:
+	var server_nodes: Array[Node] = self.get_all_guidot_server()
+
+	if (server_nodes.is_empty()):
+		self.log(LOG_WARNING, ["No available guidot server to attach the client to."])
+	else:
+		self.log(LOG_INFO, [server_nodes.size(), "instance(s) of Guidot Server found."])
+		
+		# For now, we are going to grab the first server we see.
+		# In the future, we may want to allow the user to be able to select servers that they wish to listen to.
+		self._server_node = server_nodes[0]
+		self.log(LOG_INFO, ["Connected to server", self._server_node])
+
+		if (self._server_node.register_client(self.get_unique_id())):
+			self.log(LOG_INFO, ["Successfully registered", self.name, "to", self._server_node.name])
+
+func init_client() -> void:
+	self.name = Guidot_Utils.generate_unique_name(self, self._client_group_name)
 	self.add_to_group(self._client_group_name)
-	self.log(LOG_INFO, [self.get_tree().get_nodes_in_group(self._client_group_name)])
-	self.log(LOG_INFO, [self.get_tree().get_nodes_in_group(self._server_group_name)])
 
 func _on_server_connected() -> void:
 	self.log(LOG_INFO, ["Server connected"])
-
-func _physics_process(delta: float) -> void:
-	pass
 
 func set_path_to_server(server_nodepath: NodePath):
 	self._server_nodepath = server_nodepath
@@ -43,8 +58,20 @@ func set_update_rate_hz(freq: float) -> void:
 	else:
 		self._update_rate_hz = freq
 
-func scan_for_data_server() -> void:
-	pass
+@onready var last_update_ms: int = Time.get_ticks_msec()
+@onready var init_ms: int = Time.get_ticks_msec()
+
+func _mouse_cursor_data(delta: float) -> void:
+	var curr_ms: int = Time.get_ticks_msec()
+	var curr_s: float = float(curr_ms)/1000
+	if (curr_ms - last_update_ms > 10):
+		var relative_ms: int = curr_ms - init_ms
+		var curr_mouse_pos = self.get_viewport().get_mouse_position()
+		self._server_node.add_data_point(self.get_instance_id(), curr_mouse_pos.x)
+		last_update_ms = Time.get_ticks_msec()
+
+func _physics_process(delta: float) -> void:
+	self._mouse_cursor_data(delta)
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
 	Guidot_Log.gd_log(log_level, self._comp_tag, msg)
