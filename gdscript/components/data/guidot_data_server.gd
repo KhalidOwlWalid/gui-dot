@@ -25,7 +25,7 @@ func _ready() -> void:
 	self.add_to_group(Guidot_Common._server_group_name)
 
 	# TODO (Khalid): Error handling, if the node does not exist in the group, then server should be responsible in creating one
-	var clock_nodes: Array[Node] = self.get_tree().get_nodes_in_group(Guidot_Clock._clock_group_name)
+	var clock_nodes: Array[Node] = self.get_tree().get_nodes_in_group(Guidot_Common._clock_group_name)
 	self._clock_node = clock_nodes[0]
 
 func set_graph_buffer_mode(buf_mode: Graph_Buffer_Mode) -> void:
