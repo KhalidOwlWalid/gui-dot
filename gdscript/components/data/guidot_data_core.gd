@@ -1,15 +1,9 @@
-@tool
 class_name Guidot_Data_Core
 extends Node
 
 @onready var frequency: float = 0
 @onready var unit: String = ""
 @onready var description: String = ""
-
-# WARNING: This should not be changed by the user
-@onready var _server_group_name: String = "Guidot_Server"
-@onready var _client_group_name: String = "Guidot_Client"
-@onready var _clock_group_name: String = "Guidot_Clock"
 
 enum ClockSourceType {
 	GUIDOT_CLOCK,
@@ -68,7 +62,7 @@ func get_freqeuncy() -> float:
 	return 0
 
 func get_all_guidot_clients() -> Array[Node]:
-	return self.get_tree().get_nodes_in_group(self._client_group_name)
+	return self.get_tree().get_nodes_in_group(Guidot_Common._client_group_name)
 
 func get_all_guidot_server() -> Array[Node]:
-	return self.get_tree().get_nodes_in_group(self._server_group_name)
+	return self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)

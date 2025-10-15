@@ -36,8 +36,8 @@ func scan_for_server() -> void:
 			self.log(LOG_INFO, ["Successfully registered", self.name, "to", self._server_node.name])
 
 func init_client() -> void:
-	self.name = Guidot_Utils.generate_unique_name(self, self._client_group_name)
-	self.add_to_group(self._client_group_name)
+	self.name = Guidot_Utils.generate_unique_name(self, Guidot_Common._client_group_name)
+	self.add_to_group(Guidot_Common._client_group_name)
 
 func _on_server_connected() -> void:
 	self.log(LOG_INFO, ["Server connected"])
