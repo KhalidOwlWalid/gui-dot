@@ -8,6 +8,7 @@ signal focus_escaped
 static var _server_group_name: String = "Guidot_Server"
 static var _client_group_name: String = "Guidot_Client"
 static var _clock_group_name: String = "Guidot_Clock"
+static var _graph_group_name: String = "Guidot_Graph"
 
 enum Graph_Buffer_Mode {
 	FIXED,      # If user wants to display a set window span. User will have to manually reset the time axes
