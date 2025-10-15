@@ -40,5 +40,5 @@ func _mouse_cursor_data(delta: float) -> void:
 		last_update_ms = Time.get_ticks_msec()
 
 func _physics_process(delta: float) -> void:
-	_mouse_cursor_data(delta)
-	
+	if (float(Time.get_ticks_msec())/1000 > 5.0):
+		_mouse_cursor_data(delta)	

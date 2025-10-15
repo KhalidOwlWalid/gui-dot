@@ -76,6 +76,9 @@ func update_debug_info() -> void:
 		"Graph: mouse in": self._mouse_in,
 		"Graph: in focus": self._is_in_focus,
 		"Graph: mouse filter": self.get_mouse_filter(),
+		"t axis limit signal": self.t_axis_lim_signal,
+		"y axis limit signal": self.y_axis_lim_signal,
+		"data received signal": self.data_received_signal,
 	}
 	# self.debug_signals_to_trace = self.debug_signals_to_trace
 
@@ -96,6 +99,10 @@ func _update_final_debug_trace() -> void:
 # WARNING: This is temporary for testing the debug info
 
 ### HELPER FUNCTIONS #####
+@onready var t_axis_lim_signal: int = 0 
+@onready var y_axis_lim_signal: int = 0 
+@onready var data_received_signal: int = 0 
+
 func get_last_data_point() -> Vector2:
 	var tmp: Vector2 = Vector2()
 	if (mavlink_node.data == null):
@@ -167,7 +174,8 @@ func init_server() -> void:
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	self.name = "Graph_Display"
+	self.name = Guidot_Utils.generate_unique_name(self, Guidot_Common._graph_group_name)
+	self.add_to_group(self._graph_group_name)
 	self.clip_contents = true
 	self.size = default_window_size
 	self.color = default_window_color
@@ -195,7 +203,11 @@ func _ready() -> void:
 	mavlink_node.data_received.connect(_on_data_received)
 
 	# Axis node signal
-	t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
+	# Note (Khalid): I am commenting the axis limit changed for t axis due to the fact that when running in real-time, it is actually redundant
+	# to when the data is received because as time passes, and the sliding window increases, we will also trigger another draw event, which
+	# doubles the computational resources since we are technically plotting something similar
+	# I am simply commenting this out as I believe it might still be useful in the future
+	# t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
 	y_axis_node.axis_limit_changed.connect(_on_y_axis_changed)
 
 	plot_node.focus_requested.connect(_on_focus_requested)
@@ -222,6 +234,9 @@ func _ready() -> void:
 
 	queue_redraw()
 
+func subscribe_to_data() -> void:
+	pass
+
 # TODO: Implement this with error detection
 func set_window_color(color: Color) -> void:
 	self.color = color
@@ -242,6 +257,7 @@ func _on_display_frame_resized() -> void:
 ########################################
 func _on_data_received() -> void:
 	if (not self._is_pause):
+		self.data_received_signal += 1
 		t_axis_min = t_axis_node.min_val
 		t_axis_max = t_axis_node.max_val
 		plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
@@ -252,24 +268,21 @@ func _on_focus_requested() -> void:
 	self.parent_focus_requested.emit()
 
 func _on_t_axis_changed() -> void:
+	self.t_axis_lim_signal += 1
 	t_axis_min = t_axis_node.min_val
 	t_axis_max = t_axis_node.max_val
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
 	plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 
 func _on_y_axis_changed() -> void:
+	self.y_axis_lim_signal += 1
 	y_axis_min = y_axis_node.min_val
 	y_axis_max = y_axis_node.max_val
 	plot_node.update_y_ticks_properties(y_axis_node.n_steps, y_axis_node.ticks_pos)
 	plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 
-func _nerd_stats_panel_update():
-	if (self._toggle_nerd_stats):
-		pass
-
 func _input(event: InputEvent) -> void:
 
-	# if (self._mouse_in):
 	if event is InputEventMouseButton:
 		
 		if event.pressed:
@@ -284,7 +297,8 @@ func _input(event: InputEvent) -> void:
 	# For hotkeys
 	if (Input.is_action_just_pressed("nerd_stats")):
 		self._toggle_nerd_stats = !self._toggle_nerd_stats
-		self.log(LOG_INFO, ["Toggle for nerd stats:", self._toggle_nerd_stats])
+		self.log(LOG_DEBUG, ["Toggle for nerd stats:", self._toggle_nerd_stats])
+		self.log(LOG_INFO, ["Displaying nerd stats"])
 
 		if (self._toggle_nerd_stats):
 			var curr_mouse_pos: Vector2 = self.get_viewport().get_mouse_position()
@@ -295,8 +309,8 @@ func _input(event: InputEvent) -> void:
 
 	if (Input.is_action_just_pressed("pause")):
 		self._is_pause = !self._is_pause
-		self.log(LOG_DEBUG, ["Last data value: ", mavlink_node.data[-1].x, ", ", mavlink_node.data[-1].y])
-		self.log(LOG_INFO, ["Pause button pressed: ", self._is_pause])
+		self.log(LOG_DEBUG, ["Pause button pressed: ", self._is_pause])
+		self.log(LOG_INFO, ["Graph paused"])
 
 func _physics_process(delta: float) -> void:
 	self._move_display_process()
