@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=3 uid="uid://b7e2pd3t4pbfn"]
+[gd_scene load_steps=6 format=3 uid="uid://b7e2pd3t4pbfn"]
 
+[ext_resource type="Script" path="res://gdscript/components/data/guidot_clock.gd" id="1_bb5dl"]
 [ext_resource type="Script" path="res://gdscript/mavlink_node.gd" id="2_8j47k"]
-[ext_resource type="Script" path="res://gdscript/guidot_master_node.gd" id="3_gnnt3"]
+[ext_resource type="Script" path="res://gdscript/components/data/guidot_data_server.gd" id="2_ct1jo"]
 [ext_resource type="Script" path="res://gdscript/t_graph_with_panel.gd" id="5_ax30q"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0lbeu"]
@@ -19,14 +20,16 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
+[node name="Guidot_Clock" type="Node" parent="."]
+script = ExtResource("1_bb5dl")
+
+[node name="Guidot_Data_Server" type="Node" parent="."]
+script = ExtResource("2_ct1jo")
+
 [node name="Mavlink_Node" type="Node" parent="."]
 script = ExtResource("2_8j47k")
 
-[node name="Guidot_Master_Node" type="ColorRect" parent="."]
-layout_mode = 0
-script = ExtResource("3_gnnt3")
-
-[node name="Guidot_Graph" type="PanelContainer" parent="Guidot_Master_Node"]
+[node name="Guidot_Graph" type="PanelContainer" parent="."]
 layout_mode = 0
 offset_right = 620.0
 offset_bottom = 360.0

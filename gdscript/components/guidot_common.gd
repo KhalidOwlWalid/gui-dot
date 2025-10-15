@@ -4,6 +4,11 @@ extends ColorRect
 signal focus_requested
 signal focus_escaped
 
+# WARNING: This should not be changed by the user
+static var _server_group_name: String = "Guidot_Server"
+static var _client_group_name: String = "Guidot_Client"
+static var _clock_group_name: String = "Guidot_Clock"
+
 enum Graph_Buffer_Mode {
 	FIXED,      # If user wants to display a set window span. User will have to manually reset the time axes
 	SNAPSHOT,   # Alias of fixed (thats the plan for now)
