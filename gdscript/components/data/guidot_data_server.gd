@@ -4,6 +4,7 @@ extends Guidot_Data_Core
 
 signal connected
 signal disconnected
+signal graph_buffer_mode_changed
 
 const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG
 const LOG_WARNING = Guidot_Log.Log_Level.WARNING
@@ -14,15 +15,25 @@ const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 @onready var _client_manager: Array[int] = []
 @onready var _client_data_manager: Dictionary = {}
 
+const Graph_Buffer_Mode = Guidot_Common.Graph_Buffer_Mode
+var _graph_buffer_mode: Graph_Buffer_Mode = Graph_Buffer_Mode.REALTIME
+
 @onready var _comp_tag: String = "GUIDOT_DATA_SERVER"
 
 func _ready() -> void:
-	self.name = Guidot_Utils.generate_unique_name(self, self._server_group_name)
-	self.add_to_group(self._server_group_name)
+	self.name = Guidot_Utils.generate_unique_name(self, Guidot_Common._server_group_name)
+	self.add_to_group(Guidot_Common._server_group_name)
 
 	# TODO (Khalid): Error handling, if the node does not exist in the group, then server should be responsible in creating one
 	var clock_nodes: Array[Node] = self.get_tree().get_nodes_in_group(Guidot_Clock._clock_group_name)
 	self._clock_node = clock_nodes[0]
+
+func set_graph_buffer_mode(buf_mode: Graph_Buffer_Mode) -> void:
+	_graph_buffer_mode = buf_mode
+	graph_buffer_mode_changed.emit()
+
+func get_graph_buffer_mode() -> Graph_Buffer_Mode:
+	return _graph_buffer_mode
 
 # TODO (Khalid): Error handling to check if it is a duplicate
 func register_client(client_unique_id: int) -> bool:

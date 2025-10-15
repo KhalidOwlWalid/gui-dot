@@ -23,7 +23,7 @@ var window_color: Color
 # TODO (Khalid): This should only be temporary for prototyping, but the plugin is created
 # I need to find a better way to interface this
 @onready var mavlink_node = get_node('/root/Control/Mavlink_Node')
-@onready var guidot_master_node = get_node('/root/Control/Guidot_Master_Node')
+var guidot_server: Node
 
 @onready var default_window_size: Vector2 = Vector2(620, 360)
 @onready var default_window_color: Color = color_dict["gd_black"]
@@ -158,17 +158,22 @@ func _register_hotkeys() -> void:
 	Guidot_Utils.add_action_with_keycode("pause", KEY_SPACE)
 
 func _request_buffer_mode() -> void:
-	self._current_buffer_mode = guidot_master_node.get_graph_buffer_mode()
+	self._current_buffer_mode = guidot_server.get_graph_buffer_mode()
 	self.log(LOG_INFO, ["Current buffer mode: ", self.get_buffer_mode_str(self._current_buffer_mode)])
+
+# TODO (Khalid): Make this more fool proof, add checks, or even potentially allow the user to be able to user their own server
+func init_server() -> void:
+	guidot_server = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)[0]
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	self.name = "Graph_Display"
-	self.log(LOG_INFO, [mavlink_node])
 	self.clip_contents = true
 	self.size = default_window_size
 	self.color = default_window_color
 	self._component_tag = "DISPLAY"
+
+	init_server()
 	
 	# Add child node for the graph
 	init_plot_node()
@@ -188,7 +193,6 @@ func _ready() -> void:
 	# Data oriented signal
 	# TODO (Khalid): Remove the use of mavlink node. Data server node should not be internally handled here but should be handled by the master
 	mavlink_node.data_received.connect(_on_data_received)
-	guidot_master_node.graph_buffer_mode_changed.connect(_on_graph_buffer_mode_changed)
 
 	# Axis node signal
 	t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
@@ -242,9 +246,6 @@ func _on_data_received() -> void:
 		t_axis_max = t_axis_node.max_val
 		plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 		queue_redraw()
-
-func _on_graph_buffer_mode_changed() -> void:
-	pass
 
 func _on_focus_requested() -> void:
 	self._is_in_focus = !self._is_in_focus
@@ -316,7 +317,8 @@ func _physics_process(delta: float) -> void:
 			if (mavlink_node.data.is_empty()):
 				pass
 			else:
-				var moving_max_tick: bool = mavlink_node.data[-1].x > t_axis_node.max_val
+				# var moving_max_tick: bool = mavlink_node.data[-1].x > t_axis_node.max_val
+				# var moving_max_tick: bool = float(Time.get_ticks_msec())/1000 > t_axis_node.max_val
 				if (not self._is_pause):
 					# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
 					# even number
