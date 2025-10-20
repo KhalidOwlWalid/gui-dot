@@ -2,11 +2,11 @@
 class_name Guidot_T_Series_Graph
 extends Guidot_Common
 
-const Guidot_Axis := preload("res://gdscript/components/axis/guidot_axis.gd")
-const Guidot_Y_Axis := preload("res://gdscript/components/axis/guidot_y_axis.gd")
-const Guidot_T_Axis := preload("res://gdscript/components/axis/guidot_t_axis.gd")
-const Guidot_Plot := preload("res://gdscript/components/guidot_plot.gd")
-const Guidot_Line := preload("res://gdscript/components/guidot_line.gd")
+# const Guidot_Axis := preload("res://gdscript/components/axis/guidot_axis.gd")
+# const Guidot_Y_Axis := preload("res://gdscript/components/axis/guidot_y_axis.gd")
+# const Guidot_T_Axis := preload("res://gdscript/components/axis/guidot_t_axis.gd")
+# const Guidot_Plot := preload("res://gdscript/components/guidot_plot.gd")
+# const Guidot_Line := preload("res://gdscript/components/guidot_line.gd")
 # const Guidot_Data_Core := preload("res://gdscript/components/guidot_data.gd")
 
 @onready var color_dict: Dictionary = Guidot_Utils.color_dict
@@ -76,9 +76,9 @@ func update_debug_info() -> void:
 		"Graph: mouse in": self._mouse_in,
 		"Graph: in focus": self._is_in_focus,
 		"Graph: mouse filter": self.get_mouse_filter(),
-		"t axis limit signal": self.t_axis_lim_signal,
-		"y axis limit signal": self.y_axis_lim_signal,
-		"data received signal": self.data_received_signal,
+		# "t axis limit signal": self.t_axis_lim_signal,
+		# "y axis limit signal": self.y_axis_lim_signal,
+		# "data received signal": self.data_received_signal,
 	}
 	# self.debug_signals_to_trace = self.debug_signals_to_trace
 
@@ -169,17 +169,25 @@ func _request_buffer_mode() -> void:
 	self.log(LOG_INFO, ["Current buffer mode: ", self.get_buffer_mode_str(self._current_buffer_mode)])
 
 # TODO (Khalid): Make this more fool proof, add checks, or even potentially allow the user to be able to user their own server
+# Check if any server actually exist
 func init_server() -> void:
 	guidot_server = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)[0]
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-	self.name = Guidot_Utils.generate_unique_name(self, Guidot_Common._graph_group_name)
-	self.add_to_group(self._graph_group_name)
+func setup_graph_client() -> void:
 	self.clip_contents = true
 	self.size = default_window_size
 	self.color = default_window_color
 	self._component_tag = "DISPLAY"
+
+func register_graph_client() -> void:
+	self.name = Guidot_Utils.generate_unique_name(self, Guidot_Common._graph_group_name)
+	self.add_to_group(self._graph_group_name)
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+
+	self.setup_graph_client()
+	self.register_graph_client()
 
 	init_server()
 	
@@ -200,14 +208,14 @@ func _ready() -> void:
 
 	# Data oriented signal
 	# TODO (Khalid): Remove the use of mavlink node. Data server node should not be internally handled here but should be handled by the master
-	mavlink_node.data_received.connect(_on_data_received)
+	# Note (Khalid): I am commenting the data received axis due to the fact that when running in real-time, it is actually redundant to the t-axis node,
+	# to when the data is received because as time passes, and the sliding window increases, we will also trigger another draw event, which
+	# this actually doubles the computational resources since we are technically triggering queue_redraw() twice which plots something similar
+	# I am simply commenting this out as I believe it might still be useful in the future
+	# mavlink_node.data_received.connect(_on_data_received)
 
 	# Axis node signal
-	# Note (Khalid): I am commenting the axis limit changed for t axis due to the fact that when running in real-time, it is actually redundant
-	# to when the data is received because as time passes, and the sliding window increases, we will also trigger another draw event, which
-	# doubles the computational resources since we are technically plotting something similar
-	# I am simply commenting this out as I believe it might still be useful in the future
-	# t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
+	t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
 	y_axis_node.axis_limit_changed.connect(_on_y_axis_changed)
 
 	plot_node.focus_requested.connect(_on_focus_requested)
@@ -331,8 +339,6 @@ func _physics_process(delta: float) -> void:
 			if (mavlink_node.data.is_empty()):
 				pass
 			else:
-				# var moving_max_tick: bool = mavlink_node.data[-1].x > t_axis_node.max_val
-				# var moving_max_tick: bool = float(Time.get_ticks_msec())/1000 > t_axis_node.max_val
 				if (not self._is_pause):
 					# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
 					# even number

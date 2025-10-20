@@ -46,11 +46,11 @@ var approx_sample_t: float
 func update_debug_info() -> void:
 	self.debug_signals_to_trace = {
 		# "ds_offset": str(ds_offset),
-		# "plot: mouse_in": self._mouse_in,
+		"plot: mouse_in": self._mouse_in,
 		"Plot: in focus": self._is_in_focus,
-		"Pre-processed data size": self.n_preprocessed_data,
-		"Post-processed data size": self.n_postprocessed_data,
-		"Approximated sample time": self.approx_sample_t,
+		# "Pre-processed data size": self.n_preprocessed_data,
+		# "Post-processed data size": self.n_postprocessed_data,
+		# "Approximated sample time": self.approx_sample_t,
 	}
 
 ##############################################
@@ -326,8 +326,6 @@ func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_ra
 	if !(data_points.size() < n_sampling):
 		# We need at least 5 sets of data to be able to perform calculations for approximating the index of data we wish to plot
 		data = _data_processing(data, t_axis_range)
-		self.head_vec2 = data[0]
-		self.tail_vec2 = data[-1]
 
 	n_postprocessed_data = data.size()
 

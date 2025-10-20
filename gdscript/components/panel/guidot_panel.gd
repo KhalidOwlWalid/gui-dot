@@ -1,4 +1,4 @@
-@tool
+# @tool
 class_name Guidot_Panel
 extends PanelContainer
 
@@ -34,6 +34,12 @@ func set_margin_size(val: int) -> void:
 	_guidot_panel_stylebox.content_margin_right = val
 	_guidot_panel_stylebox.content_margin_bottom = val
 	_guidot_panel_stylebox.content_margin_top = val
+
+func set_panel_size(new_size: Vector2) -> void:
+	self.size = new_size
+
+func set_background_color(new_color: Color) -> void:
+	_guidot_panel_stylebox.bg_color = new_color
 
 func show_panel() -> void:
 	self.visible = true

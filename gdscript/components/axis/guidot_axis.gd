@@ -159,7 +159,7 @@ func _input(event):
 
 			if event.button_index == MOUSE_BUTTON_RIGHT:
 				var curr_mouse_pos: Vector2 = self.get_viewport().get_mouse_position()	
-				var popup_size: Vector2 = Vector2(100, 100)
+				var popup_size: Vector2 = Vector2(200, 200)
 				var popup_rect: Rect2i = Rect2i(curr_mouse_pos, popup_size)
 				_axis_config_popup.popup(popup_rect)
 				self.log(LOG_DEBUG, ["[", self.name, "]", _axis_config_popup.name, "open at position:", curr_mouse_pos])

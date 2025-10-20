@@ -1,0 +1,133 @@
+[gd_scene load_steps=8 format=3 uid="uid://dqmjdjnwwk8o"]
+
+[ext_resource type="Script" path="res://gdscript/components/data/guidot_data_client.gd" id="1_snlrs"]
+[ext_resource type="Script" path="res://gdscript/components/data/guidot_clock.gd" id="1_uyv4n"]
+[ext_resource type="Script" path="res://gdscript/components/data/guidot_data_server.gd" id="2_b3yst"]
+[ext_resource type="Script" path="res://gdscript/components/menu/guidot_graph_manager.gd" id="4_6gqn8"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tseee"]
+bg_color = Color(0.145098, 0.184314, 0.219608, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tohtj"]
+bg_color = Color(0.145098, 0.184314, 0.219608, 1)
+border_width_top = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5thyg"]
+bg_color = Color(0.145098, 0.168627, 0.203922, 1)
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 1.0
+offset_right = 6.0
+offset_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Guidot_Clock" type="Node" parent="."]
+script = ExtResource("1_uyv4n")
+
+[node name="Guidot_Data_Server" type="Node" parent="."]
+script = ExtResource("2_b3yst")
+
+[node name="Guidot_Data_Client" type="Node" parent="."]
+script = ExtResource("1_snlrs")
+
+[node name="Guidot_Data_Client2" type="Node" parent="." groups=["test"]]
+script = ExtResource("1_snlrs")
+
+[node name="MenuBar" type="TabContainer" parent="."]
+layout_mode = 0
+offset_left = 735.0
+offset_top = 348.0
+offset_right = 1286.0
+offset_bottom = 519.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_tseee")
+theme_override_styles/tab_selected = SubResource("StyleBoxFlat_tohtj")
+theme_override_styles/tab_unselected = SubResource("StyleBoxFlat_5thyg")
+current_tab = 0
+
+[node name="Test" type="AspectRatioContainer" parent="MenuBar"]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MenuBar/Test"]
+layout_mode = 2
+
+[node name="PanelContainer" type="MarginContainer" parent="MenuBar/Test/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MenuBar/Test/VBoxContainer/PanelContainer"]
+custom_minimum_size = Vector2(353, 20)
+layout_mode = 2
+
+[node name="Label" type="RichTextLabel" parent="MenuBar/Test/VBoxContainer/PanelContainer/HBoxContainer"]
+custom_minimum_size = Vector2(176.5, 20)
+layout_mode = 2
+text = "Name Selection"
+fit_content = true
+scroll_active = false
+
+[node name="Label2" type="OptionButton" parent="MenuBar/Test/VBoxContainer/PanelContainer/HBoxContainer"]
+custom_minimum_size = Vector2(176.5, 20)
+layout_mode = 2
+item_count = 4
+popup/item_0/text = "Khalid"
+popup/item_1/text = "Alia"
+popup/item_1/id = 1
+popup/item_2/text = "Natasha"
+popup/item_2/id = 2
+popup/item_3/text = "Muhammad"
+popup/item_3/id = 3
+
+[node name="Test2" type="AspectRatioContainer" parent="MenuBar"]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MenuBar/Test2"]
+layout_mode = 2
+
+[node name="PanelContainer" type="MarginContainer" parent="MenuBar/Test2/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MenuBar/Test2/VBoxContainer/PanelContainer"]
+custom_minimum_size = Vector2(353, 20)
+layout_mode = 2
+
+[node name="Label" type="RichTextLabel" parent="MenuBar/Test2/VBoxContainer/PanelContainer/HBoxContainer"]
+custom_minimum_size = Vector2(176.5, 20)
+layout_mode = 2
+text = "Test Selection"
+fit_content = true
+scroll_active = false
+
+[node name="Label2" type="OptionButton" parent="MenuBar/Test2/VBoxContainer/PanelContainer/HBoxContainer"]
+custom_minimum_size = Vector2(176.5, 20)
+layout_mode = 2
+item_count = 4
+popup/item_0/text = "Khalid"
+popup/item_1/text = "Alia"
+popup/item_1/id = 1
+popup/item_2/text = "Natasha"
+popup/item_2/id = 2
+popup/item_3/text = "Muhammad"
+popup/item_3/id = 3
+
+[node name="MenuBar2" type="TabContainer" parent="."]
+layout_mode = 0
+offset_right = 400.0
+offset_bottom = 117.0
+current_tab = 0
+script = ExtResource("4_6gqn8")
