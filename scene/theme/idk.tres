@@ -1,0 +1,7 @@
+[gd_resource type="Theme" load_steps=2 format=3 uid="uid://dfyrv13gw2eiv"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_g12ia"]
+bg_color = Color(0.459056, 0.585796, 0.915193, 1)
+
+[resource]
+ColorRect/styles/Test = SubResource("StyleBoxFlat_g12ia")
