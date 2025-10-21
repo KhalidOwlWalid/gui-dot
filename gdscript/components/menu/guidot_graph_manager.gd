@@ -19,18 +19,11 @@ class_name Guidot_Graph_Manager
 #func _ready() -> void:
 	#pass
 	#
-extends TabContainer
+extends Guidot_Panel
 
 var selected_server: String
 
-# Called when the node enters the scene tree for the first time.
-# func _ready() -> void:
-# 	self.name = "Server_Configuration"
-# 	self.set_margin_size(20)
-# 	self.custom_minimum_size = Vector2(100, 100)
-# 	self.set_background_color(Color.BLACK)
-
-
+@onready var _graph_config_tab_cont: TabContainer = TabContainer.new()
 @onready var _graph_config_window: PanelContainer = PanelContainer.new()
 @onready var _config_window_stylebox: StyleBoxFlat = StyleBoxFlat.new()
 @onready var _server_config_tab: AspectRatioContainer = AspectRatioContainer.new()
@@ -82,16 +75,17 @@ func create_dropdown_selection_row(label_text: String, custom_min_size: Vector2,
 	return panel_container1
 
 func _ready() -> void:
-	self.add_child(_server_config_tab)
+	self.add_child(_graph_config_tab_cont)
+	_graph_config_tab_cont.add_child(_server_config_tab)
 	_server_config_tab.name = "Server Manager"
 	_server_config_tab.custom_minimum_size = Vector2(50, 20)
 
 	var vbox1 = VBoxContainer.new()
 
 	print(_server_config_tab.custom_minimum_size)
-	var panel_container1 = self.create_dropdown_selection_row("Name selection", Vector2(200, 20), ["Khalid", "Alia"])
-	var panel_container2 = self.create_dropdown_selection_row("Favourite fruit",Vector2(200, 20), ["Apple", "Banana", "Mangosteen"])
+	var server_options = self.create_dropdown_selection_row("Server Node", Vector2(200, 20), ["Khalid", "Alia"])
+	var data_type = self.create_dropdown_selection_row("Favourite fruit",Vector2(200, 20), ["Apple", "Banana", "Mangosteen"])
 
 	_server_config_tab.add_child(vbox1)
-	vbox1.add_child(panel_container1)
-	vbox1.add_child(panel_container2)
+	vbox1.add_child(server_options)
+	vbox1.add_child(data_type)
