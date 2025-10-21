@@ -44,33 +44,54 @@ func _process(delta: float) -> void:
 func scaled_row_size(column_scale: float) -> Vector2:
 	return Vector2(column_scale * self._graph_config_window.size.x, 20)
 
-func example_row() -> MarginContainer:
+func create_dropdown_selection_row(label_text: String, custom_min_size: Vector2, dropdown_items: Array) -> MarginContainer:
+
+	# Internal properties of the dropdown selection row
+	var margin_size: int = 5
+	
+	# All nodes required to create the dropdown
 	var panel_container1 = MarginContainer.new()
 	var hbox1 = HBoxContainer.new()
-	hbox1.custom_minimum_size = Vector2(190, 20)
 	var label1 = Label.new()
 	var option_button1 = OptionButton.new()
 
-	panel_container1.add_theme_constant_override("margin_top", 10)
-	panel_container1.add_theme_constant_override("margin_bottom", 10)
-	label1.text = "Server name"
-	label1.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	option_button1.add_item("Server 1")
-	option_button1.add_item("Server 2")
-	option_button1.add_item("Server 3")
+	hbox1.custom_minimum_size = custom_min_size
+	label1.custom_minimum_size = custom_min_size
+	option_button1.custom_minimum_size = custom_min_size
 
+	# Control the margin size of each dropdown selection so that it looks nicer in the GUI
+	panel_container1.add_theme_constant_override("margin_top", margin_size)
+	panel_container1.add_theme_constant_override("margin_bottom", margin_size)
+	panel_container1.add_theme_constant_override("margin_left", margin_size)
+	panel_container1.add_theme_constant_override("margin_right", margin_size)
+	
+	# Set the labels properties
+	label1.text = label_text
+	label1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label1.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+	option_button1.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	for i in len(dropdown_items):
+		option_button1.add_item(str(dropdown_items[i]))
+
+	# Add the labels and the dropdown selection to the HBOX Container
 	hbox1.add_child(label1)
 	hbox1.add_child(option_button1)
 	panel_container1.add_child(hbox1)
+
 	return panel_container1
 
 func _ready() -> void:
 	self.add_child(_server_config_tab)
 	_server_config_tab.name = "Server Manager"
-	_server_config_tab.custom_minimum_size = Vector2(400, 50)
+	_server_config_tab.custom_minimum_size = Vector2(50, 20)
 
 	var vbox1 = VBoxContainer.new()
-	_server_config_tab.add_child(vbox1)
 
-	var panel_container1 = self.example_row()
+	print(_server_config_tab.custom_minimum_size)
+	var panel_container1 = self.create_dropdown_selection_row("Name selection", Vector2(200, 20), ["Khalid", "Alia"])
+	var panel_container2 = self.create_dropdown_selection_row("Favourite fruit",Vector2(200, 20), ["Apple", "Banana", "Mangosteen"])
+
+	_server_config_tab.add_child(vbox1)
 	vbox1.add_child(panel_container1)
+	vbox1.add_child(panel_container2)
