@@ -27,6 +27,7 @@ var selected_server: String
 @onready var _graph_config_window: PanelContainer = PanelContainer.new()
 @onready var _config_window_stylebox: StyleBoxFlat = StyleBoxFlat.new()
 @onready var _server_config_tab: AspectRatioContainer = AspectRatioContainer.new()
+@onready var _axis_config_tab: AspectRatioContainer = AspectRatioContainer.new()
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -84,6 +85,7 @@ func _ready() -> void:
 
 	var header_hbox: HBoxContainer = HBoxContainer.new()
 
+	# Setup for header label for the graph manager
 	var main_header: Label = Label.new()
 	main_header.text = "Settings"
 	main_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -113,3 +115,13 @@ func _ready() -> void:
 	vbox1.add_child(server_options)
 	vbox1.add_child(data_type)
 	_graph_config_tab_cont.add_child(_server_config_tab)
+
+	_axis_config_tab.name = "Axis Configuration"
+	_graph_config_tab_cont.add_child(_axis_config_tab)
+	var axis_config_vbox: VBoxContainer = VBoxContainer.new()
+	var test = self.create_dropdown_selection_row("Server Node", Vector2(200, 20), ["Khalid", "Alia"])
+	var test1 = self.create_dropdown_selection_row("Server Node", Vector2(200, 20), ["Khalid", "Alia"])
+	axis_config_vbox.add_child(test)
+	axis_config_vbox.add_child(test1)
+	_axis_config_tab.add_child(axis_config_vbox)
+	_graph_config_tab_cont.add_child(_axis_config_tab)
