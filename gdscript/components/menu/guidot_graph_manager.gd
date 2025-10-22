@@ -19,12 +19,9 @@ class_name Guidot_Graph_Manager
 #func _ready() -> void:
 	#pass
 	#
-extends Panel
+extends Guidot_Panel
 
 var selected_server: String
-
-# Controls button
-@onready var close_button: Button = Button.new()
 
 @onready var _graph_config_tab_cont: TabContainer = TabContainer.new()
 @onready var _graph_config_window: PanelContainer = PanelContainer.new()
@@ -82,25 +79,37 @@ func _on_close_button_pressed() -> void:
 
 func _ready() -> void:
 
-	self.add_child(_graph_config_tab_cont)
-	_graph_config_tab_cont.add_child(_server_config_tab)
-	_server_config_tab.name = "Server Manager"
+	var main_vbox: VBoxContainer = VBoxContainer.new()
+	self.add_child(main_vbox)
 
-	var vbox1 = VBoxContainer.new()
+	var header_hbox: HBoxContainer = HBoxContainer.new()
 
-	var server_options = self.create_dropdown_selection_row("Server Node", Vector2(200, 20), ["Khalid", "Alia"])
-	var data_type = self.create_dropdown_selection_row("Favourite fruit",Vector2(200, 20), ["Apple", "Banana", "Mangosteen"])
-
-	_server_config_tab.add_child(vbox1)
-
-	vbox1.add_child(server_options)
-	vbox1.add_child(data_type)
+	var main_header: Label = Label.new()
+	main_header.text = "Settings"
+	main_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	main_header.custom_minimum_size = Vector2(self.size.x * 0.9, 10)
+	header_hbox.add_child(main_header)
 
 	# Setup the controls button for the graph manager
+	var close_button: Button = Button.new()
 	close_button.text = "X"
 	close_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_RIGHT)
-	close_button.size = Vector2(30, 10)
-	close_button.position = Vector2(-close_button.size.x, 0)
+	close_button.custom_minimum_size = Vector2(self.size.x * 0.1, 10)
 	close_button.add_theme_color_override("font_color", Color.RED)
 	close_button.pressed.connect(_on_close_button_pressed)
-	self.add_child(close_button)
+	header_hbox.add_child(close_button)
+
+	main_vbox.add_child(header_hbox)
+
+	# Graph configuration tab container setup
+	main_vbox.add_child(_graph_config_tab_cont)
+
+	# Setup server manager tab
+	_server_config_tab.name = "Server Manager"
+	var vbox1 = VBoxContainer.new()
+	var server_options = self.create_dropdown_selection_row("Server Node", Vector2(200, 20), ["Khalid", "Alia"])
+	var data_type = self.create_dropdown_selection_row("Favourite fruit",Vector2(200, 20), ["Apple", "Banana", "Mangosteen"])
+	_server_config_tab.add_child(vbox1)
+	vbox1.add_child(server_options)
+	vbox1.add_child(data_type)
+	_graph_config_tab_cont.add_child(_server_config_tab)
