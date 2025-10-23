@@ -28,8 +28,8 @@ var selected_server: String
 @onready var _config_window_stylebox: StyleBoxFlat = StyleBoxFlat.new()
 
 # Setting tabs
-@onready var _server_config_tab: AspectRatioContainer = AspectRatioContainer.new()
-@onready var _axis_config_tab: AspectRatioContainer = AspectRatioContainer.new()
+@onready var _server_config_tab: AspectRatioContainer
+@onready var _axis_config_tab: AspectRatioContainer
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -113,8 +113,11 @@ func create_dropdown_selection_row(label_text: String,  dropdown_items: Array, c
 
 	return panel_container1
 
-func create_configuration_tab() -> AspectRatioContainer:
+# For each configuration tab, it requires:
+#	=> VBox - Host all of the configuration row
+func create_configuration_tab(tab_name: String) -> AspectRatioContainer:
 	var config_tab: AspectRatioContainer = AspectRatioContainer.new()
+	config_tab.name = tab_name
 	var vbox: VBoxContainer = VBoxContainer.new()
 	
 	config_tab.add_child(vbox)
@@ -122,9 +125,11 @@ func create_configuration_tab() -> AspectRatioContainer:
 	return config_tab
 
 # Takes in the configuration tab and helps populate the internal VBoxContainer
-func add_config_row(config_tab: AspectRatioContainer, config_row: MarginContainer) -> void:
-	# var config_tab_children: Array[Node]  = config_tab.get_child()
-	pass
+func add_config_rows(config_tab: AspectRatioContainer, config_rows: Array[MarginContainer]) -> void:
+	var config_tab_vbox: VBoxContainer  = config_tab.get_children()[0]
+	
+	for row in config_rows:
+		config_tab_vbox.add_child(row)
 
 func _on_close_button_pressed() -> void:
 	self.visible = false
@@ -158,23 +163,22 @@ func _ready() -> void:
 	main_vbox.add_child(_graph_config_tab_cont)
 
 	# Setup server manager tab
-	_server_config_tab.name = "Server Manager"
-	var vbox1 = VBoxContainer.new()
+	self._server_config_tab = self.create_configuration_tab("Server Manager")
+	_graph_config_tab_cont.add_child(_server_config_tab)
+
+	# All server configuration settings
 	var server_options = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
 	var data_type = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
 	var some_string = self.create_label_row("Current mode", "Realtime", Vector2(200, 20))
-	_server_config_tab.add_child(vbox1)
-	vbox1.add_child(server_options)
-	vbox1.add_child(data_type)
-	vbox1.add_child(some_string)
-	_graph_config_tab_cont.add_child(_server_config_tab)
+	var server_config_rows: Array[MarginContainer] = [server_options, data_type, some_string]
+	self.add_config_rows(self._server_config_tab, server_config_rows)
 
-	_axis_config_tab.name = "Axis Configuration"
+	# Setup axis configuration tab
+	self._axis_config_tab = self.create_configuration_tab("Axis Configuration")
 	_graph_config_tab_cont.add_child(_axis_config_tab)
-	var axis_config_vbox: VBoxContainer = VBoxContainer.new()
+
+	# All Axis Configuration settings
 	var test = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
 	var test1 = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
-	axis_config_vbox.add_child(test)
-	axis_config_vbox.add_child(test1)
-	_axis_config_tab.add_child(axis_config_vbox)
-	_graph_config_tab_cont.add_child(_axis_config_tab)
+	var axis_config_rows: Array[MarginContainer] = [test, test1]
+	self.add_config_rows(self._axis_config_tab, axis_config_rows) 
