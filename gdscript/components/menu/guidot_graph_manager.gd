@@ -29,7 +29,8 @@ var selected_server: String
 
 # Setting tabs
 @onready var _server_config_tab: AspectRatioContainer
-@onready var _axis_config_tab: AspectRatioContainer
+@onready var _x_axis_config_tab: AspectRatioContainer
+@onready var _y_axis_config_tab: AspectRatioContainer
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -174,11 +175,21 @@ func _ready() -> void:
 	self.add_config_rows(self._server_config_tab, server_config_rows)
 
 	# Setup axis configuration tab
-	self._axis_config_tab = self.create_configuration_tab("Axis Configuration")
-	_graph_config_tab_cont.add_child(_axis_config_tab)
+	self._x_axis_config_tab = self.create_configuration_tab("X-Axis")
+	_graph_config_tab_cont.add_child(self._x_axis_config_tab)
 
 	# All Axis Configuration settings
 	var test = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
 	var test1 = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
-	var axis_config_rows: Array[MarginContainer] = [test, test1]
-	self.add_config_rows(self._axis_config_tab, axis_config_rows) 
+	var x_axis_config_rows: Array[MarginContainer] = [test, test1]
+	self.add_config_rows(self._x_axis_config_tab, x_axis_config_rows) 
+
+	# Setup axis configuration tab
+	self._y_axis_config_tab = self.create_configuration_tab("Y-Axis")
+	_graph_config_tab_cont.add_child(self._y_axis_config_tab)
+
+	# All Axis Configuration settings
+	var test2 = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
+	var test3 = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
+	var y_axis_config_rows: Array[MarginContainer] = [test2, test3]
+	self.add_config_rows(self._y_axis_config_tab, y_axis_config_rows) 
