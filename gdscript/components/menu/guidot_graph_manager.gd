@@ -32,7 +32,6 @@ var selected_server: String
 @onready var _x_axis_config_tab: AspectRatioContainer
 @onready var _y_axis_config_tab: AspectRatioContainer
 
-
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	# print(_graph_config_window.size)
@@ -132,6 +131,9 @@ func add_config_rows(config_tab: AspectRatioContainer, config_rows: Array[Margin
 	for row in config_rows:
 		config_tab_vbox.add_child(row)
 
+func _create_server_selection_row() -> void:
+	pass
+
 func _on_close_button_pressed() -> void:
 	self.visible = false
 
@@ -168,10 +170,13 @@ func _ready() -> void:
 	_graph_config_tab_cont.add_child(_server_config_tab)
 
 	# All server configuration settings
-	var server_options = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
-	var data_type = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
-	var some_string = self.create_label_row("Current mode", "Realtime", Vector2(200, 20))
-	var server_config_rows: Array[MarginContainer] = [server_options, data_type, some_string]
+	var graph_buffer_mode_label = self.create_label_row("Current mode", "Realtime", Vector2(200, 20))
+	var server_selection = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
+	var subscribe_data_margin_container: MarginContainer = MarginContainer.new()
+	var subscribe_data_button: Button = Button.new()
+	subscribe_data_margin_container.add_child(subscribe_data_button)
+	subscribe_data_button.text = "+ Subscribe to data"
+	var server_config_rows: Array[MarginContainer] = [graph_buffer_mode_label, server_selection, subscribe_data_margin_container]
 	self.add_config_rows(self._server_config_tab, server_config_rows)
 
 	# Setup axis configuration tab
