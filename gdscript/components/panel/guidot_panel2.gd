@@ -1,8 +1,6 @@
 # @tool
-class_name Guidot_Panel
+class_name Guidot_Panel2
 extends PanelContainer
-
-# const Guidot_Utils = preload("/home/khalidowlwalid/Documents/KhalidOWlWalid-Github-Projects/Godot/gui-dot/gdscript/utils/guidot_utils.gd")
 
 @onready var _panel_size: Vector2 = Vector2(100, 100)
 @onready var _init_pos: Vector2 = Vector2(100, 100)
@@ -10,7 +8,10 @@ extends PanelContainer
 @onready var _last_pos: Vector2 = Vector2()
 var color_dict: Dictionary
 
-@onready var _guidot_panel_stylebox: StyleBoxFlat = StyleBoxFlat.new()
+@onready var _inner_container: PanelContainer = PanelContainer.new()
+
+@onready var _outline_stylebox: StyleBoxFlat = StyleBoxFlat.new()
+@onready var _inner_container_stylebox: StyleBoxFlat = StyleBoxFlat.new()
 @onready var margin_val: int = 3
 @onready var _font_size: int = 10
 
@@ -27,21 +28,31 @@ func _ready() -> void:
 	self.size = _panel_size
 	self.position = self._init_pos
 
-	_guidot_panel_stylebox.bg_color = Guidot_Utils.get_color("gd_black")
+	self.add_child(self._inner_container)
+
+	_outline_stylebox.bg_color = Guidot_Utils.get_color("gd_black")
+	_inner_container_stylebox.bg_color = Guidot_Utils.get_color("gd_grey")
 	set_margin_size(margin_val)
-	add_theme_stylebox_override("panel", _guidot_panel_stylebox)
+	add_theme_stylebox_override("panel", _outline_stylebox)
+	self._inner_container.add_theme_stylebox_override("panel", _inner_container_stylebox)
 
 func set_margin_size(val: int) -> void:
-	_guidot_panel_stylebox.content_margin_left = val
-	_guidot_panel_stylebox.content_margin_right = val
-	_guidot_panel_stylebox.content_margin_bottom = val
-	_guidot_panel_stylebox.content_margin_top = val
+	_outline_stylebox.content_margin_left = val
+	_outline_stylebox.content_margin_right = val
+	_outline_stylebox.content_margin_bottom = val
+	_outline_stylebox.content_margin_top = val
 
 func set_panel_size(new_size: Vector2) -> void:
 	self.size = new_size
 
-func set_background_color(new_color: Color) -> void:
-	self._guidot_panel_stylebox.bg_color = new_color
+func set_outline_color(new_color: Color) -> void:
+	self._outline_stylebox.bg_color = new_color
+
+func set_container_color(new_color: Color) -> void:
+	self._inner_container_stylebox.bg_color = new_color
+
+func add_child_to_container(child: Node) -> void:
+	self._inner_container.add_child(child)
 
 func show_panel() -> void:
 	self.visible = true
