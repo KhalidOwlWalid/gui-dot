@@ -46,6 +46,7 @@ offset_bottom = 117.0
 script = ExtResource("4_6gqn8")
 
 [node name="PanelContainer" type="PanelContainer" parent="."]
+visible = false
 layout_mode = 0
 offset_left = 534.0
 offset_top = 229.0
@@ -271,6 +272,7 @@ popup/item_3/text = "Muhammad"
 popup/item_3/id = 3
 
 [node name="Data Selection Example" type="PanelContainer" parent="."]
+visible = false
 layout_mode = 0
 offset_left = 190.0
 offset_top = 249.0

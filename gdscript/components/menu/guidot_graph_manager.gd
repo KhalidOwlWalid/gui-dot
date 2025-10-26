@@ -32,9 +32,12 @@ var selected_server: String
 @onready var _x_axis_config_tab: AspectRatioContainer
 @onready var _y_axis_config_tab: AspectRatioContainer
 
+var data_subscriber_menu: Guidot_Panel
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	# print(_graph_config_window.size)
+	# TODO (Khalid): Remove this, temporary for now
+	self.data_subscriber_menu.position = Vector2(500, 500)
 	pass
 
 func scaled_row_size(column_scale: float) -> Vector2:
@@ -140,6 +143,38 @@ func _on_close_button_pressed() -> void:
 func _on_subscribe_pressed() -> void:
 	print("Subscribe button pressed")
 
+func _create_checkbox_with_label(label: String) -> HBoxContainer:
+	var l_hbox1: HBoxContainer = HBoxContainer.new()
+	var l_cbox1: CheckBox = CheckBox.new()
+	var l_label1: Label = Label.new()
+	l_label1.text = label
+
+	l_hbox1.add_child(l_cbox1)
+	l_hbox1.add_child(l_label1)
+
+	return l_hbox1
+
+func _setup_data_subscriber_menu() -> void:
+	# Ensure this gets constructed first, and added into the scene tree before initializing any of its properties
+	self.data_subscriber_menu = Guidot_Panel.new()
+	self.add_child(self.data_subscriber_menu)
+
+	var l_vbox1: VBoxContainer = VBoxContainer.new()
+	var header: Label = Label.new()
+	var search_bar: LineEdit = LineEdit.new()
+	var l_scr_cont: ScrollContainer = ScrollContainer.new()
+	var data_list_vbox: VBoxContainer = VBoxContainer.new()
+
+	self.data_subscriber_menu.custom_minimum_size = Vector2(300, 300)
+	self.data_subscriber_menu.set_background_color(Guidot_Utils.get_color("red"))
+	var child_array: Array[Node] = [header, search_bar, l_scr_cont]
+
+	for node in child_array:
+		self.data_subscriber_menu.add_child(node)
+
+	l_scr_cont.add_child(data_list_vbox)
+	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
+
 func _ready() -> void:
 
 	var main_vbox: VBoxContainer = VBoxContainer.new()
@@ -219,3 +254,5 @@ func _ready() -> void:
 	var test3 = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
 	var y_axis_config_rows: Array[Node] = [test2, test3]
 	self.add_config_rows(self._y_axis_config_tab, y_axis_config_rows) 
+
+	self._setup_data_subscriber_menu()

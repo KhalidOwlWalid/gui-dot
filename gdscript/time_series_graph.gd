@@ -9,7 +9,6 @@ extends Guidot_Common
 # const Guidot_Line := preload("res://gdscript/components/guidot_line.gd")
 # const Guidot_Data_Core := preload("res://gdscript/components/guidot_data.gd")
 
-@onready var color_dict: Dictionary = Guidot_Utils.color_dict
 
 # Property of the graph
 var window_size: Vector2
@@ -26,7 +25,7 @@ var window_color: Color
 var guidot_server: Node
 
 @onready var default_window_size: Vector2 = Vector2(620, 360)
-@onready var default_window_color: Color = color_dict["gd_black"]
+@onready var default_window_color: Color = Guidot_Utils.get_color("gd_black")
 @onready var prev_display_color: Color = default_window_color
 
 # Components used for building the graph 
@@ -128,7 +127,7 @@ func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 			return "Not Implemented"
 
 func setup_plot_node() -> void:
-	plot_node.init_plot(color_dict["gd_black"])
+	plot_node.init_plot(Guidot_Utils.get_color("gd_black"))
 	plot_node.setup_plot(Vector2(self.size.x, self.size.y), Vector2(t_axis_node.norm_comp_size, y_axis_node.norm_comp_size))
 
 func init_plot_node():
@@ -145,11 +144,11 @@ func init_axis(axis_node: Guidot_Axis, axis_name: String, axis_color: Color, axi
 	axis_node.calculate_offset_from_plot_frame(self, plot_node)
 
 func init_t_axis_node():
-	init_axis(t_axis_node, "t_axis", color_dict["gd_black"], t_axis_min, t_axis_max)
+	init_axis(t_axis_node, "t_axis", Guidot_Utils.get_color("gd_black"), t_axis_min, t_axis_max)
 	add_child(t_axis_node)
 
 func init_y_axis_node():
-	init_axis(y_axis_node, "y_axis", color_dict["gd_black"], y_axis_min, y_axis_max)
+	init_axis(y_axis_node, "y_axis", Guidot_Utils.get_color("gd_black"), y_axis_min, y_axis_max)
 	add_child(y_axis_node)
 
 func setup_font() -> void:

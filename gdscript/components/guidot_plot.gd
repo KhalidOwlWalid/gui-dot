@@ -83,7 +83,7 @@ func _ready() -> void:
 func setup_plot_anchor() -> void:
 	pass
 
-func init_plot(color: Color = Guidot_Utils.color_dict["gd_black"]) -> void:
+func init_plot(color: Color = Guidot_Utils.get_color("gd_black")) -> void:
 	self.name = "plot_frame"
  
 	# This helps ensuring that we do not draw anything beyond the plot frame
@@ -353,8 +353,8 @@ func _draw_horizontal_grids(n_ticks: int, ticks_pos: PackedVector2Array, grid_co
 	
 # Handle data line drawing here
 func _draw() -> void:
-	_draw_vertical_grids(n_x_ticks, x_ticks_pos, Guidot_Utils.color_dict["gd_grey"])
-	_draw_horizontal_grids(n_y_ticks, y_ticks_pos, Guidot_Utils.color_dict["gd_grey"])
+	_draw_vertical_grids(n_x_ticks, x_ticks_pos, Guidot_Utils.get_color("gd_grey"))
+	_draw_horizontal_grids(n_y_ticks, y_ticks_pos, Guidot_Utils.get_color("gd_grey"))
 	for i in range(1, pixel_data_points.size()):
 		draw_line(pixel_data_points[i - 1], pixel_data_points[i], Color.RED, 0.5, true)
 		# TODO (Khalid): Circle should only be drawn when it is at a certain window size
