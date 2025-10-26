@@ -87,12 +87,12 @@ func _ready() -> void:
 	self._component_tag = "DEBUG_PANEL"
 	self.top_level = true
 
-	_guidot_panel_stylebox.bg_color = color_dict["gd_grey"]
+	_guidot_panel_stylebox.bg_color = Guidot_Utils.get_color("gd_grey")
 	set_margin_size(self.margin_val)
 	add_theme_stylebox_override("panel", self._guidot_panel_stylebox)
 
 	var _guidot_debugging_text_window: StyleBoxFlat = StyleBoxFlat.new()
-	_guidot_debugging_text_window.bg_color = color_dict["gd_grey_transparent"]
+	_guidot_debugging_text_window.bg_color = Guidot_Utils.get_color("gd_grey_transparent")
 	_debugging_text_window.add_theme_stylebox_override("panel", _guidot_debugging_text_window)
 	self.add_child(self._debugging_text_window)
 

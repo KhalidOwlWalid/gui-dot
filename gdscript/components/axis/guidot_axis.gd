@@ -101,8 +101,8 @@ func _ready() -> void:
 	# Override this if necessary
 
 	# Since this is inheriting Rect2D, self.color refers to the box and not the lines of the axis!
-	self.color = Guidot_Utils.color_dict["gd_black"]
-	self.line_color = Guidot_Utils.color_dict["white"]
+	self.color = Guidot_Utils.get_color("gd_black")
+	self.line_color = Guidot_Utils.get_color("white")
 	self.last_box_color = self.color
 	self.last_line_color = self.line_color
 	font_size = 10
@@ -122,8 +122,8 @@ func _on_mouse_entered() -> void:
 	self.last_line_color = self.line_color
 
 	# Change the color of the box so user knows they are hovering above it
-	self.color = Guidot_Utils.color_dict["gd_dim_blue"]
-	self.line_color = Guidot_Utils.color_dict["gd_bright_yellow"]
+	self.color = Guidot_Utils.get_color("gd_dim_blue")
+	self.line_color = Guidot_Utils.get_color("gd_bright_yellow")
 
 	self._mouse_in = true
 	queue_redraw()

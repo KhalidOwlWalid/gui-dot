@@ -2,11 +2,13 @@
 class_name Guidot_Panel
 extends PanelContainer
 
+# const Guidot_Utils = preload("/home/khalidowlwalid/Documents/KhalidOWlWalid-Github-Projects/Godot/gui-dot/gdscript/utils/guidot_utils.gd")
+
 @onready var _panel_size: Vector2 = Vector2(100, 100)
 @onready var _init_pos: Vector2 = Vector2(100, 100)
 
 @onready var _last_pos: Vector2 = Vector2()
-@onready var color_dict: Dictionary = Guidot_Utils.color_dict
+var color_dict: Dictionary
 
 @onready var _guidot_panel_stylebox: StyleBoxFlat = StyleBoxFlat.new()
 @onready var margin_val: int = 3
@@ -25,7 +27,7 @@ func _ready() -> void:
 	self.size = _panel_size
 	self.position = self._init_pos
 
-	_guidot_panel_stylebox.bg_color = color_dict["gd_black"]
+	_guidot_panel_stylebox.bg_color = Guidot_Utils.get_color("gd_black")
 	set_margin_size(margin_val)
 	add_theme_stylebox_override("panel", _guidot_panel_stylebox)
 
@@ -39,7 +41,9 @@ func set_panel_size(new_size: Vector2) -> void:
 	self.size = new_size
 
 func set_background_color(new_color: Color) -> void:
-	_guidot_panel_stylebox.bg_color = new_color
+	self._guidot_panel_stylebox.bg_color = new_color
+	# var l_stylebox: StyleBoxFlat = StyleBoxFlat.new()
+	# l_stylebox.bg_color = new_color
 
 func show_panel() -> void:
 	self.visible = true
