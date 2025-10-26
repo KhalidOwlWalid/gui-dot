@@ -125,7 +125,7 @@ func create_configuration_tab(tab_name: String) -> AspectRatioContainer:
 	return config_tab
 
 # Takes in the configuration tab and helps populate the internal VBoxContainer
-func add_config_rows(config_tab: AspectRatioContainer, config_rows: Array[MarginContainer]) -> void:
+func add_config_rows(config_tab: AspectRatioContainer, config_rows: Array[Node]) -> void:
 	var config_tab_vbox: VBoxContainer  = config_tab.get_children()[0]
 	
 	for row in config_rows:
@@ -136,6 +136,9 @@ func _create_server_selection_row() -> void:
 
 func _on_close_button_pressed() -> void:
 	self.visible = false
+
+func _on_subscribe_pressed() -> void:
+	print("Subscribe button pressed")
 
 func _ready() -> void:
 
@@ -173,10 +176,28 @@ func _ready() -> void:
 	var graph_buffer_mode_label = self.create_label_row("Current mode", "Realtime", Vector2(200, 20))
 	var server_selection = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
 	var subscribe_data_margin_container: MarginContainer = MarginContainer.new()
+
 	var subscribe_data_button: Button = Button.new()
 	subscribe_data_margin_container.add_child(subscribe_data_button)
 	subscribe_data_button.text = "+ Subscribe to data"
-	var server_config_rows: Array[MarginContainer] = [graph_buffer_mode_label, server_selection, subscribe_data_margin_container]
+	subscribe_data_button.pressed.connect(_on_subscribe_pressed)
+
+	# TODO (Khalid): Use a scroll container to allow us to go through all of the subscribed data
+	var sub_data_scroll_cont: ScrollContainer = ScrollContainer.new()
+	sub_data_scroll_cont.custom_minimum_size = Vector2(100, 40)
+	var sub_data_vbox: VBoxContainer = VBoxContainer.new()
+	sub_data_scroll_cont.add_child(sub_data_vbox)
+	var label_test = Label.new()
+	label_test.text = "Hello World"
+	var label2 = Label.new()
+	label2.text = "Hello World"
+	var label3 = Label.new()
+	label3.text = "Hello World"
+	sub_data_vbox.add_child(label_test)
+	sub_data_vbox.add_child(label2)
+	sub_data_vbox.add_child(label3)
+	
+	var server_config_rows: Array[Node] = [graph_buffer_mode_label, server_selection, subscribe_data_margin_container, sub_data_scroll_cont]
 	self.add_config_rows(self._server_config_tab, server_config_rows)
 
 	# Setup axis configuration tab
@@ -186,7 +207,7 @@ func _ready() -> void:
 	# All Axis Configuration settings
 	var test = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
 	var test1 = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
-	var x_axis_config_rows: Array[MarginContainer] = [test, test1]
+	var x_axis_config_rows: Array[Node] = [test, test1]
 	self.add_config_rows(self._x_axis_config_tab, x_axis_config_rows) 
 
 	# Setup axis configuration tab
@@ -196,5 +217,5 @@ func _ready() -> void:
 	# All Axis Configuration settings
 	var test2 = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
 	var test3 = self.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
-	var y_axis_config_rows: Array[MarginContainer] = [test2, test3]
+	var y_axis_config_rows: Array[Node] = [test2, test3]
 	self.add_config_rows(self._y_axis_config_tab, y_axis_config_rows) 
