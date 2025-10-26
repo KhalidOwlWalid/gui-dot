@@ -18,7 +18,7 @@ var _data_subscriber_menu: Guidot_Panel2
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	# TODO (Khalid): Remove this, temporary for now
-	# self._data_subscriber_menu.position = Vector2(500, 500)
+	self._data_subscriber_menu.position = Vector2(500, 500)
 	pass
 
 func scaled_row_size(column_scale: float) -> Vector2:
@@ -118,6 +118,9 @@ func add_config_rows(config_tab: AspectRatioContainer, config_rows: Array[Node])
 func _create_server_selection_row() -> void:
 	pass
 
+func _on_apply_changes_pressed(selected_data: VBoxContainer) -> void:
+	print(selected_data)
+
 func _on_close_button_submenu_pressed(panel: Node) -> void:
 	panel.visible = false
 
@@ -160,11 +163,12 @@ func _setup_data_subscriber_menu() -> void:
 	l_hbox1.add_child(header)	
 	l_hbox1.add_child(l_close_btn1)
 
+	var apply_button: Button = Button.new()
 	var search_bar: LineEdit = LineEdit.new()
 	var l_scr_cont: ScrollContainer = ScrollContainer.new()
 	var data_list_vbox: VBoxContainer = VBoxContainer.new()
 
-	var child_array: Array[Node] = [l_hbox1, search_bar, l_scr_cont]
+	var child_array: Array[Node] = [l_hbox1, apply_button, search_bar, l_scr_cont]
 
 	for node in child_array:
 		l_vbox1.add_child(node)
@@ -181,6 +185,7 @@ func _setup_data_subscriber_menu() -> void:
 	l_close_btn1.pressed.connect(_on_close_button_submenu_pressed.bind(self._data_subscriber_menu))
 	l_scr_cont.custom_minimum_size = Vector2(self._data_subscriber_menu.size.x, 100)
 
+
 	l_scr_cont.add_child(data_list_vbox)
 	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
 	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
@@ -188,11 +193,17 @@ func _setup_data_subscriber_menu() -> void:
 	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
 	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
 
+	apply_button.text = "Apply changes"
+	apply_button.pressed.connect(self._on_apply_changes_pressed.bind(data_list_vbox))
+
 func _ready() -> void:
 
 	super._ready()
 	var main_vbox: VBoxContainer = VBoxContainer.new()
 	self.add_child_to_container(main_vbox)
+	self.set_outline_color(Guidot_Utils.get_color("white"))
+	self.set_container_color(Guidot_Utils.get_color("gd_black"))
+	self.set_panel_size(Vector2(500, 300))
 
 	var header_hbox: HBoxContainer = HBoxContainer.new()
 
@@ -233,18 +244,9 @@ func _ready() -> void:
 
 	# TODO (Khalid): Use a scroll container to allow us to go through all of the subscribed data
 	var sub_data_scroll_cont: ScrollContainer = ScrollContainer.new()
-	sub_data_scroll_cont.custom_minimum_size = Vector2(100, 40)
+	sub_data_scroll_cont.custom_minimum_size = Vector2(100, 200)
 	var sub_data_vbox: VBoxContainer = VBoxContainer.new()
 	sub_data_scroll_cont.add_child(sub_data_vbox)
-	var label_test = Label.new()
-	label_test.text = "Hello World"
-	var label2 = Label.new()
-	label2.text = "Hello World"
-	var label3 = Label.new()
-	label3.text = "Hello World"
-	sub_data_vbox.add_child(label_test)
-	sub_data_vbox.add_child(label2)
-	sub_data_vbox.add_child(label3)
 	
 	var server_config_rows: Array[Node] = [graph_buffer_mode_label, server_selection, subscribe_data_margin_container, sub_data_scroll_cont]
 	self.add_config_rows(self._server_config_tab, server_config_rows)
