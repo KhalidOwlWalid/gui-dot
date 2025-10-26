@@ -137,14 +137,16 @@ func add_config_rows(config_tab: AspectRatioContainer, config_rows: Array[Node])
 func _create_server_selection_row() -> void:
 	pass
 
-func _on_close_button_submenu_pressed() -> void:
-	self._data_subscriber_menu.visible = false
+func _on_close_button_submenu_pressed(panel: Node) -> void:
+	panel.visible = false
+	print("Hey i am pressed")
 
 func _on_close_button_pressed() -> void:
 	self.visible = false
 
 func _on_subscribe_pressed() -> void:
 	print("Subscribe button pressed")
+	self._data_subscriber_menu.visible = true
 
 func _create_checkbox_with_label(label: String) -> HBoxContainer:
 	var l_hbox1: HBoxContainer = HBoxContainer.new()
@@ -196,7 +198,7 @@ func _setup_data_subscriber_menu() -> void:
 	l_close_btn1.custom_minimum_size = Vector2(30, 20)
 	l_close_btn1.text = "X"
 	l_close_btn1.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_RIGHT)
-	l_close_btn1.pressed.connect(_on_close_button_submenu_pressed)
+	l_close_btn1.pressed.connect(_on_close_button_submenu_pressed.bind(self._data_subscriber_menu))
 	l_scr_cont.custom_minimum_size = Vector2(self._data_subscriber_menu.size.x, 100)
 
 	l_scr_cont.add_child(data_list_vbox)
