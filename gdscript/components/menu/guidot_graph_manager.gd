@@ -1,24 +1,5 @@
 @tool
 class_name Guidot_Graph_Manager
-#extends Node
-#
-#signal selected_server_changed
-#signal graph_buffer_mode_changed
-#signal selected_data_changed
-#
-#signal server_deselected
-#signal data_deselected
-#
-#var server_list: Array[Guidot_Data_Server]
-#var selected_graph_buffer_mode: Guidot_Common.Graph_Buffer_Mode
-#var available_data: Array[String]
-#
-#var selected_server: Guidot_Data_Server
-#var selected_data: String
-#
-#func _ready() -> void:
-	#pass
-	#
 extends Guidot_Panel2
 
 var selected_server: String
@@ -37,7 +18,7 @@ var _data_subscriber_menu: Guidot_Panel2
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	# TODO (Khalid): Remove this, temporary for now
-	self._data_subscriber_menu.position = Vector2(500, 500)
+	# self._data_subscriber_menu.position = Vector2(500, 500)
 	pass
 
 func scaled_row_size(column_scale: float) -> Vector2:
@@ -139,13 +120,11 @@ func _create_server_selection_row() -> void:
 
 func _on_close_button_submenu_pressed(panel: Node) -> void:
 	panel.visible = false
-	print("Hey i am pressed")
 
 func _on_close_button_pressed() -> void:
 	self.visible = false
 
 func _on_subscribe_pressed() -> void:
-	print("Subscribe button pressed")
 	self._data_subscriber_menu.visible = true
 
 func _create_checkbox_with_label(label: String) -> HBoxContainer:
@@ -165,6 +144,7 @@ func _setup_data_subscriber_menu() -> void:
 	
 	# TODO (Khalid): I really need to rework this where Guidot Panel should produce the two panel container
 	self.add_child(self._data_subscriber_menu)
+	self._data_subscriber_menu.hide_panel()
 
 	self._data_subscriber_menu.custom_minimum_size = Vector2(300, 300)
 	self._data_subscriber_menu.set_outline_color(Guidot_Utils.get_color("white"))
@@ -210,8 +190,9 @@ func _setup_data_subscriber_menu() -> void:
 
 func _ready() -> void:
 
+	super._ready()
 	var main_vbox: VBoxContainer = VBoxContainer.new()
-	self.add_child(main_vbox)
+	self.add_child_to_container(main_vbox)
 
 	var header_hbox: HBoxContainer = HBoxContainer.new()
 
