@@ -12,7 +12,6 @@ const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 @onready var _guidot_stylebox: StyleBoxFlat = StyleBoxFlat.new()
 @onready var margin_val: int = 1
 
-@onready var color_dict: Dictionary = Guidot_Utils.color_dict
 
 @onready var _last_mouse_position: Vector2 = Vector2()
 @onready var _mouse_in: bool = false
@@ -113,7 +112,7 @@ func _ready() -> void:
 	self.size = Vector2(620*factor, 360*factor)
 	self.add_child(guidot_graph)
 
-	_guidot_stylebox.bg_color = color_dict["gd_black"]
+	_guidot_stylebox.bg_color = Guidot_Utils.get_color("gd_black")
 	set_margin_size(margin_val)
 	add_theme_stylebox_override("panel", _guidot_stylebox)
 	self._last_position = self.position
@@ -330,10 +329,10 @@ func _draw() -> void:
 func _process(delta: float) -> void:
 
 	if (self._is_in_focus):
-		self.set_stylebox_color(color_dict["red"])
+		self.set_stylebox_color(Guidot_Utils.get_color("red"))
 	else:
 		# TODO (Khalid): This needs to be able to change back to previous color, not hardcoded color
-		self.set_stylebox_color(color_dict["gd_black"])
+		self.set_stylebox_color(Guidot_Utils.get_color("gd_black"))
 	
 	if (self._is_in_focus):
 		self._current_ui_mode = UI_Mode.SELECTED

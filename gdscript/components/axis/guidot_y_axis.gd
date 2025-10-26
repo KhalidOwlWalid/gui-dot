@@ -2,7 +2,7 @@ class_name Guidot_Y_Axis
 extends Guidot_Axis
 
 func _ready() -> void:
-	self.line_color = Guidot_Utils.color_dict["white"]
+	self.line_color = Guidot_Utils.get_color("white")
 	self.last_line_color = self.line_color
 	self.ticks_pos = PackedVector2Array()
 	var tick_x_pos: int = self.top_right().x

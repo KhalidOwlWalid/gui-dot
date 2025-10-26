@@ -7,7 +7,7 @@ func update_debug_info() -> void:
 	}
 
 func _ready() -> void:
-	self.line_color = Guidot_Utils.color_dict["white"]
+	self.line_color = Guidot_Utils.get_color("white")
 	self.last_line_color = self.line_color
 	self.ticks_pos = PackedVector2Array()
 	var tick_y_pos: int = self.top_left().y
