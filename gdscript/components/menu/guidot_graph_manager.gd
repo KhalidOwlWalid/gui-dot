@@ -19,7 +19,7 @@ class_name Guidot_Graph_Manager
 #func _ready() -> void:
 	#pass
 	#
-extends Guidot_Panel
+extends Guidot_Panel2
 
 var selected_server: String
 
@@ -32,12 +32,12 @@ var selected_server: String
 @onready var _x_axis_config_tab: AspectRatioContainer
 @onready var _y_axis_config_tab: AspectRatioContainer
 
-var data_subscriber_menu: Guidot_Panel
+var _data_subscriber_menu: Guidot_Panel2
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	# TODO (Khalid): Remove this, temporary for now
-	self.data_subscriber_menu.position = Vector2(500, 500)
+	self._data_subscriber_menu.position = Vector2(500, 500)
 	pass
 
 func scaled_row_size(column_scale: float) -> Vector2:
@@ -137,6 +137,9 @@ func add_config_rows(config_tab: AspectRatioContainer, config_rows: Array[Node])
 func _create_server_selection_row() -> void:
 	pass
 
+func _on_close_button_submenu_pressed() -> void:
+	self._data_subscriber_menu.visible = false
+
 func _on_close_button_pressed() -> void:
 	self.visible = false
 
@@ -156,23 +159,51 @@ func _create_checkbox_with_label(label: String) -> HBoxContainer:
 
 func _setup_data_subscriber_menu() -> void:
 	# Ensure this gets constructed first, and added into the scene tree before initializing any of its properties
-	self.data_subscriber_menu = Guidot_Panel.new()
-	self.add_child(self.data_subscriber_menu)
+	self._data_subscriber_menu = Guidot_Panel2.new()
+	
+	# TODO (Khalid): I really need to rework this where Guidot Panel should produce the two panel container
+	self.add_child(self._data_subscriber_menu)
+
+	self._data_subscriber_menu.custom_minimum_size = Vector2(300, 300)
+	self._data_subscriber_menu.set_outline_color(Guidot_Utils.get_color("white"))
 
 	var l_vbox1: VBoxContainer = VBoxContainer.new()
+	self._data_subscriber_menu.add_child_to_container(l_vbox1)
+	self._data_subscriber_menu.set_container_color(Guidot_Utils.get_color("gd_black"))
+
+	# Header for data subscriber
+	var l_hbox1: HBoxContainer = HBoxContainer.new()
 	var header: Label = Label.new()
+	var l_close_btn1: Button = Button.new()
+	l_hbox1.add_child(header)	
+	l_hbox1.add_child(l_close_btn1)
+
 	var search_bar: LineEdit = LineEdit.new()
 	var l_scr_cont: ScrollContainer = ScrollContainer.new()
 	var data_list_vbox: VBoxContainer = VBoxContainer.new()
 
-	self.data_subscriber_menu.custom_minimum_size = Vector2(300, 300)
-	self.data_subscriber_menu.set_background_color(Guidot_Utils.get_color("red"))
-	var child_array: Array[Node] = [header, search_bar, l_scr_cont]
+	var child_array: Array[Node] = [l_hbox1, search_bar, l_scr_cont]
 
 	for node in child_array:
-		self.data_subscriber_menu.add_child(node)
+		l_vbox1.add_child(node)
+
+	# Setup the header
+	l_hbox1.custom_minimum_size = Vector2(self._data_subscriber_menu.size.x, 20)
+	l_hbox1.size = Vector2(self._data_subscriber_menu.size.x, 20)
+	header.text = "Header"
+	header.custom_minimum_size = Vector2(0.9 * self._data_subscriber_menu.size.x, 20)
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	l_close_btn1.custom_minimum_size = Vector2(30, 20)
+	l_close_btn1.text = "X"
+	l_close_btn1.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_RIGHT)
+	l_close_btn1.pressed.connect(_on_close_button_submenu_pressed)
+	l_scr_cont.custom_minimum_size = Vector2(self._data_subscriber_menu.size.x, 100)
 
 	l_scr_cont.add_child(data_list_vbox)
+	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
+	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
+	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
+	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
 	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
 
 func _ready() -> void:
