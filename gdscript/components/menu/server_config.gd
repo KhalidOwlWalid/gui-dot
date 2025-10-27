@@ -14,18 +14,13 @@ func register_data_sub_manager(dsub_node: Guidot_Data_Sub_Manager) -> void:
 	# TODO (Khalid): I do not like the way that this basically gets opened inside the server
 	# selection panel itself, but I am struggling in making the data subscriber manager to open separately
 	# on its own
-	self.add_child(self.data_subscriber_manager)
+	# self.add_child(self.data_subscriber_manager)
 	
 func _ready() -> void:
 	super._ready()
 
 	var vbox: VBoxContainer = VBoxContainer.new()
 	self.add_child_to_container(vbox)
-
-	var header_label = Label.new()
-	header_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	header_label.text = "Server Selection 1"
-	vbox.add_child(header_label)
 
 	# All server configuration settings
 	var server_selection = Guidot_Utils.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
