@@ -20,7 +20,7 @@ var _data_subscriber_manager: Guidot_Panel2
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	# TODO (Khalid): Remove this, temporary for now
-	self._data_subscriber_manager.position = Vector2(500, 500)
+	# self._data_subscriber_manager.position = Vector2(500, 500)
 	pass
 
 func scaled_row_size(column_scale: float) -> Vector2:
@@ -82,58 +82,6 @@ func _create_checkbox_with_label(label: String) -> HBoxContainer:
 
 	return l_hbox1
 
-func _setup_data_subscriber_manager() -> void:
-	# Ensure this gets constructed first, and added into the scene tree before initializing any of its properties
-	self._data_subscriber_manager = Guidot_Panel2.new()
-	
-	self.add_child(self._data_subscriber_manager)
-	self._data_subscriber_manager.hide_panel()
-
-	self._data_subscriber_manager.custom_minimum_size = Vector2(300, 300)
-	self._data_subscriber_manager.set_outline_color(Guidot_Utils.get_color("white"))
-
-	var l_vbox1: VBoxContainer = VBoxContainer.new()
-	self._data_subscriber_manager.add_child_to_container(l_vbox1)
-	self._data_subscriber_manager.set_container_color(Guidot_Utils.get_color("gd_black"))
-
-	# Header for data subscriber
-	var l_hbox1: HBoxContainer = HBoxContainer.new()
-	var header: Label = Label.new()
-	var l_close_btn1: Button = Button.new()
-	l_hbox1.add_child(header)	
-	l_hbox1.add_child(l_close_btn1)
-
-	var apply_button: Button = Button.new()
-	var search_bar: LineEdit = LineEdit.new()
-	var l_scr_cont: ScrollContainer = ScrollContainer.new()
-	var data_list_vbox: VBoxContainer = VBoxContainer.new()
-
-	var child_array: Array[Node] = [l_hbox1, apply_button, search_bar, l_scr_cont]
-
-	for node in child_array:
-		l_vbox1.add_child(node)
-
-	# Setup the header
-	l_hbox1.custom_minimum_size = Vector2(self._data_subscriber_manager.size.x, 20)
-	l_hbox1.size = Vector2(self._data_subscriber_manager.size.x, 20)
-	header.text = "Data Subscriber Manager"
-	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l_close_btn1.custom_minimum_size = Vector2(30, 20)
-	l_close_btn1.text = "X"
-	l_close_btn1.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_RIGHT)
-	l_close_btn1.pressed.connect(_on_close_button_submenu_pressed.bind(self._data_subscriber_manager))
-	l_scr_cont.custom_minimum_size = Vector2(self._data_subscriber_manager.size.x, 100)
-
-	l_scr_cont.add_child(data_list_vbox)
-	data_list_vbox.add_child(self._create_checkbox_with_label("Engine Speed"))
-	data_list_vbox.add_child(self._create_checkbox_with_label("Fd Commands"))
-	data_list_vbox.add_child(self._create_checkbox_with_label("Roll"))
-	data_list_vbox.add_child(self._create_checkbox_with_label("Pitch"))
-	data_list_vbox.add_child(self._create_checkbox_with_label("Yaw"))
-
-	apply_button.text = "Apply changes"
-	apply_button.pressed.connect(self._on_apply_changes_pressed.bind(data_list_vbox))
-
 func _ready() -> void:
 
 	super._ready()
@@ -170,26 +118,13 @@ func _ready() -> void:
 	self._server_config_tab = self.create_configuration_tab("Server Manager")
 	_graph_config_tab_cont.add_child(_server_config_tab)
 
-	# All server configuration settings
 	var graph_buffer_mode_label = Guidot_Utils.create_label_row("Current mode", "Realtime", Vector2(200, 20))
-	var server_selection = Guidot_Utils.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
-	var subscribe_data_margin_container: MarginContainer = MarginContainer.new()
-
-	var subscribe_data_button: Button = Button.new()
-	subscribe_data_margin_container.add_child(subscribe_data_button)
-	subscribe_data_button.text = "+ Subscribe to data"
-	subscribe_data_button.pressed.connect(_on_subscribe_pressed)
-
-	# TODO (Khalid): Use a scroll container to allow us to go through all of the subscribed data
-	var sub_data_scroll_cont: ScrollContainer = ScrollContainer.new()
-	sub_data_scroll_cont.custom_minimum_size = Vector2(100, 200)
-	var sub_data_vbox: VBoxContainer = VBoxContainer.new()
-	sub_data_scroll_cont.add_child(sub_data_vbox)
-
-	var test_gd_panel2 = Guidot_Server_Config.new()
+	var gd_server_conf1 = Guidot_Server_Config.new()
+	var gd_sub_manager1 = Guidot_Data_Sub_Manager.new()
 	
-	var server_config_rows: Array[Node] = [graph_buffer_mode_label, server_selection, subscribe_data_margin_container, sub_data_scroll_cont, test_gd_panel2]
+	var server_config_rows: Array[Node] = [graph_buffer_mode_label, gd_server_conf1]
 	self.add_config_rows(self._server_config_tab, server_config_rows)
+	gd_server_conf1.register_data_sub_manager(gd_sub_manager1)
 
 	# Setup axis configuration tab
 	self._x_axis_config_tab = self.create_configuration_tab("X-Axis")
@@ -211,7 +146,7 @@ func _ready() -> void:
 	var y_axis_config_rows: Array[Node] = [test2, test3]
 	self.add_config_rows(self._y_axis_config_tab, y_axis_config_rows) 
 
-	self._setup_data_subscriber_manager()
+	# self._setup_data_subscriber_manager()
 
 	# Signal handling
 	self.data_selected.connect(self._on_data_selected)
