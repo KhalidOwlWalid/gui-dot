@@ -11,9 +11,9 @@ var selected_server: String
 @onready var _config_window_stylebox: StyleBoxFlat = StyleBoxFlat.new()
 
 # Setting tabs
-@onready var _server_config_tab: AspectRatioContainer
-@onready var _x_axis_config_tab: AspectRatioContainer
-@onready var _y_axis_config_tab: AspectRatioContainer
+@onready var _server_config_tab: ScrollContainer
+# @onready var _x_axis_config_tab: AspectRatioContainer
+# @onready var _y_axis_config_tab: AspectRatioContainer
 
 var _data_subscriber_manager: Guidot_Panel2
 
@@ -28,17 +28,19 @@ func scaled_row_size(column_scale: float) -> Vector2:
 
 # For each configuration tab, it requires:
 #	=> VBox - Host all of the configuration row
-func create_configuration_tab(tab_name: String) -> AspectRatioContainer:
-	var config_tab: AspectRatioContainer = AspectRatioContainer.new()
+func create_configuration_tab(tab_name: String) -> ScrollContainer:
+	var config_tab: ScrollContainer = ScrollContainer.new()
 	config_tab.name = tab_name
+	config_tab.custom_minimum_size = Vector2(300, 400)
 	var vbox: VBoxContainer = VBoxContainer.new()
 	
 	config_tab.add_child(vbox)
+	vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	return config_tab
 
 # Takes in the configuration tab and helps populate the internal VBoxContainer
-func add_config_rows(config_tab: AspectRatioContainer, config_rows: Array[Node]) -> void:
+func add_config_rows(config_tab: ScrollContainer, config_rows: Array[Node]) -> void:
 	var config_tab_vbox: VBoxContainer  = config_tab.get_children()[0]
 	
 	for row in config_rows:
@@ -70,6 +72,13 @@ func _on_close_button_pressed() -> void:
 
 func _on_subscribe_pressed() -> void:
 	self._data_subscriber_manager.visible = true
+
+func _on_add_server_pressed() -> void:
+	var gd_server_conf1 = Guidot_Server_Config.new()
+	var gd_sub_manager1 = Guidot_Data_Sub_Manager.new()
+	gd_server_conf1.register_data_sub_manager(gd_sub_manager1)
+	self.add_child(gd_sub_manager1)
+	self.add_config_rows(self._server_config_tab, [gd_server_conf1])
 
 func _create_checkbox_with_label(label: String) -> HBoxContainer:
 	var l_hbox1: HBoxContainer = HBoxContainer.new()
@@ -119,34 +128,32 @@ func _ready() -> void:
 	_graph_config_tab_cont.add_child(_server_config_tab)
 
 	var graph_buffer_mode_label = Guidot_Utils.create_label_row("Current mode", "Realtime", Vector2(200, 20))
-	var gd_server_conf1 = Guidot_Server_Config.new()
-	var gd_sub_manager1 = Guidot_Data_Sub_Manager.new()
+	var add_server_btn: Button = Button.new()
+	add_server_btn.text = "+ Add Server"
+	add_server_btn.pressed.connect(self._on_add_server_pressed)
 	
-	var server_config_rows: Array[Node] = [graph_buffer_mode_label, gd_server_conf1]
+	var server_config_rows: Array[Node] = [graph_buffer_mode_label, add_server_btn]
 	self.add_config_rows(self._server_config_tab, server_config_rows)
-	gd_server_conf1.register_data_sub_manager(gd_sub_manager1)
 
 	# Setup axis configuration tab
-	self._x_axis_config_tab = self.create_configuration_tab("X-Axis")
-	_graph_config_tab_cont.add_child(self._x_axis_config_tab)
+	# self._x_axis_config_tab = self.create_configuration_tab("X-Axis")
+	# _graph_config_tab_cont.add_child(self._x_axis_config_tab)
 
-	# All Axis Configuration settings
-	var test = Guidot_Utils.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
-	var test1 = Guidot_Utils.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
-	var x_axis_config_rows: Array[Node] = [test, test1]
-	self.add_config_rows(self._x_axis_config_tab, x_axis_config_rows) 
+	# # All Axis Configuration settings
+	# var test = Guidot_Utils.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
+	# var test1 = Guidot_Utils.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
+	# var x_axis_config_rows: Array[Node] = [test, test1]
+	# self.add_config_rows(self._x_axis_config_tab, x_axis_config_rows) 
 
-	# Setup axis configuration tab
-	self._y_axis_config_tab = self.create_configuration_tab("Y-Axis")
-	_graph_config_tab_cont.add_child(self._y_axis_config_tab)
+	# # Setup axis configuration tab
+	# self._y_axis_config_tab = self.create_configuration_tab("Y-Axis")
+	# _graph_config_tab_cont.add_child(self._y_axis_config_tab)
 
-	# All Axis Configuration settings
-	var test2 = Guidot_Utils.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
-	var test3 = Guidot_Utils.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
-	var y_axis_config_rows: Array[Node] = [test2, test3]
-	self.add_config_rows(self._y_axis_config_tab, y_axis_config_rows) 
+	# # All Axis Configuration settings
+	# var test2 = Guidot_Utils.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
+	# var test3 = Guidot_Utils.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
+	# var y_axis_config_rows: Array[Node] = [test2, test3]
+	# self.add_config_rows(self._y_axis_config_tab, y_axis_config_rows) 
 
-	# self._setup_data_subscriber_manager()
-
-	# Signal handling
-	self.data_selected.connect(self._on_data_selected)
+	# # Signal handling
+	# self.data_selected.connect(self._on_data_selected)
