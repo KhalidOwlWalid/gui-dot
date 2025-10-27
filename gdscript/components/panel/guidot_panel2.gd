@@ -2,6 +2,12 @@
 class_name Guidot_Panel2
 extends PanelContainer
 
+######################################## NOTE ##############################################################
+# Please call the add_child_to_container function, if you wish to place your nodes inside of the container #
+# Failure to do so, may result in the container being drawn on top of your node which may cause the node   #
+# to not function well																					   #
+#############################################################################################################
+
 @onready var _panel_size: Vector2 = Vector2(100, 100)
 @onready var _init_pos: Vector2 = Vector2(100, 100)
 

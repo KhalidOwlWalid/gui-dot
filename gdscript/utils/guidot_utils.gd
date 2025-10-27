@@ -46,3 +46,83 @@ static func get_color(guidot_color: String) -> Color:
 		"gd_grey_transparent": rgba(54, 61, 74, 125),
 	}
 	return color_dict[guidot_color]
+
+static func create_dropdown_selection_row(label_text: String,  dropdown_items: Array, custom_min_size: Vector2) -> MarginContainer:
+
+	# Internal properties of the dropdown selection row
+	var margin_size: int = 5
+	
+	# All nodes required to create the dropdown
+	var panel_container1 = MarginContainer.new()
+	var hbox1 = HBoxContainer.new()
+	var label1 = Label.new()
+	var option_button1 = OptionButton.new()
+
+	hbox1.custom_minimum_size = custom_min_size
+	label1.custom_minimum_size = custom_min_size
+	option_button1.custom_minimum_size = custom_min_size
+
+	# Control the margin size of each dropdown selection so that it looks nicer in the GUI
+	panel_container1.add_theme_constant_override("margin_top", margin_size)
+	panel_container1.add_theme_constant_override("margin_bottom", margin_size)
+	panel_container1.add_theme_constant_override("margin_left", margin_size)
+	panel_container1.add_theme_constant_override("margin_right", margin_size)
+	
+	# Set the labels properties
+	label1.text = label_text
+	label1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label1.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+	option_button1.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	for i in len(dropdown_items):
+		option_button1.add_item(str(dropdown_items[i]))
+
+	# Add the labels and the dropdown selection to the HBOX Container
+	hbox1.add_child(label1)
+	hbox1.add_child(option_button1)
+	panel_container1.add_child(hbox1)
+
+	return panel_container1
+
+static func create_label_row(label_text: String, label_value, custom_min_size: Vector2,) -> MarginContainer:
+	# Internal properties of the dropdown selection row
+	var margin_size: int = 5
+	
+	# All nodes required to create the dropdown
+	var panel_container1 = MarginContainer.new()
+	var hbox1 = HBoxContainer.new()
+	var label = Label.new()
+	var value = Label.new()
+
+	hbox1.custom_minimum_size = custom_min_size
+	label.custom_minimum_size = custom_min_size
+	value.custom_minimum_size = custom_min_size
+
+	# Control the margin size of each dropdown selection so that it looks nicer in the GUI
+	panel_container1.add_theme_constant_override("margin_top", margin_size)
+	panel_container1.add_theme_constant_override("margin_bottom", margin_size)
+	panel_container1.add_theme_constant_override("margin_left", margin_size)
+	panel_container1.add_theme_constant_override("margin_right", margin_size)
+	
+	# Set the labels properties
+	label.text = label_text
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+	value.text = str(label_value)
+	value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	value.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+	# Add the labels and the dropdown selection to the HBOX Container
+	hbox1.add_child(label)
+	hbox1.add_child(value)
+	panel_container1.add_child(hbox1)
+
+	return panel_container1
+
+# Takes in the configuration tab and helps populate the internal VBoxContainer
+static func add_config_rows(config_tab: AspectRatioContainer, config_rows: Array[Node]) -> void:
+	var config_tab_vbox: VBoxContainer  = config_tab.get_children()[0]
+	
+	for row in config_rows:
+		config_tab_vbox.add_child(row)
