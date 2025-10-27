@@ -2,6 +2,8 @@
 class_name Guidot_Graph_Manager
 extends Guidot_Panel2
 
+signal data_selected
+
 var selected_server: String
 
 @onready var _graph_config_tab_cont: TabContainer = TabContainer.new()
@@ -13,12 +15,12 @@ var selected_server: String
 @onready var _x_axis_config_tab: AspectRatioContainer
 @onready var _y_axis_config_tab: AspectRatioContainer
 
-var _data_subscriber_menu: Guidot_Panel2
+var _data_subscriber_manager: Guidot_Panel2
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	# TODO (Khalid): Remove this, temporary for now
-	self._data_subscriber_menu.position = Vector2(500, 500)
+	self._data_subscriber_manager.position = Vector2(500, 500)
 	pass
 
 func scaled_row_size(column_scale: float) -> Vector2:
@@ -118,8 +120,20 @@ func add_config_rows(config_tab: AspectRatioContainer, config_rows: Array[Node])
 func _create_server_selection_row() -> void:
 	pass
 
+func _on_data_selected(data_str_array: Array[String]) -> void:
+	print(data_str_array)
+	pass
+
 func _on_apply_changes_pressed(selected_data: VBoxContainer) -> void:
-	print(selected_data)
+	var selected_data_str: Array[String] = []
+	for hbox in selected_data.get_children():
+		var cbox: CheckBox = hbox.get_child(0)
+		var data_label: Label = hbox.get_child(1)
+
+		if cbox.button_pressed:
+			selected_data_str.append(data_label.text)
+
+	self.data_selected.emit(selected_data_str)
 
 func _on_close_button_submenu_pressed(panel: Node) -> void:
 	panel.visible = false
@@ -128,7 +142,7 @@ func _on_close_button_pressed() -> void:
 	self.visible = false
 
 func _on_subscribe_pressed() -> void:
-	self._data_subscriber_menu.visible = true
+	self._data_subscriber_manager.visible = true
 
 func _create_checkbox_with_label(label: String) -> HBoxContainer:
 	var l_hbox1: HBoxContainer = HBoxContainer.new()
@@ -141,20 +155,19 @@ func _create_checkbox_with_label(label: String) -> HBoxContainer:
 
 	return l_hbox1
 
-func _setup_data_subscriber_menu() -> void:
+func _setup_data_subscriber_manager() -> void:
 	# Ensure this gets constructed first, and added into the scene tree before initializing any of its properties
-	self._data_subscriber_menu = Guidot_Panel2.new()
+	self._data_subscriber_manager = Guidot_Panel2.new()
 	
-	# TODO (Khalid): I really need to rework this where Guidot Panel should produce the two panel container
-	self.add_child(self._data_subscriber_menu)
-	self._data_subscriber_menu.hide_panel()
+	self.add_child(self._data_subscriber_manager)
+	self._data_subscriber_manager.hide_panel()
 
-	self._data_subscriber_menu.custom_minimum_size = Vector2(300, 300)
-	self._data_subscriber_menu.set_outline_color(Guidot_Utils.get_color("white"))
+	self._data_subscriber_manager.custom_minimum_size = Vector2(300, 300)
+	self._data_subscriber_manager.set_outline_color(Guidot_Utils.get_color("white"))
 
 	var l_vbox1: VBoxContainer = VBoxContainer.new()
-	self._data_subscriber_menu.add_child_to_container(l_vbox1)
-	self._data_subscriber_menu.set_container_color(Guidot_Utils.get_color("gd_black"))
+	self._data_subscriber_manager.add_child_to_container(l_vbox1)
+	self._data_subscriber_manager.set_container_color(Guidot_Utils.get_color("gd_black"))
 
 	# Header for data subscriber
 	var l_hbox1: HBoxContainer = HBoxContainer.new()
@@ -174,24 +187,22 @@ func _setup_data_subscriber_menu() -> void:
 		l_vbox1.add_child(node)
 
 	# Setup the header
-	l_hbox1.custom_minimum_size = Vector2(self._data_subscriber_menu.size.x, 20)
-	l_hbox1.size = Vector2(self._data_subscriber_menu.size.x, 20)
-	header.text = "Header"
-	header.custom_minimum_size = Vector2(0.9 * self._data_subscriber_menu.size.x, 20)
+	l_hbox1.custom_minimum_size = Vector2(self._data_subscriber_manager.size.x, 20)
+	l_hbox1.size = Vector2(self._data_subscriber_manager.size.x, 20)
+	header.text = "Data Subscriber Manager"
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	l_close_btn1.custom_minimum_size = Vector2(30, 20)
 	l_close_btn1.text = "X"
 	l_close_btn1.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_RIGHT)
-	l_close_btn1.pressed.connect(_on_close_button_submenu_pressed.bind(self._data_subscriber_menu))
-	l_scr_cont.custom_minimum_size = Vector2(self._data_subscriber_menu.size.x, 100)
-
+	l_close_btn1.pressed.connect(_on_close_button_submenu_pressed.bind(self._data_subscriber_manager))
+	l_scr_cont.custom_minimum_size = Vector2(self._data_subscriber_manager.size.x, 100)
 
 	l_scr_cont.add_child(data_list_vbox)
-	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
-	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
-	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
-	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
-	data_list_vbox.add_child(self._create_checkbox_with_label("Test"))
+	data_list_vbox.add_child(self._create_checkbox_with_label("Engine Speed"))
+	data_list_vbox.add_child(self._create_checkbox_with_label("Fd Commands"))
+	data_list_vbox.add_child(self._create_checkbox_with_label("Roll"))
+	data_list_vbox.add_child(self._create_checkbox_with_label("Pitch"))
+	data_list_vbox.add_child(self._create_checkbox_with_label("Yaw"))
 
 	apply_button.text = "Apply changes"
 	apply_button.pressed.connect(self._on_apply_changes_pressed.bind(data_list_vbox))
@@ -271,4 +282,7 @@ func _ready() -> void:
 	var y_axis_config_rows: Array[Node] = [test2, test3]
 	self.add_config_rows(self._y_axis_config_tab, y_axis_config_rows) 
 
-	self._setup_data_subscriber_menu()
+	self._setup_data_subscriber_manager()
+
+	# Signal handling
+	self.data_selected.connect(self._on_data_selected)
