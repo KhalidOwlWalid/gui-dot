@@ -38,9 +38,9 @@ script = ExtResource("5_ax30q")
 
 [node name="Guidot_Graph2" type="PanelContainer" parent="."]
 layout_mode = 2
-offset_left = 665.0
-offset_top = 7.0
-offset_right = 1265.0
-offset_bottom = 347.0
+offset_left = 688.0
+offset_top = 21.0
+offset_right = 1288.0
+offset_bottom = 361.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_0lbeu")
 script = ExtResource("5_ax30q")
