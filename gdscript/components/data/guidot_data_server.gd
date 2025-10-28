@@ -35,6 +35,9 @@ func set_graph_buffer_mode(buf_mode: Graph_Buffer_Mode) -> void:
 func get_graph_buffer_mode() -> Graph_Buffer_Mode:
 	return _graph_buffer_mode
 
+func get_all_registered_clients() -> Array[int]:
+	return self._client_manager
+
 # TODO (Khalid): Error handling to check if it is a duplicate
 func register_client(client_unique_id: int) -> bool:
 	self._client_manager.append(client_unique_id)

@@ -4,19 +4,6 @@ extends Guidot_Panel2
 signal data_selected
 
 @onready var available_data: Dictionary = {
-	"Engine Speed": false,
-	"Fd Commands": false,
-	"Rotor Speed": true,
-	"test1": false,
-	"test2": false,
-	"test3": false,
-	"test4": true,
-	"test5": false,
-	"test6": false,
-	"test7": true,
-	"test8": false,
-	"test9": true,
-	"test10": false,
 }
 
 @onready var header: Label = Label.new()
@@ -25,6 +12,18 @@ signal data_selected
 @onready var scroll_container: ScrollContainer = ScrollContainer.new()
 @onready var data_list_vbox: VBoxContainer = VBoxContainer.new()
 @onready var close_button: Button = Button.new()
+
+func set_available_data(client_nodes: Array[int]) -> void:
+	self.available_data.clear()
+
+	for node in client_nodes:
+		available_data[instance_from_id(node).name] = false
+
+	self.populate_data_selection_vbox()
+
+func populate_data_selection_vbox() -> void:
+	for key in available_data.keys():
+		data_list_vbox.add_child(Guidot_Utils._create_checkbox_with_label(key, available_data[key]))
 
 func _on_close_submenu_button_pressed() -> void:
 	self.visible = false
