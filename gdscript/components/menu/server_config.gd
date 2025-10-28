@@ -3,6 +3,11 @@ extends Guidot_Panel2
 
 var data_subscriber_manager: Guidot_Data_Sub_Manager
 
+@onready var sub_data_scroll_cont: ScrollContainer = ScrollContainer.new()
+
+func _get_selected_data_display() -> void:
+	var vbox = sub_data_scroll_cont.get_children()
+
 func _on_subscribe_pressed() -> void:
 	self.data_subscriber_manager.visible = true
 
@@ -34,14 +39,19 @@ func _ready() -> void:
 	subscribe_data_button.text = "+ Subscribe to data"
 	subscribe_data_button.pressed.connect(self._on_subscribe_pressed)
 
+	# TODO (Khalid): Use a scroll container to allow us to go through all of the subscribed data
+	sub_data_scroll_cont.custom_minimum_size = Vector2(100, 100)
+	var sub_data_vbox: VBoxContainer = VBoxContainer.new()
+	sub_data_scroll_cont.add_child(sub_data_vbox)
+
+	var tmp = Label.new()
+	tmp.text = "Khalid"
+	sub_data_vbox.add_child(tmp)
+
 	vbox.add_child(server_selection)
 	vbox.add_child(margin_cont1)
+	vbox.add_child(sub_data_scroll_cont)
 
-	# # TODO (Khalid): Use a scroll container to allow us to go through all of the subscribed data
-	# var sub_data_scroll_cont: ScrollContainer = ScrollContainer.new()
-	# sub_data_scroll_cont.custom_minimum_size = Vector2(100, 200)
-	# var sub_data_vbox: VBoxContainer = VBoxContainer.new()
-	# sub_data_scroll_cont.add_child(sub_data_vbox)
 
 func _process(delta: float) -> void:
 	pass
