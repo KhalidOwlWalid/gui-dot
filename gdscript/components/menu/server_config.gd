@@ -4,6 +4,7 @@ extends Guidot_Panel2
 var data_subscriber_manager: Guidot_Data_Sub_Manager
 
 @onready var sub_data_scroll_cont: ScrollContainer = ScrollContainer.new()
+@onready var sub_data_vbox: VBoxContainer = VBoxContainer.new()
 
 func _get_selected_data_display() -> void:
 	var vbox = sub_data_scroll_cont.get_children()
@@ -16,10 +17,20 @@ func _on_close_submenu_button_pressed(panel: Node) -> void:
 
 func register_data_sub_manager(dsub_node: Guidot_Data_Sub_Manager) -> void:
 	self.data_subscriber_manager = dsub_node
+	self.data_subscriber_manager.data_selected.connect(self._on_data_selected)
 	# TODO (Khalid): I do not like the way that this basically gets opened inside the server
 	# selection panel itself, but I am struggling in making the data subscriber manager to open separately
 	# on its own
 	# self.add_child(self.data_subscriber_manager)
+
+func _on_data_selected(sel_data_array: Array[String]) -> void:
+	for n in sub_data_vbox.get_children():
+		sub_data_vbox.remove_child(n)
+
+	for item in sel_data_array:
+		var label: Label = Label.new()
+		label.text = item
+		sub_data_vbox.add_child(label)
 	
 func _ready() -> void:
 	super._ready()
@@ -41,7 +52,6 @@ func _ready() -> void:
 
 	# TODO (Khalid): Use a scroll container to allow us to go through all of the subscribed data
 	sub_data_scroll_cont.custom_minimum_size = Vector2(100, 100)
-	var sub_data_vbox: VBoxContainer = VBoxContainer.new()
 	sub_data_scroll_cont.add_child(sub_data_vbox)
 
 	var tmp = Label.new()

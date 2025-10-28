@@ -33,12 +33,12 @@ func _on_apply_changes_pressed(selected_data: VBoxContainer) -> void:
 	var selected_data_str: Array[String] = []
 	for hbox in selected_data.get_children():
 		var cbox: CheckBox = hbox.get_child(0)
-		var data_label: Label = hbox.get_child(1)
 
 		if cbox.button_pressed:
-			selected_data_str.append(data_label.text)
+			selected_data_str.append(cbox.text)
 
 	self.data_selected.emit(selected_data_str)
+	self.log(LOG_INFO, [selected_data_str])
 
 func set_container_size(new_size: Vector2) -> void:
 	self.scroll_container.custom_minimum_size = new_size
