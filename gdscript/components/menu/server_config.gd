@@ -3,8 +3,11 @@ extends Guidot_Panel2
 
 var data_subscriber_manager: Guidot_Data_Sub_Manager
 
+@onready var server_selection: MarginContainer 
 @onready var sub_data_scroll_cont: ScrollContainer = ScrollContainer.new()
 @onready var sub_data_vbox: VBoxContainer = VBoxContainer.new()
+
+@onready var available_server: Dictionary = {}
 
 func _get_selected_data_display() -> void:
 	var vbox = sub_data_scroll_cont.get_children()
@@ -18,19 +21,31 @@ func _on_close_submenu_button_pressed(panel: Node) -> void:
 func register_data_sub_manager(dsub_node: Guidot_Data_Sub_Manager) -> void:
 	self.data_subscriber_manager = dsub_node
 	self.data_subscriber_manager.data_selected.connect(self._on_data_selected)
-	# TODO (Khalid): I do not like the way that this basically gets opened inside the server
-	# selection panel itself, but I am struggling in making the data subscriber manager to open separately
-	# on its own
-	# self.add_child(self.data_subscriber_manager)
 
 func _on_data_selected(sel_data_array: Array[String]) -> void:
+	# Clear the vbox from the previously selected label
 	for n in sub_data_vbox.get_children():
 		sub_data_vbox.remove_child(n)
 
+	# Populate selected labels
 	for item in sel_data_array:
 		var label: Label = Label.new()
 		label.text = item
 		sub_data_vbox.add_child(label)
+
+func get_available_gd_server() -> Array[String]:
+	var gd_servers: Array[Node] = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)
+
+	var gd_servers_str: Array[String]
+
+	# Returns the name of the server
+	available_server.clear()
+	for server in gd_servers:
+		# Stores the respective name as key for node, to make it easy to access later
+		available_server[server.name] = server
+		gd_servers_str.append(server.name)
+
+	return gd_servers_str
 	
 func _ready() -> void:
 	super._ready()
@@ -39,7 +54,7 @@ func _ready() -> void:
 	self.add_child_to_container(vbox)
 
 	# All server configuration settings
-	var server_selection = Guidot_Utils.create_dropdown_selection_row("Server Node", ["Khalid", "Alia"], Vector2(200, 20))
+	server_selection = Guidot_Utils.create_dropdown_selection_row("Server Node", self.get_available_gd_server(), Vector2(200, 20))
 
 	var margin_cont1: MarginContainer = MarginContainer.new()
 	var subscribe_data_button: Button = Button.new()
@@ -54,14 +69,9 @@ func _ready() -> void:
 	sub_data_scroll_cont.custom_minimum_size = Vector2(100, 100)
 	sub_data_scroll_cont.add_child(sub_data_vbox)
 
-	var tmp = Label.new()
-	tmp.text = "Khalid"
-	sub_data_vbox.add_child(tmp)
-
 	vbox.add_child(server_selection)
 	vbox.add_child(margin_cont1)
 	vbox.add_child(sub_data_scroll_cont)
-
 
 func _process(delta: float) -> void:
 	pass
