@@ -126,3 +126,13 @@ static func add_config_rows(config_tab: AspectRatioContainer, config_rows: Array
 	
 	for row in config_rows:
 		config_tab_vbox.add_child(row)
+
+static func _create_checkbox_with_label(label: String, flag: bool) -> HBoxContainer:
+	var l_hbox1: HBoxContainer = HBoxContainer.new()
+	var l_cbox1: CheckBox = CheckBox.new()
+	l_cbox1.text = label
+	l_cbox1.button_pressed = flag
+
+	l_hbox1.add_child(l_cbox1)
+
+	return l_hbox1

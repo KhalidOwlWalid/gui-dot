@@ -2,8 +2,6 @@
 class_name Guidot_Graph_Manager
 extends Guidot_Panel2
 
-signal data_selected
-
 var selected_server: String
 
 @onready var _graph_config_tab_cont: TabContainer = TabContainer.new()
@@ -53,25 +51,11 @@ func _on_data_selected(data_str_array: Array[String]) -> void:
 	print(data_str_array)
 	pass
 
-func _on_apply_changes_pressed(selected_data: VBoxContainer) -> void:
-	var selected_data_str: Array[String] = []
-	for hbox in selected_data.get_children():
-		var cbox: CheckBox = hbox.get_child(0)
-		var data_label: Label = hbox.get_child(1)
-
-		if cbox.button_pressed:
-			selected_data_str.append(data_label.text)
-
-	self.data_selected.emit(selected_data_str)
-
 func _on_close_button_submenu_pressed(panel: Node) -> void:
 	panel.visible = false
 
 func _on_close_button_pressed() -> void:
 	self.visible = false
-
-func _on_subscribe_pressed() -> void:
-	self._data_subscriber_manager.visible = true
 
 func _on_add_server_pressed() -> void:
 	var gd_server_conf1 = Guidot_Server_Config.new()
@@ -80,23 +64,13 @@ func _on_add_server_pressed() -> void:
 	self.add_child(gd_sub_manager1)
 	self.add_config_rows(self._server_config_tab, [gd_server_conf1])
 
-func _create_checkbox_with_label(label: String) -> HBoxContainer:
-	var l_hbox1: HBoxContainer = HBoxContainer.new()
-	var l_cbox1: CheckBox = CheckBox.new()
-	var l_label1: Label = Label.new()
-	l_label1.text = label
-
-	l_hbox1.add_child(l_cbox1)
-	l_hbox1.add_child(l_label1)
-
-	return l_hbox1
-
 func _ready() -> void:
 
 	super._ready()
 	var main_vbox: VBoxContainer = VBoxContainer.new()
 	self.add_child_to_container(main_vbox)
 	self.set_outline_color(Guidot_Utils.get_color("white"))
+	self.set_margin_size(1)
 	self.set_container_color(Guidot_Utils.get_color("gd_black"))
 	self.set_panel_size(Vector2(500, 300))
 
