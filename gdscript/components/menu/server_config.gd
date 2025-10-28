@@ -13,7 +13,14 @@ func _get_selected_data_display() -> void:
 	var vbox = sub_data_scroll_cont.get_children()
 
 func _on_subscribe_pressed() -> void:
+	var hbox_server_sel: HBoxContainer = self.server_selection.get_child(0)
+	var server_dropdown: OptionButton = hbox_server_sel.get_child(1)
+	var selected_server: String = server_dropdown.get_item_text(server_dropdown.get_selected_id())
+
 	self.data_subscriber_manager.visible = true
+	var server_node: Guidot_Data_Server = self.available_server[selected_server]
+
+	self.data_subscriber_manager.set_available_data(server_node.get_all_registered_clients())
 
 func _on_close_submenu_button_pressed(panel: Node) -> void:
 	panel.visible = false
@@ -35,7 +42,6 @@ func _on_data_selected(sel_data_array: Array[String]) -> void:
 
 func get_available_gd_server() -> Array[String]:
 	var gd_servers: Array[Node] = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)
-
 	var gd_servers_str: Array[String]
 
 	# Returns the name of the server
