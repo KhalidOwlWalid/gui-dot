@@ -16,12 +16,15 @@ signal data_selected
 func set_available_data(client_nodes: Array[int]) -> void:
 	self.available_data.clear()
 
+	for node in self.data_list_vbox.get_children():
+		self.data_list_vbox.remove_child(node)
+
 	for node in client_nodes:
-		available_data[instance_from_id(node).name] = false
+		self.available_data[instance_from_id(node).name] = false
 
-	self.populate_data_selection_vbox()
+	self._populate_data_selection_vbox()
 
-func populate_data_selection_vbox() -> void:
+func _populate_data_selection_vbox() -> void:
 	for key in available_data.keys():
 		data_list_vbox.add_child(Guidot_Utils._create_checkbox_with_label(key, available_data[key]))
 
@@ -80,6 +83,8 @@ func _ready() -> void:
 
 	for key in available_data.keys():
 		data_list_vbox.add_child(Guidot_Utils._create_checkbox_with_label(key, available_data[key]))
+
+	self._populate_data_selection_vbox()
 
 	apply_button.text = "Apply changes"
 	apply_button.pressed.connect(self._on_apply_changes_pressed.bind(data_list_vbox))
