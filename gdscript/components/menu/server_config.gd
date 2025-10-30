@@ -20,7 +20,7 @@ func _on_subscribe_pressed() -> void:
 	self.data_subscriber_manager.visible = true
 	var server_node: Guidot_Data_Server = self.available_server[selected_server]
 
-	self.data_subscriber_manager.set_available_data(server_node.get_all_registered_clients())
+	self.data_subscriber_manager.set_available_data_for_selection(server_node.get_all_registered_clients())
 
 func _on_close_submenu_button_pressed(panel: Node) -> void:
 	panel.visible = false

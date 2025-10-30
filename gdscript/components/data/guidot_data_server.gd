@@ -40,12 +40,12 @@ func set_graph_buffer_mode(buf_mode: Graph_Buffer_Mode) -> void:
 func get_graph_buffer_mode() -> Graph_Buffer_Mode:
 	return _graph_buffer_mode
 
-func get_all_registered_clients() -> Array[int]:
-	return self._client_manager
+func get_all_registered_clients() -> Dictionary:
+	return self._client_id_manager
 
 # TODO (Khalid): Error handling to check if it is a duplicate
 func register_client(node: Guidot_Data_Client) -> bool:
-	self._client_id_manager[node.name] = node.get_instance_id()	
+	self._client_id_manager[node.name] = node	
 	return true
 
 func update_channel_manager(node: Guidot_Data_Client) -> bool:
@@ -53,7 +53,6 @@ func update_channel_manager(node: Guidot_Data_Client) -> bool:
 	for key in node.get_all_data_channels().keys():
 		self._data_channel_manager[key] = PackedVector2Array()
 	return true
-
 
 func add_data_point(data_channel_node: Guidot_Data, data_point: float) -> void:
 	self._data_channel_manager[data_channel_node].append(Vector2(self._clock_node.get_current_time_s(), data_point))
