@@ -3,7 +3,7 @@ extends Guidot_Panel2
 
 signal data_selected
 
-@onready var available_data: Dictionary = {
+@onready var _available_data: Dictionary = {
 }
 
 @onready var header: Label = Label.new()
@@ -13,20 +13,26 @@ signal data_selected
 @onready var data_list_vbox: VBoxContainer = VBoxContainer.new()
 @onready var close_button: Button = Button.new()
 
-func set_available_data(client_nodes: Array[int]) -> void:
-	self.available_data.clear()
+# client_nodes have a structure of {"client_name": <Guidot_Data_Client>}
+func set_available_data_for_selection(client_nodes: Dictionary) -> void:
+	self._available_data.clear()
 
+	# Clean up the previosly populated child
 	for node in self.data_list_vbox.get_children():
 		self.data_list_vbox.remove_child(node)
 
-	for node in client_nodes:
-		self.available_data[instance_from_id(node).name] = false
+	# Go through the client ID manager, and get all available data channel from the client
+	for client_node in client_nodes.values():
+		# self.self._available_data[node] = false
+		var channel_list: Array[String]  = client_node.get_all_data_channel_name()
+		for channel in channel_list:
+			self._available_data[channel] = false
 
 	self._populate_data_selection_vbox()
 
 func _populate_data_selection_vbox() -> void:
-	for key in available_data.keys():
-		data_list_vbox.add_child(Guidot_Utils._create_checkbox_with_label(key, available_data[key]))
+	for key in self._available_data.keys():
+		data_list_vbox.add_child(Guidot_Utils._create_checkbox_with_label(key, self._available_data[key]))
 
 func _on_close_submenu_button_pressed() -> void:
 	self.visible = false
@@ -81,8 +87,8 @@ func _ready() -> void:
 
 	scroll_container.add_child(data_list_vbox)
 
-	for key in available_data.keys():
-		data_list_vbox.add_child(Guidot_Utils._create_checkbox_with_label(key, available_data[key]))
+	for key in self._available_data.keys():
+		data_list_vbox.add_child(Guidot_Utils._create_checkbox_with_label(key, self._available_data[key]))
 
 	self._populate_data_selection_vbox()
 
