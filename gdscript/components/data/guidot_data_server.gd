@@ -11,9 +11,14 @@ const LOG_WARNING = Guidot_Log.Log_Level.WARNING
 const LOG_INFO = Guidot_Log.Log_Level.INFO
 const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 
-# Keeps record of the unique id assigned to each client
-@onready var _client_manager: Array[int] = []
+# Stores the respective client name to its instance id for easy access
+@onready var _client_id_manager: Dictionary = {}
+
+# Stores all data channels (instance ID) related to the client's instance ID
 @onready var _client_data_manager: Dictionary = {}
+
+# Stores the data points for each channel according to its data channel node instance ID
+@onready var _data_channel_manager: Dictionary = {}
 
 const Graph_Buffer_Mode = Guidot_Common.Graph_Buffer_Mode
 var _graph_buffer_mode: Graph_Buffer_Mode = Graph_Buffer_Mode.REALTIME
@@ -39,16 +44,21 @@ func get_all_registered_clients() -> Array[int]:
 	return self._client_manager
 
 # TODO (Khalid): Error handling to check if it is a duplicate
-func register_client(client_unique_id: int) -> bool:
-	self._client_manager.append(client_unique_id)
-	self._client_data_manager[client_unique_id] = PackedVector2Array()
+func register_client(node: Guidot_Data_Client) -> bool:
+	self._client_id_manager[node.name] = node.get_instance_id()	
 	return true
 
-func add_data_point(client_unique_id: int, data: float) -> void:
-	self._client_data_manager[client_unique_id].append(Vector2(self._clock_node.get_current_time_s(), data))
+func update_channel_manager(node: Guidot_Data_Client) -> bool:
+
+	for key in node.get_all_data_channels().keys():
+		self._data_channel_manager[key] = PackedVector2Array()
+	return true
+
+
+func add_data_point(data_channel_node: Guidot_Data, data_point: float) -> void:
+	self._data_channel_manager[data_channel_node].append(Vector2(self._clock_node.get_current_time_s(), data_point))
 
 func _physics_process(delta: float) -> void:
-	# print("Test")
 	pass
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
