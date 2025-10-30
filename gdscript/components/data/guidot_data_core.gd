@@ -5,6 +5,14 @@ extends Node
 @onready var unit: String = ""
 @onready var description: String = ""
 
+var _metadata: Dictionary = {
+	"unique_name": "",
+	"unique_id": self.get_instance_id(),
+	"description": "",
+	"unit": "",
+	"data_name": "",
+}
+
 enum ClockSourceType {
 	GUIDOT_CLOCK,
 	EXTERNAL_CLOCK,
@@ -12,14 +20,6 @@ enum ClockSourceType {
 
 var _clock_node: Node
 @onready var _clock_src_type: ClockSourceType = ClockSourceType.GUIDOT_CLOCK
-
-@onready var _metadata: Dictionary = {
-	"unique_name": "",
-	"unique_id": self.get_instance_id(),
-	"description": "",
-	"unit": "",
-	"data_name": "",
-}
 
 func get_metadata() -> Dictionary:
 	return self._metadata
