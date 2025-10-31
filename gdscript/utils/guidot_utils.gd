@@ -139,3 +139,8 @@ static func _create_checkbox_with_label(label: String, flag: bool) -> HBoxContai
 	l_hbox1.add_child(l_cbox1)
 
 	return l_hbox1
+
+static func setup_data_client_util(client_node: Guidot_Data_Client, data_node: Guidot_Data, name: String, unit: String, description: String) -> void:
+	data_node.setup_properties(name, unit, description)
+	client_node.register_data_channel(data_node)
+	client_node.update_server()
