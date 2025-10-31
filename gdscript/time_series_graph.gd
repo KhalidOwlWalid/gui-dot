@@ -21,8 +21,7 @@ var window_color: Color
 
 # TODO (Khalid): This should only be temporary for prototyping, but the plugin is created
 # I need to find a better way to interface this
-@onready var mavlink_node = get_node('/root/Control/Mavlink_Node')
-var guidot_server: Node
+var _guidot_server: Guidot_Data_Server
 
 @onready var default_window_size: Vector2 = Vector2(620, 360)
 @onready var default_window_color: Color = Guidot_Utils.get_color("gd_black")
@@ -44,7 +43,7 @@ var guidot_server: Node
 
 @export_group("Y-Axis")
 @export var y_axis_min: float = 0
-@export var y_axis_max: float = 1
+@export var y_axis_max: float = 2000
 @export var y_number_of_ticks: int = 10
 
 var _current_buffer_mode: Graph_Buffer_Mode
@@ -104,12 +103,12 @@ func _update_final_debug_trace() -> void:
 
 func get_last_data_point() -> Vector2:
 	var tmp: Vector2 = Vector2()
-	if (mavlink_node.data == null):
+	if (self._get_data() == null):
 		return tmp
-	elif (mavlink_node.data.size() == 0):
+	elif (self._get_data().size() == 0):
 		return tmp
 	else:
-		tmp = mavlink_node.data[-1]
+		tmp = self._get_data()[-1]
 	return tmp
 
 func get_current_data_fetch_mode_str() -> String:
@@ -164,13 +163,13 @@ func _register_hotkeys() -> void:
 	Guidot_Utils.add_action_with_keycode("pause", KEY_SPACE)
 
 func _request_buffer_mode() -> void:
-	self._current_buffer_mode = guidot_server.get_graph_buffer_mode()
+	self._current_buffer_mode = _guidot_server.get_graph_buffer_mode()
 	self.log(LOG_INFO, ["Current buffer mode: ", self.get_buffer_mode_str(self._current_buffer_mode)])
 
 # TODO (Khalid): Make this more fool proof, add checks, or even potentially allow the user to be able to user their own server
 # Check if any server actually exist
 func init_server() -> void:
-	guidot_server = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)[0]
+	_guidot_server = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)[0]
 
 func setup_graph_client() -> void:
 	self.clip_contents = true
@@ -181,6 +180,9 @@ func setup_graph_client() -> void:
 func register_graph_client() -> void:
 	self.name = Guidot_Utils.generate_unique_name(self, Guidot_Common._graph_group_name)
 	self.add_to_group(self._graph_group_name)
+
+func _get_data() -> PackedVector2Array:
+	return self._guidot_server.query_data_with_channel_name("test")
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -211,7 +213,7 @@ func _ready() -> void:
 	# to when the data is received because as time passes, and the sliding window increases, we will also trigger another draw event, which
 	# this actually doubles the computational resources since we are technically triggering queue_redraw() twice which plots something similar
 	# I am simply commenting this out as I believe it might still be useful in the future
-	# mavlink_node.data_received.connect(_on_data_received)
+	# self._get_data()_received.connect(_on_data_received)
 
 	# Axis node signal
 	t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
@@ -267,7 +269,7 @@ func _on_data_received() -> void:
 		self.data_received_signal += 1
 		t_axis_min = t_axis_node.min_val
 		t_axis_max = t_axis_node.max_val
-		plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
+		plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 		queue_redraw()
 
 func _on_focus_requested() -> void:
@@ -279,14 +281,14 @@ func _on_t_axis_changed() -> void:
 	t_axis_min = t_axis_node.min_val
 	t_axis_max = t_axis_node.max_val
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
-	plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
+	plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 
 func _on_y_axis_changed() -> void:
 	self.y_axis_lim_signal += 1
 	y_axis_min = y_axis_node.min_val
 	y_axis_max = y_axis_node.max_val
 	plot_node.update_y_ticks_properties(y_axis_node.n_steps, y_axis_node.ticks_pos)
-	plot_node.plot_data(mavlink_node.data, Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
+	plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 
 func _input(event: InputEvent) -> void:
 
@@ -335,7 +337,7 @@ func _physics_process(delta: float) -> void:
 		# and the max axis value will keep moving
 		Graph_Buffer_Mode.REALTIME:
 			# If there is no data present at the moment, then we ignore it
-			if (mavlink_node.data.is_empty()):
+			if (self._get_data().is_empty()):
 				pass
 			else:
 				if (not self._is_pause):
