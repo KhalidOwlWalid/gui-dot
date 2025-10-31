@@ -22,6 +22,8 @@ var window_color: Color
 # TODO (Khalid): This should only be temporary for prototyping, but the plugin is created
 # I need to find a better way to interface this
 var _guidot_server: Guidot_Data_Server
+@onready var _curr_data_str: String = "mouse_x"
+@onready var _graph_manager: Guidot_Graph_Manager = Guidot_Graph_Manager.new()
 
 @onready var default_window_size: Vector2 = Vector2(620, 360)
 @onready var default_window_color: Color = Guidot_Utils.get_color("gd_black")
@@ -50,7 +52,6 @@ var _current_buffer_mode: Graph_Buffer_Mode
 
 # Helper tool
 var debug_panel: Guidot_Debug_Panel
-@onready var _graph_manager: Guidot_Graph_Manager = Guidot_Graph_Manager.new()
 
 signal parent_focus_requested
 
@@ -183,12 +184,17 @@ func register_graph_client() -> void:
 	self.add_to_group(self._graph_group_name)
 
 func _get_data() -> PackedVector2Array:
-	return self._guidot_server.query_data_with_channel_name("mouse_x")
+	return self._guidot_server.query_data_with_channel_name(self._curr_data_str)
 
 func _on_setting_pressed() -> void:
 	self._graph_manager.set_position(self.get_viewport().get_mouse_position())
 	self._graph_manager.show_panel()
 	self.log(LOG_INFO, [self._graph_manager.position])
+
+func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
+	# self._guidot_server = server_config_array[0].
+	self._curr_data_str = server_config_array[0].get_selected_data()[0]
+	self.log(LOG_INFO, [server_config_array])
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -212,7 +218,10 @@ func _ready() -> void:
 	setting_button.position = Vector2(self.size.x - setting_button.size.x, 0)
 	setting_button.pressed.connect(self._on_setting_pressed)
 	self.add_child(setting_button)
-	self.get_parent().add_child(self._graph_manager)
+
+	# call_deferred is required as the parent is actually busy handling the child node (self, in particular)
+	# will need to be deferred
+	self.get_node("/root").add_child.call_deferred(self._graph_manager)
 
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
 	plot_node.update_y_ticks_properties(y_axis_node.n_steps, y_axis_node.ticks_pos)
@@ -252,6 +261,8 @@ func _ready() -> void:
 	# This needs to be overriden after the debug panel is added as a child to the graph
 	self._update_final_debug_trace()
 	debug_panel.override_guidot_debug_info(self.final_debug_trace_signals)
+
+	self._graph_manager.changes_applied.connect(self._on_changes_applied)
 
 	self.log(LOG_INFO, ["Time series graph initialized"])
 
