@@ -1,6 +1,7 @@
-@tool
 class_name Guidot_Graph_Manager
 extends Guidot_Panel2
+
+signal changes_applied
 
 var selected_server: String
 
@@ -12,6 +13,8 @@ var selected_server: String
 @onready var _server_config_tab: ScrollContainer
 
 @onready var _apply_changes_btn: Button = Button.new()
+
+@onready var _server_config_manager: Array[Guidot_Server_Config] = []
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
@@ -54,14 +57,15 @@ func _on_close_button_pressed() -> void:
 	self.visible = false
 
 func _on_add_server_pressed() -> void:
-	self.log(LOG_INFO, ["I am pressing add server"])
 	var gd_server_conf1 = Guidot_Server_Config.new()
 	var gd_sub_manager1 = Guidot_Data_Sub_Manager.new()
 	gd_server_conf1.register_data_sub_manager(gd_sub_manager1)
 	self.add_child(gd_sub_manager1)
 	self.add_config_rows(self._server_config_tab, [gd_server_conf1])
+	self._server_config_manager.append(gd_server_conf1)
 
 func _on_apply_changes_to_graph() -> void:
+	changes_applied.emit(self._server_config_manager)
 	pass
 
 func _ready() -> void:

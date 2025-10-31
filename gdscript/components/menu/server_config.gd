@@ -8,6 +8,8 @@ var data_subscriber_manager: Guidot_Data_Sub_Manager
 @onready var sub_data_vbox: VBoxContainer = VBoxContainer.new()
 
 @onready var available_server: Dictionary = {}
+@onready var selected_data: Array[String] = []
+@onready var selected_server: Guidot_Data_Server = Guidot_Data_Server.new()
 
 func _get_selected_data_display() -> void:
 	var vbox = sub_data_scroll_cont.get_children()
@@ -29,10 +31,15 @@ func register_data_sub_manager(dsub_node: Guidot_Data_Sub_Manager) -> void:
 	self.data_subscriber_manager = dsub_node
 	self.data_subscriber_manager.data_selected.connect(self._on_data_selected)
 
+func get_selected_data() -> Array[String]:
+	return self.selected_data
+
 func _on_data_selected(sel_data_array: Array[String]) -> void:
 	# Clear the vbox from the previously selected label
 	for n in sub_data_vbox.get_children():
 		sub_data_vbox.remove_child(n)
+
+	self.selected_data = sel_data_array
 
 	# Populate selected labels
 	for item in sel_data_array:
@@ -52,6 +59,9 @@ func get_available_gd_server() -> Array[String]:
 		gd_servers_str.append(server.name)
 
 	return gd_servers_str
+
+func get_selected_server() -> Guidot_Data_Server:
+	return Guidot_Data_Server.new()
 	
 func _ready() -> void:
 	super._ready()
