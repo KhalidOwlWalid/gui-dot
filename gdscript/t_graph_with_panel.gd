@@ -1,3 +1,4 @@
+# @tool
 class_name Guidot_Graph
 extends PanelContainer
 

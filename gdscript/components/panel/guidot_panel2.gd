@@ -1,12 +1,11 @@
-# @tool
 class_name Guidot_Panel2
 extends PanelContainer
 
 ######################################## NOTE ##############################################################
 # Please call the add_child_to_container function, if you wish to place your nodes inside of the container #
 # Failure to do so, may result in the container being drawn on top of your node which may cause the node   #
-# to not function well																					   #
-#############################################################################################################
+# to not function as intended																			   #
+############################################################################################################
 
 @onready var _panel_size: Vector2 = Vector2(100, 100)
 @onready var _init_pos: Vector2 = Vector2(100, 100)
@@ -30,7 +29,7 @@ const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 
 func _ready() -> void:
 	self.name = "Guidot_Panel"
-	self.visible = true
+	self.visible = false
 	self.size = _panel_size
 	self.position = self._init_pos
 
