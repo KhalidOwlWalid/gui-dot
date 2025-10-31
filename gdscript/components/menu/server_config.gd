@@ -55,6 +55,7 @@ func get_available_gd_server() -> Array[String]:
 	
 func _ready() -> void:
 	super._ready()
+	self.show_panel()
 
 	var vbox: VBoxContainer = VBoxContainer.new()
 	self.add_child_to_container(vbox)

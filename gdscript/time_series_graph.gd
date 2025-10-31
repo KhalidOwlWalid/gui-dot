@@ -50,6 +50,7 @@ var _current_buffer_mode: Graph_Buffer_Mode
 
 # Helper tool
 var debug_panel: Guidot_Debug_Panel
+@onready var _graph_manager: Guidot_Graph_Manager = Guidot_Graph_Manager.new()
 
 signal parent_focus_requested
 
@@ -182,7 +183,12 @@ func register_graph_client() -> void:
 	self.add_to_group(self._graph_group_name)
 
 func _get_data() -> PackedVector2Array:
-	return self._guidot_server.query_data_with_channel_name("test")
+	return self._guidot_server.query_data_with_channel_name("mouse_x")
+
+func _on_setting_pressed() -> void:
+	self._graph_manager.set_position(self.get_viewport().get_mouse_position())
+	self._graph_manager.show_panel()
+	self.log(LOG_INFO, [self._graph_manager.position])
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -199,6 +205,14 @@ func _ready() -> void:
 	init_t_axis_node()
 	init_y_axis_node()
 	init_font()
+
+	var setting_button: Button = Button.new()
+	setting_button.size = Vector2(30, 30)
+	setting_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
+	setting_button.position = Vector2(self.size.x - setting_button.size.x, 0)
+	setting_button.pressed.connect(self._on_setting_pressed)
+	self.add_child(setting_button)
+	self.get_parent().add_child(self._graph_manager)
 
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
 	plot_node.update_y_ticks_properties(y_axis_node.n_steps, y_axis_node.ticks_pos)

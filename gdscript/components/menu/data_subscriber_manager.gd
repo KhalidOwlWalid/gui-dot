@@ -54,7 +54,6 @@ func set_container_size(new_size: Vector2) -> void:
 func _ready() -> void:
 	super._ready()
 
-	self.visible = true
 	self.hide_panel()
 
 	self.custom_minimum_size = Vector2(300, 300)
@@ -75,8 +74,6 @@ func _ready() -> void:
 		l_vbox1.add_child(node)
 
 	# Setup the header
-	# l_hbox1.custom_minimum_size = Vector2(self._data_subscriber_manager.size.x, 20)
-	# l_hbox1.size = Vector2(self._data_subscriber_manager.size.x, 20)
 	header.text = "Data Subscriber Manager"
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	close_button.custom_minimum_size = Vector2(30, 20)

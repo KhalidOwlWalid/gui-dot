@@ -54,6 +54,7 @@ func _on_close_button_pressed() -> void:
 	self.visible = false
 
 func _on_add_server_pressed() -> void:
+	self.log(LOG_INFO, ["I am pressing add server"])
 	var gd_server_conf1 = Guidot_Server_Config.new()
 	var gd_sub_manager1 = Guidot_Data_Sub_Manager.new()
 	gd_server_conf1.register_data_sub_manager(gd_sub_manager1)
