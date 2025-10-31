@@ -87,7 +87,7 @@ func get_all_data_channels() -> Dictionary:
 func get_data_channel_name(data_channel: Guidot_Data) -> String:
 	return data_channel.get_name()
 
-func get_data_channel_from_name(channel_name: String) -> Guidot_Data:
+func get_data_channel_node_id(channel_name: String) -> Guidot_Data:
 	return self._data_channel_name_ref[channel_name]
 
 func get_all_data_channel_name() -> Array[String]:

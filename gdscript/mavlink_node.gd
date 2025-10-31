@@ -40,8 +40,6 @@ func _mouse_cursor_data(delta: float) -> void:
 		# if (float(Time.get_ticks_msec())/1000 > 5.0) and float(Time.get_ticks_msec())/1000 < 10.0 \
 		# 	or (float(Time.get_ticks_msec())/1000 > 12.0) and float(Time.get_ticks_msec())/1000 < 20.0:
 		append_point(Vector2(curr_s, curr_mouse_pos.x/1920))
-		self._dc_mouse_cursor_x.add_data_point(curr_mouse_pos.x)
-		self._dc_mouse_cursor_y.add_data_point(curr_mouse_pos.y)
 		last_update_ms = Time.get_ticks_msec()
 
 func _physics_process(delta: float) -> void:
