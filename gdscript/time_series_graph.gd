@@ -2,14 +2,6 @@
 class_name Guidot_T_Series_Graph
 extends Guidot_Common
 
-# const Guidot_Axis := preload("res://gdscript/components/axis/guidot_axis.gd")
-# const Guidot_Y_Axis := preload("res://gdscript/components/axis/guidot_y_axis.gd")
-# const Guidot_T_Axis := preload("res://gdscript/components/axis/guidot_t_axis.gd")
-# const Guidot_Plot := preload("res://gdscript/components/guidot_plot.gd")
-# const Guidot_Line := preload("res://gdscript/components/guidot_line.gd")
-# const Guidot_Data_Core := preload("res://gdscript/components/guidot_data.gd")
-
-
 # Property of the graph
 var window_size: Vector2
 var window_color: Color
@@ -22,7 +14,9 @@ var window_color: Color
 # TODO (Khalid): This should only be temporary for prototyping, but the plugin is created
 # I need to find a better way to interface this
 var _guidot_server: Guidot_Data_Server
+# TODO: Remove this, since at the moment, without mouse_x being initialized, it breaks
 @onready var _curr_data_str: String = "mouse_x"
+@onready var _curr_data_color: String = "red"
 @onready var _graph_manager: Guidot_Graph_Manager = Guidot_Graph_Manager.new()
 
 @onready var default_window_size: Vector2 = Vector2(620, 360)
@@ -186,6 +180,9 @@ func register_graph_client() -> void:
 func _get_data() -> PackedVector2Array:
 	return self._guidot_server.query_data_with_channel_name(self._curr_data_str)
 
+func _get_line_color() -> Color:
+	return self._guidot_server.query_data_line_color(self._curr_data_str)
+
 func _on_setting_pressed() -> void:
 	self._graph_manager.set_position(self.get_viewport().get_mouse_position())
 	self._graph_manager.show_panel()
@@ -280,6 +277,10 @@ func _draw():
 	y_axis_node.draw_axis()
 	t_axis_node.draw_axis()
 
+func plot_data() -> void:
+	var l_color: Color = self._get_line_color()
+	plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max), l_color)
+
 func _on_display_frame_resized() -> void:
 	setup_plot_node()
 	setup_axis(y_axis_node, "y_axis", y_axis_node.color, y_axis_min, y_axis_max)
@@ -294,7 +295,8 @@ func _on_data_received() -> void:
 		self.data_received_signal += 1
 		t_axis_min = t_axis_node.min_val
 		t_axis_max = t_axis_node.max_val
-		plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
+		# plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max), self._get_line_color())
+		self.plot_data()
 		queue_redraw()
 
 func _on_focus_requested() -> void:
@@ -306,14 +308,16 @@ func _on_t_axis_changed() -> void:
 	t_axis_min = t_axis_node.min_val
 	t_axis_max = t_axis_node.max_val
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
-	plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
+	# plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
+	self.plot_data()
 
 func _on_y_axis_changed() -> void:
 	self.y_axis_lim_signal += 1
 	y_axis_min = y_axis_node.min_val
 	y_axis_max = y_axis_node.max_val
 	plot_node.update_y_ticks_properties(y_axis_node.n_steps, y_axis_node.ticks_pos)
-	plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
+	# plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
+	self.plot_data()
 
 func _input(event: InputEvent) -> void:
 
