@@ -3,6 +3,7 @@ extends Node
 # @onready var guidot_utils = Guidot_Utils.new()
 @onready var curr_t: float = 0
 @onready var last_update_ms: int = Time.get_ticks_msec()
+@onready var fps_last_update_ms: int = Time.get_ticks_msec()
 @onready var init_ms: int = Time.get_ticks_msec()
 @onready var data_transmitted: bool = false
 
@@ -27,7 +28,7 @@ func _ready() -> void:
 	Guidot_Utils.setup_data_client_util(self._dc_mouse_cursor, self._mouse_y, "mouse_y", "None", "Example", 0, 1100, "red")
 	Guidot_Utils.setup_data_client_util(self._godot_performance, self._fps, "fps", "fps", "Guidot FPS performance", 0, 150, "yellow")
 	
-func _mouse_cursor_data(delta: float) -> void:
+func _mouse_cursor_data() -> void:
 	var curr_ms: int = Time.get_ticks_msec()
 	var curr_s: float = float(curr_ms)/1000
 
@@ -40,5 +41,12 @@ func _mouse_cursor_data(delta: float) -> void:
 		self._godot_performance.add_data_point(self._fps, Engine.get_frames_per_second())
 		last_update_ms = Time.get_ticks_msec()
 
-func _physics_process(delta: float) -> void:
-	_mouse_cursor_data(delta)	
+func _fps_data() -> void:
+	var curr_ms: int = Time.get_ticks_msec()
+
+	if (curr_ms - fps_last_update_ms > 100):
+		self._godot_performance.add_data_point(self._fps, Engine.get_frames_per_second())
+		fps_last_update_ms = Time.get_ticks_msec()
+
+func _physics_process(_delta: float) -> void:
+	_mouse_cursor_data()	
