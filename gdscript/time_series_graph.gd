@@ -191,6 +191,12 @@ func _on_setting_pressed() -> void:
 func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 	# self._guidot_server = server_config_array[0].
 	self._curr_data_str = server_config_array[0].get_selected_data()[0]
+	var gd_data: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(self._curr_data_str)
+	var new_y_axis_lim: Vector2 = gd_data.get_min_max()
+	y_axis_min = new_y_axis_lim.x
+	y_axis_max = new_y_axis_lim.y
+	y_axis_node.setup_axis_limit(y_axis_min, y_axis_max)
+	y_axis_node.queue_redraw()
 	self.log(LOG_INFO, [server_config_array])
 
 # Called when the node enters the scene tree for the first time.
@@ -279,7 +285,8 @@ func _draw():
 
 func plot_data() -> void:
 	var l_color: Color = self._get_line_color()
-	plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max), l_color)
+	var gd_data: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(self._curr_data_str)
+	plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max), gd_data.get_line_color())
 
 func _on_display_frame_resized() -> void:
 	setup_plot_node()
@@ -295,7 +302,6 @@ func _on_data_received() -> void:
 		self.data_received_signal += 1
 		t_axis_min = t_axis_node.min_val
 		t_axis_max = t_axis_node.max_val
-		# plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max), self._get_line_color())
 		self.plot_data()
 		queue_redraw()
 
@@ -308,7 +314,6 @@ func _on_t_axis_changed() -> void:
 	t_axis_min = t_axis_node.min_val
 	t_axis_max = t_axis_node.max_val
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
-	# plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 	self.plot_data()
 
 func _on_y_axis_changed() -> void:
@@ -316,7 +321,6 @@ func _on_y_axis_changed() -> void:
 	y_axis_min = y_axis_node.min_val
 	y_axis_max = y_axis_node.max_val
 	plot_node.update_y_ticks_properties(y_axis_node.n_steps, y_axis_node.ticks_pos)
-	# plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max))
 	self.plot_data()
 
 func _input(event: InputEvent) -> void:
