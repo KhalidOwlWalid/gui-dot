@@ -141,7 +141,7 @@ func _handle_data_fetching(ts_data: PackedVector2Array, t_range: Vector2) -> voi
 	var cmp_t_diff: float = abs(cmp_t - t_min)
 	k_extra_slice = cmp_t_diff / approx_sample_t
 
-func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVector2Array:
+func _data_processing(ts_data: PackedVector2Array, t_range: Vector2, exp_frequency: float) -> PackedVector2Array:
 
 	# This calculation should be done at least once when new time series data comes in
 	# The time series graph makes an assumption that the data have a constant frequency rate to avoid
@@ -157,7 +157,7 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	approx_sample_t = approx_sample_t / n_iter
 	
 	# TODO (Khalid): Remove this, THIS IS TEMPORARY to solve the lag issue!
-	approx_sample_t = float(1.0/60.0)
+	approx_sample_t = float(1.0/exp_frequency)
 
 	var t_min: float = t_range.x
 	var t_max: float = t_range.y
@@ -318,7 +318,7 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	return ts_data
 
 # TODO (Khalid): Currently, this creates a copy of the data, which is not great. This uses a lot of memory so Will need to optimize this implementation
-func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2, line_color: Color = Color.RED):
+func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2, exp_freq: float, line_color: Color = Color.RED):
 
 	var data: PackedVector2Array = data_points
 	self._line_color = line_color
@@ -327,7 +327,7 @@ func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_ra
 	# Pre-process the data that should be visible on the graph
 	if !(data_points.size() < n_sampling):
 		# We need at least 5 sets of data to be able to perform calculations for approximating the index of data we wish to plot
-		data = _data_processing(data, t_axis_range)
+		data = _data_processing(data, t_axis_range, exp_freq)
 
 	n_postprocessed_data = data.size()
 
