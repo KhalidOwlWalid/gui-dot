@@ -24,9 +24,9 @@ func _ready() -> void:
 	self.add_child(self._dc_mouse_cursor)
 	self.add_child(self._godot_performance)
 
-	Guidot_Utils.setup_data_client_util(self._dc_mouse_cursor, self._mouse_x, "mouse_x", "None", "Example", 0, 2000, "white")
-	Guidot_Utils.setup_data_client_util(self._dc_mouse_cursor, self._mouse_y, "mouse_y", "None", "Example", 0, 1100, "red")
-	Guidot_Utils.setup_data_client_util(self._godot_performance, self._fps, "fps", "fps", "Guidot FPS performance", 0, 150, "yellow")
+	Guidot_Utils.setup_data_client_util(self._dc_mouse_cursor, self._mouse_x, "mouse_x", "None", "Example", 0, 2000, 60, "white")
+	Guidot_Utils.setup_data_client_util(self._dc_mouse_cursor, self._mouse_y, "mouse_y", "None", "Example", 0, 1100, 60, "red")
+	Guidot_Utils.setup_data_client_util(self._godot_performance, self._fps, "fps", "fps", "Guidot FPS performance", 0, 150, 30, "yellow")
 	
 func _mouse_cursor_data() -> void:
 	var curr_ms: int = Time.get_ticks_msec()
@@ -38,15 +38,18 @@ func _mouse_cursor_data() -> void:
 
 		self._dc_mouse_cursor.add_data_point(self._mouse_x, curr_mouse_pos.x)
 		self._dc_mouse_cursor.add_data_point(self._mouse_y, curr_mouse_pos.y)
-		self._godot_performance.add_data_point(self._fps, Engine.get_frames_per_second())
+		# self._godot_performance.add_data_point(self._fps, Engine.get_frames_per_second())
 		last_update_ms = Time.get_ticks_msec()
 
 func _fps_data() -> void:
 	var curr_ms: int = Time.get_ticks_msec()
+	var update_freq_hz: float = 1.0
+	var update_freq_ms: float = float(1/(update_freq_hz)) * 1000
 
-	if (curr_ms - fps_last_update_ms > 100):
+	if (curr_ms - fps_last_update_ms > update_freq_ms):
 		self._godot_performance.add_data_point(self._fps, Engine.get_frames_per_second())
 		fps_last_update_ms = Time.get_ticks_msec()
 
 func _physics_process(_delta: float) -> void:
 	_mouse_cursor_data()	
+	_fps_data()
