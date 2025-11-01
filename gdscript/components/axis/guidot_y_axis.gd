@@ -16,8 +16,7 @@ func _ready() -> void:
 	self._setup_axis_config_menu()
 	self.set_component_tag_name("Y-AXIS")
 	self.norm_comp_size = 0.1
-
-
+	
 func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node: Node) -> void:
 	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
 	self.axis_width = (display_frame_node.size.x - plot_frame_node.size.x)/2
@@ -34,6 +33,7 @@ func _draw_ticks() -> void:
 	var tick_x_pos: int = self.top_right().x
 	var axis_frame_size: Vector2 = self.get_component_size()
 	var increments: int  = axis_frame_size.y / n_steps
+	self.log(LOG_INFO, [self.max_val])
 	var tick_interval: float = (self.max_val - self.min_val) / self.n_steps
 
 	var tick_label_offset: Vector2 = Vector2(-25, 5)

@@ -21,6 +21,7 @@ const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 @onready var _data_channel_manager: Dictionary = {}
 
 # Stores the unique name as key and Guidot_Data node as value for ease of reference
+# e.g. {"data_channel1": Guidot_Data<unique_id>}
 @onready var _data_channel_map: Dictionary = {}
 
 const Graph_Buffer_Mode = Guidot_Common.Graph_Buffer_Mode
@@ -65,6 +66,9 @@ func query_data_line_color(channel_name: String) -> Color:
 
 func query_data_with_node_id(data_node: Guidot_Data) -> void:
 	var data_channel: Guidot_Data = self._data_channel_manager[data_node]
+
+func get_node_id_with_channel_name(channel_name: String) -> Guidot_Data:
+	return self._data_channel_map[channel_name] 
 
 func update_channel_manager(node: Guidot_Data_Client) -> bool:
 	for data_node_id in node.get_all_data_channels().keys():
