@@ -5,6 +5,7 @@ extends Guidot_Common
 # Normalized size of the plot with respect to the node frame
 @onready var default_norm_size: int = 0.8
 @onready var pixel_data_points: PackedVector2Array = PackedVector2Array()
+@onready var _line_color: Color = Color.RED
 
 # Data specific properties
 # Visualize the data as if it is a snake
@@ -317,9 +318,10 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2) -> PackedVe
 	return ts_data
 
 # TODO (Khalid): Currently, this creates a copy of the data, which is not great. This uses a lot of memory so Will need to optimize this implementation
-func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2):
+func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2, line_color: Color = Color.RED):
 
 	var data: PackedVector2Array = data_points
+	self._line_color = line_color
 
 	n_preprocessed_data = data.size()
 	# Pre-process the data that should be visible on the graph
@@ -356,7 +358,7 @@ func _draw() -> void:
 	_draw_vertical_grids(n_x_ticks, x_ticks_pos, Guidot_Utils.get_color("gd_grey"))
 	_draw_horizontal_grids(n_y_ticks, y_ticks_pos, Guidot_Utils.get_color("gd_grey"))
 	for i in range(1, pixel_data_points.size()):
-		draw_line(pixel_data_points[i - 1], pixel_data_points[i], Color.RED, 0.5, true)
+		draw_line(pixel_data_points[i - 1], pixel_data_points[i], self._line_color, 0.5, true)
 		# TODO (Khalid): Circle should only be drawn when it is at a certain window size
 		# I am not sure why but drawing a circle is very taxing, maybe due to how it is implemeted
 		# if (pixel_data_points.size() < 250):
