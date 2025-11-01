@@ -16,8 +16,8 @@ extends Node
 
 signal data_received
 
-func setup_data_client_util(client_node: Guidot_Data_Client, data_node: Guidot_Data, name: String, unit: String, description: String) -> void:
-	data_node.setup_properties(name, unit, description)
+func setup_data_client_util(client_node: Guidot_Data_Client, data_node: Guidot_Data, name: String, unit: String, description: String, color: String = "red") -> void:
+	data_node.setup_properties(name, unit, description, color)
 	client_node.register_data_channel(data_node)
 	client_node.update_server()
 
@@ -28,8 +28,8 @@ func _ready() -> void:
 	self.add_child(self._dc_mouse_cursor)
 	self.add_child(self._test_data)
 
-	self.setup_data_client_util(self._dc_mouse_cursor, self._mouse_x, "mouse_x", "None", "Example")
-	self.setup_data_client_util(self._dc_mouse_cursor, self._mouse_y, "mouse_y", "None", "Example")
+	self.setup_data_client_util(self._dc_mouse_cursor, self._mouse_x, "mouse_x", "None", "Example", "white")
+	self.setup_data_client_util(self._dc_mouse_cursor, self._mouse_y, "mouse_y", "None", "Example", "red")
 	self.setup_data_client_util(self._test_data, self._test, "test", "None", "Example")
 	self.setup_data_client_util(self._test_data, self._test2, "test", "None", "Example")
 	

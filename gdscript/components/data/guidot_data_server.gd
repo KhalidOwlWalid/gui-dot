@@ -19,6 +19,7 @@ const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 
 # Stores the data points for each channel according to its data channel node instance ID
 @onready var _data_channel_manager: Dictionary = {}
+
 # Stores the unique name as key and Guidot_Data node as value for ease of reference
 @onready var _data_channel_map: Dictionary = {}
 
@@ -50,10 +51,17 @@ func register_client(node: Guidot_Data_Client) -> bool:
 	self._client_id_manager[node.name] = node	
 	return true
 
+func get_channel_id(channel_name: String) -> Guidot_Data:
+	return self._data_channel_map[channel_name]
+
 func query_data_with_channel_name(channel_name: String) -> PackedVector2Array:
 	# Use the channel mapping to get the correct node ID
+	# var channel_id: Guidot_Data = self._data_channel_map[channel_name]
+	return self._data_channel_manager[self.get_channel_id(channel_name)]
+
+func query_data_line_color(channel_name: String) -> Color:
 	var channel_id: Guidot_Data = self._data_channel_map[channel_name]
-	return self._data_channel_manager[channel_id]
+	return channel_id.get_line_color()
 
 func query_data_with_node_id(data_node: Guidot_Data) -> void:
 	var data_channel: Guidot_Data = self._data_channel_manager[data_node]
