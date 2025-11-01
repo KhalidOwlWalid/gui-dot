@@ -35,6 +35,7 @@ static func get_color(guidot_color: String) -> Color:
 		"grey": Color(0.12, 0.12, 0.12, 1),
 		"red": Color.RED,
 		"blue": Color.BLUE,
+		"yellow": Color.YELLOW,
 
 		# Godot editor color scheme
 		"gd_black": Color(0.1, 0.12, 0.15, 1), 	# Same as Godot text editor background color

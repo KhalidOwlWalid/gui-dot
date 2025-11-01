@@ -11,16 +11,10 @@ extends Node
 @onready var _godot_performance: Guidot_Data_Client = Guidot_Data_Client.new()
 @onready var _mouse_x: Guidot_Data = Guidot_Data.new()
 @onready var _mouse_y: Guidot_Data = Guidot_Data.new()
-@onready var _test: Guidot_Data = Guidot_Data.new()
-@onready var _test2: Guidot_Data = Guidot_Data.new()
+@onready var _fps: Guidot_Data = Guidot_Data.new()
+
 
 signal data_received
-
-# func setup_data_client_util(client_node: Guidot_Data_Client, data_node: Guidot_Data, name: String, unit: String, \
-# 	 description: String, min: float, max: float, color: String = "red") -> void:
-# 	data_node.setup_properties(name, unit, description, min, max, color)
-# 	client_node.register_data_channel(data_node)
-# 	client_node.update_server()
 
 func _ready() -> void:
 	print("Mavlink node is now ready")
@@ -29,10 +23,9 @@ func _ready() -> void:
 	self.add_child(self._dc_mouse_cursor)
 	self.add_child(self._godot_performance)
 
-	# self.setup_data_client_util(self._dc_mouse_cursor, self._mouse_x, "mouse_x", "None", "Example", 0, 2000, "white")
-	# self.setup_data_client_util(self._dc_mouse_cursor, self._mouse_y, "mouse_y", "None", "Example", 0, 1100, "red")
 	Guidot_Utils.setup_data_client_util(self._dc_mouse_cursor, self._mouse_x, "mouse_x", "None", "Example", 0, 2000, "white")
 	Guidot_Utils.setup_data_client_util(self._dc_mouse_cursor, self._mouse_y, "mouse_y", "None", "Example", 0, 1100, "red")
+	Guidot_Utils.setup_data_client_util(self._godot_performance, self._fps, "fps", "fps", "Guidot FPS performance", 0, 150, "yellow")
 	
 func _mouse_cursor_data(delta: float) -> void:
 	var curr_ms: int = Time.get_ticks_msec()
@@ -44,6 +37,7 @@ func _mouse_cursor_data(delta: float) -> void:
 
 		self._dc_mouse_cursor.add_data_point(self._mouse_x, curr_mouse_pos.x)
 		self._dc_mouse_cursor.add_data_point(self._mouse_y, curr_mouse_pos.y)
+		self._godot_performance.add_data_point(self._fps, Engine.get_frames_per_second())
 		last_update_ms = Time.get_ticks_msec()
 
 func _physics_process(delta: float) -> void:
