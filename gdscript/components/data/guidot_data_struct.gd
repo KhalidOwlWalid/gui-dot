@@ -76,6 +76,8 @@ func get_unit() -> String:
 func get_unique_id() -> int:
 	return self._metadata["unique_id"]
 
+func get_expected_freq() -> float:
+	return self._freq
 
 func _set_metadata(name: String, unit: String, description: String, min: float, max: float, line_color: String) -> void:
 	# self.set_unique_name(name)
@@ -86,7 +88,7 @@ func _set_metadata(name: String, unit: String, description: String, min: float, 
 	self._metadata["min"] = min
 	self._metadata["max"] = max
 
-func setup_properties(name: String, unit: String, description: String, min: float, max: float, line_color: String = "red"):
+func setup_properties(name: String, unit: String, description: String, min: float, max: float, exp_freq: float, line_color: String = "red"):
 	self.set_unique_name(name)
 	self.set_unit(unit)
 	self.set_description(description)
@@ -94,3 +96,4 @@ func setup_properties(name: String, unit: String, description: String, min: floa
 	self.set_max(max)
 	self.set_line_color_str(line_color)
 	self.set_line_color(line_color)
+	self.set_frequency(exp_freq)

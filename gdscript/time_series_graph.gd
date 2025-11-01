@@ -286,7 +286,8 @@ func _draw():
 func plot_data() -> void:
 	var l_color: Color = self._get_line_color()
 	var gd_data: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(self._curr_data_str)
-	plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max), gd_data.get_line_color())
+	plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max), \
+	 gd_data.get_expected_freq(), gd_data.get_line_color())
 
 func _on_display_frame_resized() -> void:
 	setup_plot_node()
