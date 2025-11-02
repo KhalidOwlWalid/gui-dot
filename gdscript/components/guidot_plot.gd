@@ -317,19 +317,14 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2, exp_frequen
 	
 	return ts_data
 
-# TODO (Khalid): Currently, this creates a copy of the data, which is not great. This uses a lot of memory so Will need to optimize this implementation
 func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2, exp_freq: float, line_color: Color = Color.RED):
 
 	var data: PackedVector2Array = data_points
 	self._line_color = line_color
 
-	n_preprocessed_data = data.size()
-	# Pre-process the data that should be visible on the graph
-	if !(data_points.size() < n_sampling):
-		# We need at least 5 sets of data to be able to perform calculations for approximating the index of data we wish to plot
-		data = _data_processing(data, t_axis_range, exp_freq)
-
-	n_postprocessed_data = data.size()
+	var t_min_pos: int = data_points.bsearch(Vector2(t_axis_range.x, 0))
+	var t_max_pos: int = data_points.bsearch(Vector2(t_axis_range.y, 0))
+	data = data.slice(t_min_pos, t_max_pos)
 
 	self._map_data_to_pixel(data, t_axis_range, y_axis_range)
 	queue_redraw()

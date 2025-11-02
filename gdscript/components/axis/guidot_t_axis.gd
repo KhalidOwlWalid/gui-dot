@@ -6,13 +6,13 @@ extends Guidot_X_Axis
 # Hence, we override the _draw_ticks function from the Guidot_X_Axis class
 
 @onready var _sliding_window_s: float = 10.0
+@onready var t_increment: float = 2.0
 
 func _draw_ticks() -> void:
 
 	# Clear up the ticks so we can redraw them
 	self.ticks_pos.clear()
 
-	var t_increment: float = 1.0
 	# This calculation helps us re-shift the ticks to the correct multiples for the axis
 	var t1: float = ceil(self.min_val/t_increment) * t_increment
 	var t2: float = floor(self.max_val/t_increment) * t_increment

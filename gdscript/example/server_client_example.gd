@@ -13,6 +13,7 @@ extends Node
 @onready var _mouse_x: Guidot_Data = Guidot_Data.new()
 @onready var _mouse_y: Guidot_Data = Guidot_Data.new()
 @onready var _fps: Guidot_Data = Guidot_Data.new()
+@onready var _physics_frame: Guidot_Data = Guidot_Data.new()
 
 
 signal data_received
@@ -27,6 +28,7 @@ func _ready() -> void:
 	Guidot_Utils.setup_data_client_util(self._dc_mouse_cursor, self._mouse_x, "mouse_x", "None", "Example", 0, 2000, 60, "white")
 	Guidot_Utils.setup_data_client_util(self._dc_mouse_cursor, self._mouse_y, "mouse_y", "None", "Example", 0, 1100, 60, "red")
 	Guidot_Utils.setup_data_client_util(self._godot_performance, self._fps, "fps", "fps", "Guidot FPS performance", 0, 150, 30, "yellow")
+	Guidot_Utils.setup_data_client_util(self._godot_performance, self._physics_frame, "physics_frame", "fps", "Guidot FPS performance", 0, 150, 30, "yellow")
 	
 func _mouse_cursor_data() -> void:
 	var curr_ms: int = Time.get_ticks_msec()
@@ -43,11 +45,12 @@ func _mouse_cursor_data() -> void:
 
 func _fps_data() -> void:
 	var curr_ms: int = Time.get_ticks_msec()
-	var update_freq_hz: float = 1.0
+	var update_freq_hz: float = 10.0
 	var update_freq_ms: float = float(1/(update_freq_hz)) * 1000
 
 	if (curr_ms - fps_last_update_ms > update_freq_ms):
 		self._godot_performance.add_data_point(self._fps, Engine.get_frames_per_second())
+		self._godot_performance.add_data_point(self._physics_frame, Engine.get_frames_drawn())
 		fps_last_update_ms = Time.get_ticks_msec()
 
 func _physics_process(_delta: float) -> void:
