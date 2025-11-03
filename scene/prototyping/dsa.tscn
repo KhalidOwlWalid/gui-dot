@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://dt70emcw010i3"]
+
+[ext_resource type="Script" path="res://gdscript/example/dsa/bsearch_profiling.gd" id="1_00lfi"]
+
+[node name="Node" type="Node"]
+
+[node name="Node" type="Node" parent="."]
+script = ExtResource("1_00lfi")

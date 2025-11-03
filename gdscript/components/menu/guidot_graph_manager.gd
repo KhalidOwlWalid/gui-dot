@@ -43,6 +43,10 @@ func add_config_rows(config_tab: ScrollContainer, config_rows: Array[Node]) -> v
 	for row in config_rows:
 		config_tab_vbox.add_child(row)
 
+func show_panel_at_pos(new_pos: Vector2) -> void:
+	self.set_position(new_pos)
+	self.visible = true
+
 func _create_server_selection_row() -> void:
 	pass
 
@@ -71,6 +75,7 @@ func _on_apply_changes_to_graph() -> void:
 func _ready() -> void:
 
 	super._ready()
+
 	var main_vbox: VBoxContainer = VBoxContainer.new()
 	self.add_child_to_container(main_vbox)
 	self.set_outline_color(Guidot_Utils.get_color("white"))

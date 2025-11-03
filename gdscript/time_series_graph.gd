@@ -184,9 +184,13 @@ func _get_line_color() -> Color:
 	return self._guidot_server.query_data_line_color(self._curr_data_str)
 
 func _on_setting_pressed() -> void:
-	self._graph_manager.set_position(self.get_viewport().get_mouse_position())
-	self._graph_manager.show_panel()
-	self.log(LOG_INFO, [self._graph_manager.position])
+	self._graph_manager.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
+	var graph_manager_pos: Vector2 = Vector2()
+	graph_manager_pos.x = DisplayServer.screen_get_size().x/2 - self._graph_manager.size.x/2
+	graph_manager_pos.y = DisplayServer.screen_get_size().y/2 - self._graph_manager.size.y/2
+	self.log(LOG_INFO, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
+	# self._graph_manager.set_position(graph_manager_pos)
+	self._graph_manager.show_panel_at_pos(graph_manager_pos)
 
 func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 	# self._guidot_server = server_config_array[0].

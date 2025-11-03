@@ -8,7 +8,6 @@ extends PanelContainer
 ############################################################################################################
 
 @onready var _panel_size: Vector2 = Vector2(100, 100)
-@onready var _init_pos: Vector2 = Vector2(100, 100)
 
 @onready var _last_pos: Vector2 = Vector2()
 var color_dict: Dictionary
@@ -31,7 +30,6 @@ func _ready() -> void:
 	self.name = "Guidot_Panel"
 	self.visible = false
 	self.size = _panel_size
-	self.position = self._init_pos
 
 	self.add_child(self._inner_container)
 
