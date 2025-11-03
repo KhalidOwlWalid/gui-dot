@@ -14,9 +14,9 @@ var window_color: Color
 # TODO (Khalid): This should only be temporary for prototyping, but the plugin is created
 # I need to find a better way to interface this
 var _guidot_server: Guidot_Data_Server
+@onready var _curr_data_str: String = ""
+@onready var _guidot_clock_node: Guidot_Clock = self.get_tree().get_nodes_in_group(Guidot_Common._clock_group_name)[0]
 # TODO: Remove this, since at the moment, without mouse_x being initialized, it breaks
-@onready var _curr_data_str: String = "mouse_x"
-@onready var _curr_data_color: String = "red"
 @onready var _graph_manager: Guidot_Graph_Manager = Guidot_Graph_Manager.new()
 
 @onready var default_window_size: Vector2 = Vector2(620, 360)
@@ -159,13 +159,14 @@ func _register_hotkeys() -> void:
 	Guidot_Utils.add_action_with_keycode("pause", KEY_SPACE)
 
 func _request_buffer_mode() -> void:
-	self._current_buffer_mode = _guidot_server.get_graph_buffer_mode()
+	self._current_buffer_mode = self._guidot_server.get_graph_buffer_mode()
 	self.log(LOG_INFO, ["Current buffer mode: ", self.get_buffer_mode_str(self._current_buffer_mode)])
 
 # TODO (Khalid): Make this more fool proof, add checks, or even potentially allow the user to be able to user their own server
 # Check if any server actually exist
 func init_server() -> void:
-	_guidot_server = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)[0]
+	# _guidot_server = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)[0]
+	pass
 
 func setup_graph_client() -> void:
 	self.clip_contents = true
@@ -184,16 +185,16 @@ func _get_line_color() -> Color:
 	return self._guidot_server.query_data_line_color(self._curr_data_str)
 
 func _on_setting_pressed() -> void:
-	self._graph_manager.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
 	var graph_manager_pos: Vector2 = Vector2()
 	graph_manager_pos.x = DisplayServer.screen_get_size().x/2 - self._graph_manager.size.x/2
 	graph_manager_pos.y = DisplayServer.screen_get_size().y/2 - self._graph_manager.size.y/2
-	self.log(LOG_INFO, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
-	# self._graph_manager.set_position(graph_manager_pos)
+	self.log(LOG_DEBUG, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
 	self._graph_manager.show_panel_at_pos(graph_manager_pos)
 
 func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
-	# self._guidot_server = server_config_array[0].
+	self._guidot_server = server_config_array[0].get_selected_server()
+	self._request_buffer_mode()
+	# self._guidot_server.new_data_received.connect(self._on_data_received)
 	self._curr_data_str = server_config_array[0].get_selected_data()[0]
 	var gd_data: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(self._curr_data_str)
 	var new_y_axis_lim: Vector2 = gd_data.get_min_max()
@@ -209,7 +210,7 @@ func _ready() -> void:
 	self.setup_graph_client()
 	self.register_graph_client()
 
-	init_server()
+	# init_server()
 	
 	# Add child node for the graph
 	init_plot_node()
@@ -260,7 +261,7 @@ func _ready() -> void:
 	self.mouse_exited.connect(self._on_mouse_exited)
 
 	self._register_hotkeys()
-	self._request_buffer_mode()
+	# self._request_buffer_mode()
 	
 	debug_panel = Guidot_Debug_Panel.new()
 	add_child(debug_panel)
@@ -288,10 +289,14 @@ func _draw():
 	t_axis_node.draw_axis()
 
 func plot_data() -> void:
-	var l_color: Color = self._get_line_color()
-	var gd_data: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(self._curr_data_str)
-	plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max), \
-	 gd_data.get_expected_freq(), gd_data.get_line_color())
+	
+	if (self._guidot_server != null):
+		var l_color: Color = self._get_line_color()
+
+		var gd_data: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(self._curr_data_str)
+
+		plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max), \
+		gd_data.get_expected_freq(), gd_data.get_line_color())
 
 func _on_display_frame_resized() -> void:
 	setup_plot_node()
@@ -374,20 +379,22 @@ func _physics_process(delta: float) -> void:
 		# In principle, the min val should stay constant unless the user specifies any desired min axis value,
 		# and the max axis value will keep moving
 		Graph_Buffer_Mode.REALTIME:
+
 			# If there is no data present at the moment, then we ignore it
-			if (self._get_data().is_empty()):
-				pass
-			else:
-				if (not self._is_pause):
-					# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
-					# even number
-					# TODO (Khalid): Allow the user to use external clock source, the way that this is currently implemented
-					# is that the time series graph itself generates the clock, so if the user wish to plot and visualize
-					# their data in realtime, they will have to use Time.get_ticks_msec() function to have the correct
-					# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
-					# simply an increasing integer, or absolute or relative time etc.
-					var curr_s: float = float(Time.get_ticks_msec())/1000
-					t_axis_node.setup_axis_limit(curr_s - t_axis_node._sliding_window_s, curr_s)
+			if (self._guidot_server != null):
+				if (self._get_data().is_empty()):
+					pass
+				else:
+					if (not self._is_pause):
+						# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
+						# even number
+						# TODO (Khalid): Allow the user to use external clock source, the way that this is currently implemented
+						# is that the time series graph itself generates the clock, so if the user wish to plot and visualize
+						# their data in realtime, they will have to use Time.get_ticks_msec() function to have the correct
+						# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
+						# simply an increasing integer, or absolute or relative time etc.
+						var curr_s: float = self._guidot_clock_node.get_current_time_s()
+						t_axis_node.setup_axis_limit(curr_s- t_axis_node._sliding_window_s, curr_s)
 
 	if (not self._is_pause):
 		self._update_final_debug_trace()

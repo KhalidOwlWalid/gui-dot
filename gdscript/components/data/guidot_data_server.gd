@@ -5,6 +5,7 @@ extends Guidot_Data_Core
 signal connected
 signal disconnected
 signal graph_buffer_mode_changed
+signal new_data_received
 
 const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG
 const LOG_WARNING = Guidot_Log.Log_Level.WARNING
@@ -79,6 +80,7 @@ func update_channel_manager(node: Guidot_Data_Client) -> bool:
 
 func add_data_point(data_channel_node: Guidot_Data, data_point: float) -> void:
 	self._data_channel_manager[data_channel_node].append(Vector2(self._clock_node.get_current_time_s(), data_point))
+	self.new_data_received.emit()
 
 func _physics_process(delta: float) -> void:
 	pass
