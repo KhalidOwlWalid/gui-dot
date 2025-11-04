@@ -59,12 +59,13 @@ func get_channel_id(channel_name: String) -> Guidot_Data:
 # Returns the data points for the specified channel name
 func query_data_with_channel_name(channel_name: String) -> PackedVector2Array:
 	# Use the channel mapping to get the correct node ID
-	for data_channel_name in self._data_channel_id_manager.keys():
-		if (data_channel_name == channel_name):
-			return self._data_channel_manager[self.get_channel_id(channel_name)]
-		else:
-			self.log(LOG_WARNING, ["The chosen channel name, [", channel_name, "] does not exist. Returning empty dataset."])
-			return PackedVector2Array()
+	var has_key: bool = self._data_channel_id_manager.has(channel_name)
+
+	if (has_key):
+		self.log(LOG_INFO, [channel_name, "found."])
+		return self._data_channel_manager[self.get_channel_id(channel_name)]
+	else:
+		self.log(LOG_WARNING, ["The chosen channel name, [", channel_name, "] does not exist. Returning empty dataset."])
 	return PackedVector2Array()
 
 func query_data_line_color(channel_name: String) -> Color:
