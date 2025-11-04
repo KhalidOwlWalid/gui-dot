@@ -119,10 +119,6 @@ func _ready() -> void:
 	self._last_position = self.position
 	self._last_mouse_position = self.get_viewport().get_mouse_position()
 
-	self.log(LOG_INFO, ["Before", guidot_graph.debug_signals_to_trace])
-	guidot_graph.add_debug_info("test", "hello")
-	self.log(LOG_INFO, ["After", guidot_graph.debug_signals_to_trace])
-
 	# Signals connection
 	guidot_graph.parent_focus_requested.connect(_on_parent_focused)
 	self.mouse_entered.connect(_on_mouse_entered)

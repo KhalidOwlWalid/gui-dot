@@ -79,7 +79,7 @@ func add_data_point(data_channel_node: Guidot_Data, data_point: float) -> void:
 	self._server_node.add_data_point(data_channel_node, data_point)
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
-	Guidot_Log.gd_log(log_level, self._comp_tag, msg)
+	Guidot_Log.gd_log(log_level, self.name, msg)
 
 func get_all_data_channels() -> Dictionary:
 	return self._data_channel_node_ref

@@ -14,7 +14,7 @@ var window_color: Color
 # TODO (Khalid): This should only be temporary for prototyping, but the plugin is created
 # I need to find a better way to interface this
 var _guidot_server: Guidot_Data_Server
-@onready var _curr_data_str: String = ""
+var _curr_data_str: String
 @onready var _guidot_clock_node: Guidot_Clock = self.get_tree().get_nodes_in_group(Guidot_Common._clock_group_name)[0]
 # TODO: Remove this, since at the moment, without mouse_x being initialized, it breaks
 @onready var _graph_manager: Guidot_Graph_Manager = Guidot_Graph_Manager.new()
@@ -159,8 +159,11 @@ func _register_hotkeys() -> void:
 	Guidot_Utils.add_action_with_keycode("pause", KEY_SPACE)
 
 func _request_buffer_mode() -> void:
-	self._current_buffer_mode = self._guidot_server.get_graph_buffer_mode()
-	self.log(LOG_INFO, ["Current buffer mode: ", self.get_buffer_mode_str(self._current_buffer_mode)])
+	if (self._guidot_server == null):
+		self.log(LOG_WARNING, ["No server has been selected. Please"])
+	else:
+		self._current_buffer_mode = self._guidot_server.get_graph_buffer_mode()
+		self.log(LOG_INFO, ["Current buffer mode: ", self.get_buffer_mode_str(self._current_buffer_mode)])
 
 # TODO (Khalid): Make this more fool proof, add checks, or even potentially allow the user to be able to user their own server
 # Check if any server actually exist
@@ -179,7 +182,11 @@ func register_graph_client() -> void:
 	self.add_to_group(self._graph_group_name)
 
 func _get_data() -> PackedVector2Array:
-	return self._guidot_server.query_data_with_channel_name(self._curr_data_str)
+
+	if (self._curr_data_str == null):
+		return PackedVector2Array()
+	else:
+		return self._guidot_server.query_data_with_channel_name(self._curr_data_str)
 
 func _get_line_color() -> Color:
 	return self._guidot_server.query_data_line_color(self._curr_data_str)
@@ -192,17 +199,26 @@ func _on_setting_pressed() -> void:
 	self._graph_manager.show_panel_at_pos(graph_manager_pos)
 
 func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
-	self._guidot_server = server_config_array[0].get_selected_server()
-	self._request_buffer_mode()
-	# self._guidot_server.new_data_received.connect(self._on_data_received)
-	self._curr_data_str = server_config_array[0].get_selected_data()[0]
-	var gd_data: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(self._curr_data_str)
-	var new_y_axis_lim: Vector2 = gd_data.get_min_max()
-	y_axis_min = new_y_axis_lim.x
-	y_axis_max = new_y_axis_lim.y
-	y_axis_node.setup_axis_limit(y_axis_min, y_axis_max)
-	y_axis_node.queue_redraw()
-	self.log(LOG_INFO, [server_config_array])
+
+	if (server_config_array.is_empty()):
+		self.log(LOG_WARNING, ["No server has been selected. Please use the Add Server button to subscribe to any available server."])
+	else:
+		
+		for i in len(server_config_array):
+			self._guidot_server = server_config_array[0].get_selected_server()
+			self._request_buffer_mode()
+			
+			if (server_config_array[0].get_selected_data().is_empty()):
+				self.log(LOG_WARNING, ["Please select data that you wish to subscribe to: ", server_config_array[0].get_all_data_options()])
+			else:
+				self._curr_data_str = server_config_array[0].get_selected_data()[0]
+				var gd_data: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(self._curr_data_str)
+				var new_y_axis_lim: Vector2 = gd_data.get_min_max()
+				y_axis_min = new_y_axis_lim.x
+				y_axis_max = new_y_axis_lim.y
+				y_axis_node.setup_axis_limit(y_axis_min, y_axis_max)
+				y_axis_node.queue_redraw()
+				self.log(LOG_INFO, [server_config_array])
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
