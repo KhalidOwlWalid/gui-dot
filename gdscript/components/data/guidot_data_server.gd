@@ -62,7 +62,7 @@ func query_data_with_channel_name(channel_name: String) -> PackedVector2Array:
 	var has_key: bool = self._data_channel_id_manager.has(channel_name)
 
 	if (has_key):
-		self.log(LOG_INFO, [channel_name, "found."])
+		self.log(LOG_DEBUG, [channel_name, "found."])
 		return self._data_channel_manager[self.get_channel_id(channel_name)]
 	else:
 		self.log(LOG_WARNING, ["The chosen channel name, [", channel_name, "] does not exist. Returning empty dataset."])

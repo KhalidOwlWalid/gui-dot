@@ -15,6 +15,7 @@ var window_color: Color
 # I need to find a better way to interface this
 var _guidot_server: Guidot_Data_Server
 var _curr_data_str: String
+var _selected_channels_name: Array[String]
 @onready var _guidot_clock_node: Guidot_Clock = self.get_tree().get_nodes_in_group(Guidot_Common._clock_group_name)[0]
 # TODO: Remove this, since at the moment, without mouse_x being initialized, it breaks
 @onready var _graph_manager: Guidot_Graph_Manager = Guidot_Graph_Manager.new()
@@ -204,6 +205,7 @@ func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 		self.log(LOG_WARNING, ["No server has been selected. Please use the Add Server button to subscribe to any available server."])
 	else:
 		
+		# TODO (Khalid): At the moment, I am only using the first server that is selected
 		for i in len(server_config_array):
 			self._guidot_server = server_config_array[0].get_selected_server()
 			self._request_buffer_mode()
@@ -211,22 +213,22 @@ func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 			if (server_config_array[0].get_selected_data().is_empty()):
 				self.log(LOG_WARNING, ["Please select data that you wish to subscribe to: ", server_config_array[0].get_all_data_options()])
 			else:
-				self._curr_data_str = server_config_array[0].get_selected_data()[0]
-				var gd_data: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(self._curr_data_str)
-				var new_y_axis_lim: Vector2 = gd_data.get_min_max()
-				y_axis_min = new_y_axis_lim.x
-				y_axis_max = new_y_axis_lim.y
-				y_axis_node.setup_axis_limit(y_axis_min, y_axis_max)
+				#self._curr_data_str = server_config_array[0].get_selected_data()[0]
+				#var gd_data: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(self._curr_data_str)
+				#var new_y_axis_lim: Vector2 = gd_data.get_min_max()
+				#y_axis_min = new_y_axis_lim.x
+				#y_axis_max = new_y_axis_lim.y
+				#y_axis_node.setup_axis_limit(y_axis_min, y_axis_max)
+				#y_axis_node.queue_redraw()
+
+				self._selected_channels_name = server_config_array[0].get_selected_data()
 				y_axis_node.queue_redraw()
-				self.log(LOG_INFO, [server_config_array])
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 
 	self.setup_graph_client()
 	self.register_graph_client()
-
-	# init_server()
 	
 	# Add child node for the graph
 	init_plot_node()
@@ -254,20 +256,11 @@ func _ready() -> void:
 	#         SIGNAL         #
 	##########################
 
-	# Data oriented signal
-	# TODO (Khalid): Remove the use of mavlink node. Data server node should not be internally handled here but should be handled by the master
-	# Note (Khalid): I am commenting the data received axis due to the fact that when running in real-time, it is actually redundant to the t-axis node,
-	# to when the data is received because as time passes, and the sliding window increases, we will also trigger another draw event, which
-	# this actually doubles the computational resources since we are technically triggering queue_redraw() twice which plots something similar
-	# I am simply commenting this out as I believe it might still be useful in the future
-	# self._get_data()_received.connect(_on_data_received)
-
 	# Axis node signal
 	t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
 	y_axis_node.axis_limit_changed.connect(_on_y_axis_changed)
 
 	plot_node.focus_requested.connect(_on_focus_requested)
-	# self.focus_requested.connect(_on_focus_requested)
 	
 	# Self node signal
 	self.resized.connect(_on_display_frame_resized)
@@ -277,7 +270,6 @@ func _ready() -> void:
 	self.mouse_exited.connect(self._on_mouse_exited)
 
 	self._register_hotkeys()
-	# self._request_buffer_mode()
 	
 	debug_panel = Guidot_Debug_Panel.new()
 	add_child(debug_panel)
@@ -307,12 +299,25 @@ func _draw():
 func plot_data() -> void:
 	
 	if (self._guidot_server != null):
-		var l_color: Color = self._get_line_color()
+		# var l_color: Color = self._get_line_color()
 
-		var gd_data: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(self._curr_data_str)
+		# var gd_data: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(self._curr_data_str)
 
-		plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max), \
-		gd_data.get_expected_freq(), gd_data.get_line_color())
+		# plot_node.plot_data(self._get_data(), Vector2(t_axis_min, t_axis_max), Vector2(y_axis_min, y_axis_max), \
+		# gd_data.get_expected_freq(), gd_data.get_line_color())
+		
+		# # Time series graph will be responsible for queuing the redraw for the plot node
+		# self.plot_node.queue_redraw()
+
+		var selected_gd_data: Dictionary = {}
+
+		for channel_name in self._selected_channels_name:
+			var gd_data: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(channel_name)
+			var channel_data_points: PackedVector2Array = self._guidot_server.query_data_with_channel_name(channel_name)
+			selected_gd_data[gd_data] = channel_data_points
+
+		self.plot_node.plot_multiple_data(selected_gd_data, Vector2(t_axis_min, t_axis_max))
+
 
 func _on_display_frame_resized() -> void:
 	setup_plot_node()
@@ -398,9 +403,7 @@ func _physics_process(delta: float) -> void:
 
 			# If there is no data present at the moment, then we ignore it
 			if (self._guidot_server != null):
-				if (self._get_data().is_empty()):
-					pass
-				else:
+				if true:
 					if (not self._is_pause):
 						# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
 						# even number

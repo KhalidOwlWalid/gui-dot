@@ -7,6 +7,8 @@ extends Guidot_Common
 @onready var pixel_data_points: PackedVector2Array = PackedVector2Array()
 @onready var _line_color: Color = Color.RED
 
+@onready var _data_channel_pixel_pos: Dictionary = {}
+
 # Data specific properties
 # Visualize the data as if it is a snake
 enum DataFetchMode {
@@ -118,6 +120,19 @@ func _map_data_to_pixel(data_points: PackedVector2Array, t_axis_range: Vector2, 
 		# Remember that we are drawing from the top left, so in this case y_axis_min is the bottom left, and vice versa!
 		var y_pixel_coords: int = remap(data_points[i].y, y_axis_min, y_axis_max, self.get_component_size().y, 0)
 		pixel_data_points.append(Vector2(x_pixel_coords, y_pixel_coords))
+
+func _map_data_points_to_pixel_pos(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2) -> PackedVector2Array:
+	var pix_data_pos = PackedVector2Array()
+	var t_axis_min: float = t_axis_range.x
+	var t_axis_max: float = t_axis_range.y
+	var y_axis_min: float = y_axis_range.x
+	var y_axis_max: float = y_axis_range.y
+	for i in data_points.size():
+		var x_pixel_coords: int = remap(data_points[i].x, t_axis_min, t_axis_max, 0, self.get_component_size().x)
+		# Remember that we are drawing from the top left, so in this case y_axis_min is the bottom left, and vice versa!
+		var y_pixel_coords: int = remap(data_points[i].y, y_axis_min, y_axis_max, self.get_component_size().y, 0)
+		pix_data_pos.append(Vector2(x_pixel_coords, y_pixel_coords))
+	return pix_data_pos
 
 # TODO (Khalid): The lower the value of the approximated sample time, the higher the k value
 # This will cause out of bound error due to errors in the approximation calculation
@@ -329,6 +344,18 @@ func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_ra
 	self._map_data_to_pixel(data, t_axis_range, y_axis_range)
 	queue_redraw()
 
+# datasets = {Guidot_Data Object: <data_points>}
+func plot_multiple_data(datasets: Dictionary, time_range: Vector2):
+
+	# Clears the dictionary before adding new entries for each data channel
+	self._data_channel_pixel_pos.clear()
+	
+	for gd_data in datasets.keys():
+		var data_channel_pixel_pos: PackedVector2Array = self._map_data_points_to_pixel_pos(datasets[gd_data], time_range, gd_data.get_min_max())
+		self._data_channel_pixel_pos[gd_data] = data_channel_pixel_pos
+
+	queue_redraw()
+
 func test_func(data_node: Node):
 	print(data_node.data)
 
@@ -352,12 +379,19 @@ func _draw_horizontal_grids(n_ticks: int, ticks_pos: PackedVector2Array, grid_co
 func _draw() -> void:
 	_draw_vertical_grids(n_x_ticks, x_ticks_pos, Guidot_Utils.get_color("gd_grey"))
 	_draw_horizontal_grids(n_y_ticks, y_ticks_pos, Guidot_Utils.get_color("gd_grey"))
-	for i in range(1, pixel_data_points.size()):
-		draw_line(pixel_data_points[i - 1], pixel_data_points[i], self._line_color, 0.5, true)
+	
+	if false:
+		for i in range(1, pixel_data_points.size()):
+			draw_line(pixel_data_points[i - 1], pixel_data_points[i], self._line_color, 0.5, true)
 		# TODO (Khalid): Circle should only be drawn when it is at a certain window size
 		# I am not sure why but drawing a circle is very taxing, maybe due to how it is implemeted
 		# if (pixel_data_points.size() < 250):
 		# 	draw_circle(pixel_data_points[i], 2, Color.RED)
+
+	for gd_data in self._data_channel_pixel_pos.keys():
+		var data_points: PackedVector2Array = self._data_channel_pixel_pos[gd_data]
+		for i in range(1, data_points.size()):
+			draw_line(data_points[i - 1], data_points[i], gd_data.get_line_color(), 0.5, true)
 
 func _input(event: InputEvent) -> void:
 

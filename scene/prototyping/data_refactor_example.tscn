@@ -28,8 +28,8 @@ script = ExtResource("4_1d8jc")
 
 [node name="Guidot_Graph" type="PanelContainer" parent="."]
 layout_mode = 0
-offset_left = 568.0
-offset_top = 10.0
-offset_right = 951.0
-offset_bottom = 220.0
+offset_left = 251.0
+offset_top = 81.0
+offset_right = 955.0
+offset_bottom = 453.0
 script = ExtResource("5_2wj1d")
