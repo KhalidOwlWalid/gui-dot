@@ -45,6 +45,8 @@ var _selected_channels_name: Array[String]
 
 var _current_buffer_mode: Graph_Buffer_Mode
 
+@onready var fps_last_update_ms: float = Time.get_ticks_msec()
+
 # Helper tool
 var debug_panel: Guidot_Debug_Panel
 
@@ -385,8 +387,16 @@ func _input(event: InputEvent) -> void:
 		self.log(LOG_DEBUG, ["Pause button pressed: ", self._is_pause])
 		self.log(LOG_INFO, ["Graph paused"])
 
-func _physics_process(delta: float) -> void:
+# Please note that if physics_process is used here, this will caused a lot of lag as the physics process
+# will be consistent at the 60 Hz frame rate (or loop rate configured through the physics setting)
+# If the physics_process is used here, the setup_axis_limit() function in the realtime mode
+# gets called consistently even when the fps is dropping. This causes the process function to get
+# overloaded as it could not keep up with the constant update
+func _process(delta: float) -> void:
 	self._move_display_process()
+
+	var frame_update_rate_hz: float = 1.0
+	var curr_ms: int = Time.get_ticks_msec()
 
 	# If the current buffer mode is fixed, then only update when the user changes the axis limits
 	match (self._current_buffer_mode):
@@ -401,19 +411,22 @@ func _physics_process(delta: float) -> void:
 		# and the max axis value will keep moving
 		Graph_Buffer_Mode.REALTIME:
 
-			# If there is no data present at the moment, then we ignore it
-			if (self._guidot_server != null):
-				if true:
-					if (not self._is_pause):
-						# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
-						# even number
-						# TODO (Khalid): Allow the user to use external clock source, the way that this is currently implemented
-						# is that the time series graph itself generates the clock, so if the user wish to plot and visualize
-						# their data in realtime, they will have to use Time.get_ticks_msec() function to have the correct
-						# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
-						# simply an increasing integer, or absolute or relative time etc.
-						var curr_s: float = self._guidot_clock_node.get_current_time_s()
-						t_axis_node.setup_axis_limit(curr_s- t_axis_node._sliding_window_s, curr_s)
+			if (float(curr_ms - self.fps_last_update_ms) > 1/frame_update_rate_hz):
+				# If there is no data present at the moment, then we ignore it
+				if (self._guidot_server != null):
+					if true:
+						if (not self._is_pause):
+							# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
+							# even number
+							# TODO (Khalid): Allow the user to use external clock source, the way that this is currently implemented
+							# is that the time series graph itself generates the clock, so if the user wish to plot and visualize
+							# their data in realtime, they will have to use Time.get_ticks_msec() function to have the correct
+							# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
+							# simply an increasing integer, or absolute or relative time etc.
+							var curr_s: float = self._guidot_clock_node.get_current_time_s()
+							t_axis_node.setup_axis_limit(curr_s- t_axis_node._sliding_window_s, curr_s)
+
+				self.fps_last_update_ms = curr_ms
 
 	if (not self._is_pause):
 		self._update_final_debug_trace()
