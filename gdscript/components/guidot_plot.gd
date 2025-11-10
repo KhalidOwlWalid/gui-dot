@@ -124,8 +124,12 @@ func _map_data_to_pixel(data_points: PackedVector2Array, t_axis_range: Vector2, 
 		var y_pixel_coords: int = remap(data_points[i].y, y_axis_min, y_axis_max, comp_size.y, 0)
 		pixel_data_points.append(Vector2(x_pixel_coords, y_pixel_coords))
 
+func pixel_remap(data_pts: Vector2, t_axis_lim: Vector2, y_axis_lim: Vector2, comp_size: Vector2) -> Vector2:
+	data_pts.x = remap(data_pts.x, t_axis_lim.x, t_axis_lim.y, 0, comp_size.x)	 
+	data_pts.y = remap(data_pts.y, y_axis_lim.x, y_axis_lim.y, comp_size.y, 0)	 
+	return data_pts
+
 func _map_data_points_to_pixel_pos(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2) -> PackedVector2Array:
-	var pix_data_pos = PackedVector2Array()
 	var t_axis_min: float = t_axis_range.x
 	var t_axis_max: float = t_axis_range.y
 	var y_axis_min: float = y_axis_range.x
@@ -135,11 +139,19 @@ func _map_data_points_to_pixel_pos(data_points: PackedVector2Array, t_axis_range
 	var my: float = (self.get_component_size().y - 0)/(y_axis_min - y_axis_max)
 	var comp_size: Vector2 = self.get_component_size()
 
-	for i in data_points.size():
-		var x_pixel_coords: int = remap(data_points[i].x, t_axis_min, t_axis_max, 0, comp_size.x)
-		# Remember that we are drawing from the top left, so in this case y_axis_min is the bottom left, and vice versa!
-		var y_pixel_coords: int = remap(data_points[i].y, y_axis_min, y_axis_max, comp_size.y, 0)
-		pix_data_pos.append(Vector2(x_pixel_coords, y_pixel_coords))
+	# var pix_data_pos = PackedVector2Array()
+	
+	# First method of performing pixel remapping
+	# TODO (Khalid): Leaving this implementation here for now, as I am not sure if the first or second method is better
+	var pix_data_pos: Array = Array(data_points).map(pixel_remap.bind(t_axis_range, y_axis_range, self.get_component_size()))
+	pix_data_pos = PackedVector2Array(pix_data_pos)
+
+	# Second method of performing pixel remapping
+	# for i in data_points.size():
+	# 	var x_pixel_coords: int = remap(data_points[i].x, t_axis_min, t_axis_max, 0, comp_size.x)
+	# 	# Remember that we are drawing from the top left, so in this case y_axis_min is the bottom left, and vice versa!
+	# 	var y_pixel_coords: int = remap(data_points[i].y, y_axis_min, y_axis_max, comp_size.y, 0)
+	# 	pix_data_pos.append(Vector2(x_pixel_coords, y_pixel_coords))
 	return pix_data_pos
 
 # TODO (Khalid): The lower the value of the approximated sample time, the higher the k value
@@ -392,8 +404,8 @@ func _draw_plots() -> void:
 		# However, the user should be able to have that option enabled if they simply want to
 		# have their graph looks more sharp. With anti-aliasing disabled, it should still be alright
 		# for realtime plots
-		var use_anti_aliasing: bool = true
-		draw_polyline(data_points, gd_data.get_line_color(), 1.0, false)
+		var use_anti_aliasing: bool = false
+		draw_polyline(data_points, gd_data.get_line_color(), 1.0, use_anti_aliasing)
 		
 		# Note (Khalid): Leaving this here if I want to use it in the future
 		# for i in range(1, data_points.size()):

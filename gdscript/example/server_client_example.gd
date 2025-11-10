@@ -21,11 +21,25 @@ extends Node
 @onready var _sin: Guidot_Data = Guidot_Data.new()
 @onready var _cos: Guidot_Data = Guidot_Data.new()
 
+var thread: Thread
+var mutex: Mutex
+@onready var counter: int = 0
+
 
 signal data_received
 
+func _counter() -> void:
+	mutex.lock()
+	counter += 1
+	mutex.unlock()
+	pass
+
 func _ready() -> void:
 	print("Mavlink node is now ready")
+
+	mutex = Mutex.new()
+	thread = Thread.new()
+	thread.start(_counter)
 
 	# Necessary for guidot data client to work
 	self.add_child(self._dc_mouse_cursor)
@@ -70,8 +84,8 @@ func _sin_cos() -> void:
 	var update_freq_ms: float = float(1/(update_freq_hz)) * 1000
 
 	if (curr_ms - self._sin._last_update_ms > update_freq_ms):
-		self._custom_data.add_data_point(self._sin, sin(float(curr_ms)/1000.0))
-		self._custom_data.add_data_point(self._cos, cos(float(curr_ms)/1000.0))
+		self._custom_data.add_data_point(self._sin, sin(10 * (float(curr_ms)/1000.0)))
+		self._custom_data.add_data_point(self._cos, cos(10 * float(curr_ms)/1000.0))
 		self._sin._last_update_ms = Time.get_ticks_msec()
 
 func test() -> void:
