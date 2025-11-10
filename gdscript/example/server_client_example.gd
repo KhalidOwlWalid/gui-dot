@@ -52,8 +52,8 @@ func _ready() -> void:
 	Guidot_Utils.setup_data_client_util(self._godot_performance, self._fps, "fps", "fps", "Guidot FPS performance", 0, 150, 30, "yellow")
 	Guidot_Utils.setup_data_client_util(self._godot_performance, self._physics_frame, "physics_frame", "fps", "Guidot FPS performance", 0, 150, 30, "yellow")
 
-	Guidot_Utils.setup_data_client_util(self._custom_data, self._sin, "sin", "m", "Sinusoidal wave", -1.1, 1.1, 30, "blue")
-	Guidot_Utils.setup_data_client_util(self._custom_data, self._cos, "cos", "m", "Cosine wave", -1.1, 1.1, 30, "red")
+	Guidot_Utils.setup_data_client_util(self._custom_data, self._sin, "sin", "m", "Sinusoidal wave", -1.1, 1.1, 30, "magenta")
+	Guidot_Utils.setup_data_client_util(self._custom_data, self._cos, "cos", "m", "Cosine wave", -1.1, 1.1, 30, "cyan")
 	
 func _mouse_cursor_data() -> void:
 	var curr_ms: int = Time.get_ticks_msec()

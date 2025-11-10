@@ -138,20 +138,24 @@ func _map_data_points_to_pixel_pos(data_points: PackedVector2Array, t_axis_range
 	var mx: float = (self.get_component_size().x - 0)/(t_axis_max - t_axis_min)
 	var my: float = (self.get_component_size().y - 0)/(y_axis_min - y_axis_max)
 	var comp_size: Vector2 = self.get_component_size()
-
-	# var pix_data_pos = PackedVector2Array()
 	
 	# First method of performing pixel remapping
 	# TODO (Khalid): Leaving this implementation here for now, as I am not sure if the first or second method is better
-	var pix_data_pos: Array = Array(data_points).map(pixel_remap.bind(t_axis_range, y_axis_range, self.get_component_size()))
-	pix_data_pos = PackedVector2Array(pix_data_pos)
+	# var pix_data_pos: Array = Array(data_points).map(pixel_remap.bind(t_axis_range, y_axis_range, self.get_component_size()))
+	# pix_data_pos = PackedVector2Array(pix_data_pos)
+
+	var processed_data_points: PackedVector2Array
+	var t_min_pos: int = data_points.bsearch(Vector2(t_axis_range.x, 0))
+	var t_max_pos: int = data_points.bsearch(Vector2(t_axis_range.y, 0))
+	processed_data_points = data_points.slice(t_min_pos, t_max_pos)
 
 	# Second method of performing pixel remapping
-	# for i in data_points.size():
-	# 	var x_pixel_coords: int = remap(data_points[i].x, t_axis_min, t_axis_max, 0, comp_size.x)
-	# 	# Remember that we are drawing from the top left, so in this case y_axis_min is the bottom left, and vice versa!
-	# 	var y_pixel_coords: int = remap(data_points[i].y, y_axis_min, y_axis_max, comp_size.y, 0)
-	# 	pix_data_pos.append(Vector2(x_pixel_coords, y_pixel_coords))
+	var pix_data_pos = PackedVector2Array()
+	for i in processed_data_points.size():
+		var x_pixel_coords: int = remap(processed_data_points[i].x, t_axis_min, t_axis_max, 0, comp_size.x)
+		# Remember that we are drawing from the top left, so in this case y_axis_min is the bottom left, and vice versa!
+		var y_pixel_coords: int = remap(processed_data_points[i].y, y_axis_min, y_axis_max, comp_size.y, 0)
+		pix_data_pos.append(Vector2(x_pixel_coords, y_pixel_coords))
 	return pix_data_pos
 
 # TODO (Khalid): The lower the value of the approximated sample time, the higher the k value
@@ -352,17 +356,17 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2, exp_frequen
 	
 	return ts_data
 
-func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2, exp_freq: float, line_color: Color = Color.RED):
+# func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2, exp_freq: float, line_color: Color = Color.RED):
 
-	var data: PackedVector2Array = data_points
-	self._line_color = line_color
+# 	var data: PackedVector2Array = data_points
+# 	self._line_color = line_color
 
-	var t_min_pos: int = data_points.bsearch(Vector2(t_axis_range.x, 0))
-	var t_max_pos: int = data_points.bsearch(Vector2(t_axis_range.y, 0))
-	data = data.slice(t_min_pos, t_max_pos)
+# 	var t_min_pos: int = data_points.bsearch(Vector2(t_axis_range.x, 0))
+# 	var t_max_pos: int = data_points.bsearch(Vector2(t_axis_range.y, 0))
+# 	data = data.slice(t_min_pos, t_max_pos)
 
-	self._map_data_to_pixel(data, t_axis_range, y_axis_range)
-	queue_redraw()
+# 	self._map_data_to_pixel(data, t_axis_range, y_axis_range)
+# 	queue_redraw()
 
 # datasets = {Guidot_Data Object: <data_points>}
 func plot_multiple_data(datasets: Dictionary, time_range: Vector2):

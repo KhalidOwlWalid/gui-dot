@@ -43,7 +43,7 @@ func scan_for_server() -> void:
 	else:
 		self.log(LOG_INFO, [server_nodes.size(), "instance(s) of Guidot Server found."])
 		
-		# For now, we are going to grab the first server we see.
+		# TODO (Khalid): For now, we are going to grab the first server we see.
 		# In the future, we may want to allow the user to be able to select servers that they wish to listen to.
 		self._server_node = server_nodes[0]
 		self.log(LOG_INFO, ["Connected to server", self._server_node])
