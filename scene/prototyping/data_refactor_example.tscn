@@ -28,8 +28,56 @@ script = ExtResource("4_1d8jc")
 
 [node name="Guidot_Graph" type="PanelContainer" parent="."]
 layout_mode = 0
-offset_left = 251.0
-offset_top = 81.0
-offset_right = 955.0
-offset_bottom = 453.0
+offset_left = -5.0
+offset_top = 10.0
+offset_right = 699.0
+offset_bottom = 382.0
+script = ExtResource("5_2wj1d")
+
+[node name="Guidot_Graph2" type="PanelContainer" parent="."]
+layout_mode = 2
+offset_left = -3.0
+offset_top = 383.0
+offset_right = 701.0
+offset_bottom = 755.0
+script = ExtResource("5_2wj1d")
+
+[node name="Guidot_Graph3" type="PanelContainer" parent="."]
+layout_mode = 2
+offset_left = 711.0
+offset_top = 2.0
+offset_right = 1415.0
+offset_bottom = 374.0
+script = ExtResource("5_2wj1d")
+
+[node name="Guidot_Graph4" type="PanelContainer" parent="."]
+layout_mode = 2
+offset_left = 715.0
+offset_top = 380.0
+offset_right = 1419.0
+offset_bottom = 752.0
+script = ExtResource("5_2wj1d")
+
+[node name="Guidot_Graph5" type="PanelContainer" parent="."]
+layout_mode = 2
+offset_left = -3.0
+offset_top = 762.0
+offset_right = 706.0
+offset_bottom = 988.0
+script = ExtResource("5_2wj1d")
+
+[node name="Guidot_Graph6" type="PanelContainer" parent="."]
+layout_mode = 2
+offset_left = 716.0
+offset_top = 762.0
+offset_right = 1420.0
+offset_bottom = 988.0
+script = ExtResource("5_2wj1d")
+
+[node name="Guidot_Graph7" type="PanelContainer" parent="."]
+layout_mode = 2
+offset_left = 1434.0
+offset_top = 82.0
+offset_right = 1841.0
+offset_bottom = 434.0
 script = ExtResource("5_2wj1d")
