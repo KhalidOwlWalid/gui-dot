@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://bfox2bol655fb"]
+[gd_scene load_steps=5 format=3 uid="uid://bfox2bol655fb"]
 
-[ext_resource type="Script" path="res://gdscript/example/multithreading.gd" id="1_0bdua"]
+[ext_resource type="Script" path="res://gdscript/example/multithreading/multithreading.gd" id="1_6enej"]
+[ext_resource type="Script" path="res://gdscript/components/data/guidot_clock.gd" id="1_mytkg"]
+[ext_resource type="Script" path="res://gdscript/components/data/guidot_data_server.gd" id="2_mwrsl"]
+[ext_resource type="Script" path="res://gdscript/example/server_client_example.gd" id="3_halrf"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -10,5 +13,14 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
+[node name="Guidot_Clock" type="Node" parent="."]
+script = ExtResource("1_mytkg")
+
+[node name="Guidot_Data_Server" type="Node" parent="."]
+script = ExtResource("2_mwrsl")
+
+[node name="Guidot_Client" type="Node" parent="."]
+script = ExtResource("3_halrf")
+
 [node name="Node" type="Node" parent="."]
-script = ExtResource("1_0bdua")
+script = ExtResource("1_6enej")

@@ -16,6 +16,7 @@ class DataThreadHandler:
 	# Property
 	var _last_update_ms: int
 	var _update_rate_ms: int
+	var _counter: int
 
 	func init_data_thread_handler(thread_id: int, update_rate_ms: int, cb_func: Callable) -> void:
 		self._thread = Thread.new()
@@ -24,11 +25,13 @@ class DataThreadHandler:
 		self._thread_id = thread_id
 		self._update_rate_ms = update_rate_ms
 		self._last_update_ms = Time.get_ticks_msec()
+		self._counter = 0
 		self.register_callback(cb_func)
 
 	func register_callback(cb_func: Callable):
 		self._callback_fn = cb_func
-		self._thread.start(self._callback_fn.bind(self._thread_id, self._semaphore))
+		# .bind here allows you to pass additional arguments to the function
+		self._thread.start(self._callback_fn.bind(self._thread_id, self._semaphore, self._mutex, self._counter))
 
 	func post_semaphore() -> void:
 		self._semaphore.post()
@@ -42,10 +45,23 @@ class DataThreadHandler:
 	func set_last_update_ms(ms: int) -> void:
 		self._last_update_ms = ms
 
-func example_callback_func(id: int, sem: Semaphore) -> void:	
+# Generic function callback to be used for both data A and data B as an example
+# that you can use an externally implemented callback function with arguments
+func example_callback_func(id: int, sem: Semaphore, mutex: Mutex, counter: int) -> void:	
 	while true:
+		# Do not allow the thread to loop unless the semaphore has been released
 		sem.wait()
-		print("This thread belongs to ID: ", id)
+
+		# In this case, the mutex locks this section of the code
+		# Each thread needs to acquire mutex first before being able to write on the counter
+		# This implementation is rather simplistic for the purpose of helping people to understand
+		# If not locked, there may be potentials of racing conditions if not handled correctly
+		mutex.lock()
+		counter += 1
+		mutex.unlock()
+
+		print("This thread belongs to ID: ", id, " | Counter: ", counter)
+
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -60,9 +76,11 @@ func _process(delta: float) -> void:
 	var curr_ms: int = Time.get_ticks_msec()
 
 	if (curr_ms - self.data_A.get_last_update_ms() > self.data_A.get_update_rate_ms()):
+		# Releases the semaphore for data A
 		data_A.post_semaphore()
 		data_A.set_last_update_ms(curr_ms)
 
 	if (curr_ms - self.data_B.get_last_update_ms() > self.data_B.get_update_rate_ms()):
+		# Releases the semaphore for data B
 		data_B.post_semaphore()
 		data_B.set_last_update_ms(curr_ms)

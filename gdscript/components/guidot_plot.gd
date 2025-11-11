@@ -144,6 +144,8 @@ func _map_data_points_to_pixel_pos(data_points: PackedVector2Array, t_axis_range
 	# var pix_data_pos: Array = Array(data_points).map(pixel_remap.bind(t_axis_range, y_axis_range, self.get_component_size()))
 	# pix_data_pos = PackedVector2Array(pix_data_pos)
 
+	# Using binary search to find the nth element where t_min and t_max starts, so we don't have to remap and draw
+	# every single data points
 	var processed_data_points: PackedVector2Array
 	var t_min_pos: int = data_points.bsearch(Vector2(t_axis_range.x, 0))
 	var t_max_pos: int = data_points.bsearch(Vector2(t_axis_range.y, 0))
@@ -356,18 +358,6 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2, exp_frequen
 	
 	return ts_data
 
-# func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2, exp_freq: float, line_color: Color = Color.RED):
-
-# 	var data: PackedVector2Array = data_points
-# 	self._line_color = line_color
-
-# 	var t_min_pos: int = data_points.bsearch(Vector2(t_axis_range.x, 0))
-# 	var t_max_pos: int = data_points.bsearch(Vector2(t_axis_range.y, 0))
-# 	data = data.slice(t_min_pos, t_max_pos)
-
-# 	self._map_data_to_pixel(data, t_axis_range, y_axis_range)
-# 	queue_redraw()
-
 # datasets = {Guidot_Data Object: <data_points>}
 func plot_multiple_data(datasets: Dictionary, time_range: Vector2):
 
@@ -403,18 +393,18 @@ func _draw_plots() -> void:
 	for gd_data in self._data_channel_pixel_pos.keys():
 		var data_points: PackedVector2Array = self._data_channel_pixel_pos[gd_data]
 		# TODO (Khalid): Please do a write up of why draw_polyline is optimized better
-		
 		# Using anti-aliasing is more computationally expensive
 		# However, the user should be able to have that option enabled if they simply want to
 		# have their graph looks more sharp. With anti-aliasing disabled, it should still be alright
 		# for realtime plots
 		var use_anti_aliasing: bool = false
-		draw_polyline(data_points, gd_data.get_line_color(), 1.0, use_anti_aliasing)
-		
-		# Note (Khalid): Leaving this here if I want to use it in the future
-		# for i in range(1, data_points.size()):
-		# 	draw_line(data_points[i - 1], data_points[i], gd_data.get_line_color(), 0.5, use_anti_aliasing)
-		# 	pass
+		# Draw circles on the graph if the number of sampling points are less than 25
+		if (data_points.size() > 25):
+			draw_polyline(data_points, gd_data.get_line_color(), 1.0, use_anti_aliasing)
+		else:	
+			for i in range(1, data_points.size()):
+				draw_line(data_points[i - 1], data_points[i], gd_data.get_line_color(), 0.5, true)
+				draw_circle(data_points[i], 2.0, gd_data.get_line_color(), -1, true)
 	
 # Handle data line drawing here
 func _draw() -> void:
