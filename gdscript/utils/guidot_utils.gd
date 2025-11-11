@@ -36,6 +36,8 @@ static func get_color(guidot_color: String) -> Color:
 		"red": Color.RED,
 		"blue": Color.BLUE,
 		"yellow": Color.YELLOW,
+		"magenta": Color.MAGENTA,
+		"cyan": Color.CYAN,
 
 		# Godot editor color scheme
 		"gd_black": Color(0.1, 0.12, 0.15, 1), 	# Same as Godot text editor background color
@@ -147,3 +149,9 @@ static func setup_data_client_util(client_node: Guidot_Data_Client, data_node: G
 	data_node.setup_properties(name, unit, description, min, max, exp_freq, color)
 	client_node.register_data_channel(data_node)
 	client_node.update_server()
+
+static func profiler(func_to_profile: Callable) -> float:
+	var stime: int = Time.get_ticks_usec()
+	func_to_profile.call()
+	var etime: int = Time.get_ticks_usec()
+	return float(etime - stime)/1e6

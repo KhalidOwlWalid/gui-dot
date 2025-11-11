@@ -13,6 +13,14 @@ signal data_selected
 @onready var data_list_vbox: VBoxContainer = VBoxContainer.new()
 @onready var close_button: Button = Button.new()
 
+func get_available_data_options() -> Array[String]:
+	var data_options: Array[String] = []
+
+	for data_name in self._available_data.keys():
+		data_options.append(data_name)
+
+	return data_options
+
 # client_nodes have a structure of {"client_name": <Guidot_Data_Client>}
 func set_available_data_for_selection(client_nodes: Dictionary) -> void:
 	self._available_data.clear()

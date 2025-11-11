@@ -48,15 +48,13 @@ enum Origin {
 
 func _emit_focus_requested_signal() -> void:
 	focus_requested.emit()
-	self.log(LOG_INFO, ["Toggle focus request: ", self._is_in_focus])
+	self.log(LOG_DEBUG, ["Toggle focus request: ", self._is_in_focus])
 
 func _on_mouse_entered() -> void:
 	self._mouse_in = true
-	self.log(LOG_INFO, ["Inside guidot common, mouse_in: ", self._mouse_in])
 
 func _on_mouse_exited() -> void:
 	self._mouse_in = false
-	self.log(LOG_INFO, ["Inside guidot common, mouse_in: ", self._mouse_in])
 
 func get_component_size() -> Vector2:
 	return self.size
@@ -156,7 +154,7 @@ func _move_display_process() -> void:
 		self.position = _new_position
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
-	Guidot_Log.gd_log(log_level, self._component_tag, msg)
+	Guidot_Log.gd_log(log_level, self.name, msg)
 
 func update_debug_info() -> void:
 	pass

@@ -7,6 +7,8 @@ extends Guidot_Common
 @onready var pixel_data_points: PackedVector2Array = PackedVector2Array()
 @onready var _line_color: Color = Color.RED
 
+@onready var _data_channel_pixel_pos: Dictionary = {}
+
 # Data specific properties
 # Visualize the data as if it is a snake
 enum DataFetchMode {
@@ -43,12 +45,14 @@ var approx_sample_t: float
 @onready var n_postprocessed_data: int = 0
 @onready var head_vec2: Vector2 = Vector2()
 @onready var tail_vec2: Vector2 = Vector2()
+@onready var t_draw: float = float()
 
 func update_debug_info() -> void:
 	self.debug_signals_to_trace = {
+		"t_draw": str(self.t_draw, 3)
 		# "ds_offset": str(ds_offset),
-		"plot: mouse_in": self._mouse_in,
-		"Plot: in focus": self._is_in_focus,
+		# "plot: mouse_in": self._mouse_in,
+		# "Plot: in focus": self._is_in_focus,
 		# "Pre-processed data size": self.n_preprocessed_data,
 		# "Post-processed data size": self.n_postprocessed_data,
 		# "Approximated sample time": self.approx_sample_t,
@@ -113,11 +117,48 @@ func _map_data_to_pixel(data_points: PackedVector2Array, t_axis_range: Vector2, 
 	var t_axis_max: float = t_axis_range.y
 	var y_axis_min: float = y_axis_range.x
 	var y_axis_max: float = y_axis_range.y
+	var comp_size: Vector2 = self.get_component_size()
 	for i in data_points.size():
-		var x_pixel_coords: int = remap(data_points[i].x, t_axis_min, t_axis_max, 0, self.get_component_size().x)
+		var x_pixel_coords: int = remap(data_points[i].x, t_axis_min, t_axis_max, 0, comp_size.x)
 		# Remember that we are drawing from the top left, so in this case y_axis_min is the bottom left, and vice versa!
-		var y_pixel_coords: int = remap(data_points[i].y, y_axis_min, y_axis_max, self.get_component_size().y, 0)
+		var y_pixel_coords: int = remap(data_points[i].y, y_axis_min, y_axis_max, comp_size.y, 0)
 		pixel_data_points.append(Vector2(x_pixel_coords, y_pixel_coords))
+
+func pixel_remap(data_pts: Vector2, t_axis_lim: Vector2, y_axis_lim: Vector2, comp_size: Vector2) -> Vector2:
+	data_pts.x = remap(data_pts.x, t_axis_lim.x, t_axis_lim.y, 0, comp_size.x)	 
+	data_pts.y = remap(data_pts.y, y_axis_lim.x, y_axis_lim.y, comp_size.y, 0)	 
+	return data_pts
+
+func _map_data_points_to_pixel_pos(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2) -> PackedVector2Array:
+	var t_axis_min: float = t_axis_range.x
+	var t_axis_max: float = t_axis_range.y
+	var y_axis_min: float = y_axis_range.x
+	var y_axis_max: float = y_axis_range.y
+
+	var mx: float = (self.get_component_size().x - 0)/(t_axis_max - t_axis_min)
+	var my: float = (self.get_component_size().y - 0)/(y_axis_min - y_axis_max)
+	var comp_size: Vector2 = self.get_component_size()
+	
+	# First method of performing pixel remapping
+	# TODO (Khalid): Leaving this implementation here for now, as I am not sure if the first or second method is better
+	# var pix_data_pos: Array = Array(data_points).map(pixel_remap.bind(t_axis_range, y_axis_range, self.get_component_size()))
+	# pix_data_pos = PackedVector2Array(pix_data_pos)
+
+	# Using binary search to find the nth element where t_min and t_max starts, so we don't have to remap and draw
+	# every single data points
+	var processed_data_points: PackedVector2Array
+	var t_min_pos: int = data_points.bsearch(Vector2(t_axis_range.x, 0))
+	var t_max_pos: int = data_points.bsearch(Vector2(t_axis_range.y, 0))
+	processed_data_points = data_points.slice(t_min_pos, t_max_pos)
+
+	# Second method of performing pixel remapping
+	var pix_data_pos = PackedVector2Array()
+	for i in processed_data_points.size():
+		var x_pixel_coords: int = remap(processed_data_points[i].x, t_axis_min, t_axis_max, 0, comp_size.x)
+		# Remember that we are drawing from the top left, so in this case y_axis_min is the bottom left, and vice versa!
+		var y_pixel_coords: int = remap(processed_data_points[i].y, y_axis_min, y_axis_max, comp_size.y, 0)
+		pix_data_pos.append(Vector2(x_pixel_coords, y_pixel_coords))
+	return pix_data_pos
 
 # TODO (Khalid): The lower the value of the approximated sample time, the higher the k value
 # This will cause out of bound error due to errors in the approximation calculation
@@ -317,21 +358,16 @@ func _data_processing(ts_data: PackedVector2Array, t_range: Vector2, exp_frequen
 	
 	return ts_data
 
-# TODO (Khalid): Currently, this creates a copy of the data, which is not great. This uses a lot of memory so Will need to optimize this implementation
-func plot_data(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2, exp_freq: float, line_color: Color = Color.RED):
+# datasets = {Guidot_Data Object: <data_points>}
+func plot_multiple_data(datasets: Dictionary, time_range: Vector2):
 
-	var data: PackedVector2Array = data_points
-	self._line_color = line_color
+	# Clears the dictionary before adding new entries for each data channel
+	self._data_channel_pixel_pos.clear()
+	
+	for gd_data in datasets.keys():
+		var data_channel_pixel_pos: PackedVector2Array = self._map_data_points_to_pixel_pos(datasets[gd_data], time_range, gd_data.get_min_max())
+		self._data_channel_pixel_pos[gd_data] = data_channel_pixel_pos
 
-	n_preprocessed_data = data.size()
-	# Pre-process the data that should be visible on the graph
-	if !(data_points.size() < n_sampling):
-		# We need at least 5 sets of data to be able to perform calculations for approximating the index of data we wish to plot
-		data = _data_processing(data, t_axis_range, exp_freq)
-
-	n_postprocessed_data = data.size()
-
-	self._map_data_to_pixel(data, t_axis_range, y_axis_range)
 	queue_redraw()
 
 func test_func(data_node: Node):
@@ -352,17 +388,29 @@ func _draw_vertical_grids(n_ticks: int, ticks_pos: PackedVector2Array, grid_colo
 func _draw_horizontal_grids(n_ticks: int, ticks_pos: PackedVector2Array, grid_color: Color) -> void:
 	for i in range(ticks_pos.size()):
 		draw_line(Vector2(self.top_left().x, ticks_pos[i].y), Vector2(self.top_right().x, ticks_pos[i].y), grid_color, -1, true)
+
+func _draw_plots() -> void:
+	for gd_data in self._data_channel_pixel_pos.keys():
+		var data_points: PackedVector2Array = self._data_channel_pixel_pos[gd_data]
+		# TODO (Khalid): Please do a write up of why draw_polyline is optimized better
+		# Using anti-aliasing is more computationally expensive
+		# However, the user should be able to have that option enabled if they simply want to
+		# have their graph looks more sharp. With anti-aliasing disabled, it should still be alright
+		# for realtime plots
+		var use_anti_aliasing: bool = false
+		# Draw circles on the graph if the number of sampling points are less than 25
+		if (data_points.size() > 25):
+			draw_polyline(data_points, gd_data.get_line_color(), 1.0, use_anti_aliasing)
+		else:	
+			for i in range(1, data_points.size()):
+				draw_line(data_points[i - 1], data_points[i], gd_data.get_line_color(), 0.5, true)
+				draw_circle(data_points[i], 2.0, gd_data.get_line_color(), -1, true)
 	
 # Handle data line drawing here
 func _draw() -> void:
 	_draw_vertical_grids(n_x_ticks, x_ticks_pos, Guidot_Utils.get_color("gd_grey"))
 	_draw_horizontal_grids(n_y_ticks, y_ticks_pos, Guidot_Utils.get_color("gd_grey"))
-	for i in range(1, pixel_data_points.size()):
-		draw_line(pixel_data_points[i - 1], pixel_data_points[i], self._line_color, 0.5, true)
-		# TODO (Khalid): Circle should only be drawn when it is at a certain window size
-		# I am not sure why but drawing a circle is very taxing, maybe due to how it is implemeted
-		# if (pixel_data_points.size() < 250):
-		# 	draw_circle(pixel_data_points[i], 2, Color.RED)
+	t_draw = Guidot_Utils.profiler(self._draw_plots) * 1e3
 
 func _input(event: InputEvent) -> void:
 

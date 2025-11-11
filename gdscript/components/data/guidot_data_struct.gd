@@ -8,6 +8,7 @@ var _line_color_str: String = "red"
 var _min: float = 0
 var _max: float = 1
 var _freq: float = 60.0
+var _last_update_ms: int = Time.get_ticks_msec()
 
 var _metadata: Dictionary = {
 	"unique_name": "",

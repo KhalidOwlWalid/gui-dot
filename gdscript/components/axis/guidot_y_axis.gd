@@ -33,7 +33,6 @@ func _draw_ticks() -> void:
 	var tick_x_pos: int = self.top_right().x
 	var axis_frame_size: Vector2 = self.get_component_size()
 	var increments: int  = axis_frame_size.y / n_steps
-	self.log(LOG_INFO, [self.max_val])
 	var tick_interval: float = (self.max_val - self.min_val) / self.n_steps
 
 	var tick_label_offset: Vector2 = Vector2(-25, 5)

@@ -9,20 +9,29 @@ var data_subscriber_manager: Guidot_Data_Sub_Manager
 
 @onready var available_server: Dictionary = {}
 @onready var selected_data: Array[String] = []
-@onready var selected_server: Guidot_Data_Server = Guidot_Data_Server.new()
+@onready var selected_server: String = ""
+var curr_server_node: Guidot_Data_Server
+
+func _get_server_dropdown() -> OptionButton:
+	var hbox_server_sel: HBoxContainer = self.server_selection.get_child(0)
+	var server_dropdown: OptionButton = hbox_server_sel.get_child(1)
+	return server_dropdown
+
+func _get_dropdown_selected_id() -> String:
+	var server_dropdown: OptionButton = self._get_server_dropdown()
+	return server_dropdown.get_item_text(server_dropdown.get_selected_id())
 
 func _get_selected_data_display() -> void:
 	var vbox = sub_data_scroll_cont.get_children()
 
 func _on_subscribe_pressed() -> void:
-	var hbox_server_sel: HBoxContainer = self.server_selection.get_child(0)
-	var server_dropdown: OptionButton = hbox_server_sel.get_child(1)
-	var selected_server: String = server_dropdown.get_item_text(server_dropdown.get_selected_id())
+
+	selected_server = self._get_dropdown_selected_id()
 
 	self.data_subscriber_manager.visible = true
-	var server_node: Guidot_Data_Server = self.available_server[selected_server]
+	curr_server_node = self.available_server[selected_server]
 
-	self.data_subscriber_manager.set_available_data_for_selection(server_node.get_all_registered_clients())
+	self.data_subscriber_manager.set_available_data_for_selection(curr_server_node.get_all_registered_clients())
 
 func _on_close_submenu_button_pressed(panel: Node) -> void:
 	panel.visible = false
@@ -33,6 +42,9 @@ func register_data_sub_manager(dsub_node: Guidot_Data_Sub_Manager) -> void:
 
 func get_selected_data() -> Array[String]:
 	return self.selected_data
+
+func get_all_data_options() -> Array[String]:
+	return self.data_subscriber_manager.get_available_data_options()
 
 func _on_data_selected(sel_data_array: Array[String]) -> void:
 	# Clear the vbox from the previously selected label
@@ -61,7 +73,8 @@ func get_available_gd_server() -> Array[String]:
 	return gd_servers_str
 
 func get_selected_server() -> Guidot_Data_Server:
-	return Guidot_Data_Server.new()
+	self.curr_server_node = self.available_server[self._get_dropdown_selected_id()]
+	return self.curr_server_node
 	
 func _ready() -> void:
 	super._ready()

@@ -81,7 +81,7 @@ func _ready() -> void:
 	self.name = "Guidot_Debug_Panel"
 	self.visible = false
 	self.size = _panel_size
-	self.position = self._init_pos
+	#self.position = self._init_pos
 	self.margin_val = 3
 	self._font_size = 10
 	self._component_tag = "DEBUG_PANEL"
