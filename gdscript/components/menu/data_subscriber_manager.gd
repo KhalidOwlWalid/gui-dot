@@ -21,9 +21,25 @@ func get_available_data_options() -> Array[String]:
 
 	return data_options
 
+func get_selected_data() -> Dictionary:
+	var sel_data_dict: Dictionary = {}
+	
+	for hbox in self.data_list_vbox.get_children():
+		var cbox: CheckBox = hbox.get_child(0)
+		var is_data_selected: bool = cbox.button_pressed
+		var data_name: String = cbox.text
+
+		if is_data_selected:
+			sel_data_dict[data_name] = true
+		else:
+			sel_data_dict[data_name] = false
+
+	return sel_data_dict
+
 # client_nodes have a structure of {"client_name": <Guidot_Data_Client>}
 func set_available_data_for_selection(client_nodes: Dictionary) -> void:
-	self._available_data.clear()
+	# self._available_data.clear()
+	self._available_data = get_selected_data()
 
 	# Clean up the previosly populated child
 	for node in self.data_list_vbox.get_children():
@@ -31,10 +47,12 @@ func set_available_data_for_selection(client_nodes: Dictionary) -> void:
 
 	# Go through the client ID manager, and get all available data channel from the client
 	for client_node in client_nodes.values():
-		# self.self._available_data[node] = false
 		var channel_list: Array[String]  = client_node.get_all_data_channel_name()
 		for channel in channel_list:
-			self._available_data[channel] = false
+			# If the user has previously select the data to be plotted, leave it
+			# This ensures the user to not have to select the data they wish to plot again
+			if (not self._available_data.has(channel) or not self._available_data[channel]):
+				self._available_data[channel] = false
 
 	self._populate_data_selection_vbox()
 
@@ -51,7 +69,11 @@ func _on_apply_changes_pressed(selected_data: VBoxContainer) -> void:
 		var cbox: CheckBox = hbox.get_child(0)
 
 		if cbox.button_pressed:
+			# Get the unique data channel name from the checkbox
 			selected_data_str.append(cbox.text)
+			
+			# Save the current data selected by the user
+			self._available_data[cbox.text] = cbox.button_pressed
 
 	self.data_selected.emit(selected_data_str)
 	self.log(LOG_INFO, [selected_data_str])
