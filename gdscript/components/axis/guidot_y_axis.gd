@@ -1,6 +1,13 @@
 class_name Guidot_Y_Axis
 extends Guidot_Axis
 
+const _max_axis_num: int = 6
+
+enum AxisPosition {
+	LEFT,
+	RIGHT,
+}
+
 func _ready() -> void:
 	self.line_color = Guidot_Utils.get_color("white")
 	self.last_line_color = self.line_color

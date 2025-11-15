@@ -46,18 +46,49 @@ func get_selected_data() -> Array[String]:
 func get_all_data_options() -> Array[String]:
 	return self.data_subscriber_manager.get_available_data_options()
 
+func _create_channel_config_name(chan_name: String) -> HBoxContainer:
+	var chan_config_hbox: HBoxContainer = HBoxContainer.new()
+	var chan_label: Label = Label.new()
+	var axis_dropdown: OptionButton = OptionButton.new()
+	var pos_dropdown: OptionButton = OptionButton.new()
+	var color_dropdown: OptionButton = OptionButton.new()
+
+	var label_norm_size: float = 0.3
+	var n_dropdown: float = 3
+	var dropdown_norm_size: float = ((1 - label_norm_size)/n_dropdown) - 0.015
+	chan_label.text = chan_name
+	chan_label.custom_minimum_size = Vector2(label_norm_size * self.size.x, 20)
+
+	for i in range(Guidot_Y_Axis._max_axis_num):
+		axis_dropdown.add_item(str(i))
+		axis_dropdown.get_popup().max_size.y = 100
+	axis_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
+
+	for pos in Guidot_Y_Axis.AxisPosition.keys():
+		pos_dropdown.add_item(pos)
+	pos_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
+
+	color_dropdown.add_item("Test")
+	color_dropdown.add_item("Test2")
+	color_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
+	chan_config_hbox.add_child(chan_label)
+	chan_config_hbox.add_child(axis_dropdown)
+	chan_config_hbox.add_child(pos_dropdown)
+	chan_config_hbox.add_child(color_dropdown)
+	return chan_config_hbox
+
 func _on_data_selected(sel_data_array: Array[String]) -> void:
 	# Clear the vbox from the previously selected label
 	for n in sub_data_vbox.get_children():
 		sub_data_vbox.remove_child(n)
 
+	# This will be used by the time series graph to query for the data of each respective channel name
 	self.selected_data = sel_data_array
 
 	# Populate selected labels
 	for item in sel_data_array:
-		var label: Label = Label.new()
-		label.text = item
-		sub_data_vbox.add_child(label)
+		var hbox: HBoxContainer = self._create_channel_config_name(item)
+		sub_data_vbox.add_child(hbox)
 
 func get_available_gd_server() -> Array[String]:
 	var gd_servers: Array[Node] = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)
