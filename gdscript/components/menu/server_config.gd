@@ -61,16 +61,18 @@ func _create_channel_config_name(chan_name: String) -> HBoxContainer:
 
 	for i in range(Guidot_Y_Axis._max_axis_num):
 		axis_dropdown.add_item(str(i))
-		axis_dropdown.get_popup().max_size.y = 100
 	axis_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
+	axis_dropdown.get_popup().max_size.y = 100
 
 	for pos in Guidot_Y_Axis.AxisPosition.keys():
-		pos_dropdown.add_item(pos)
+		pos_dropdown.add_item(str(pos).to_lower())
 	pos_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
 
-	color_dropdown.add_item("Test")
-	color_dropdown.add_item("Test2")
+	for color in Guidot_Utils.color_dict.keys():
+		color_dropdown.add_item(color)
 	color_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
+	color_dropdown.get_popup().max_size.y = 100
+
 	chan_config_hbox.add_child(chan_label)
 	chan_config_hbox.add_child(axis_dropdown)
 	chan_config_hbox.add_child(pos_dropdown)
@@ -126,14 +128,9 @@ func _ready() -> void:
 	subscribe_data_button.text = "+ Subscribe to data"
 	subscribe_data_button.pressed.connect(self._on_subscribe_pressed)
 
-	# TODO (Khalid): Use a scroll container to allow us to go through all of the subscribed data
-	sub_data_scroll_cont.custom_minimum_size = Vector2(100, 100)
+	sub_data_scroll_cont.custom_minimum_size = Vector2(100, 300)
 	sub_data_scroll_cont.add_child(sub_data_vbox)
 
 	vbox.add_child(server_selection)
 	vbox.add_child(margin_cont1)
 	vbox.add_child(sub_data_scroll_cont)
-
-func _process(delta: float) -> void:
-	pass
-	# pass
