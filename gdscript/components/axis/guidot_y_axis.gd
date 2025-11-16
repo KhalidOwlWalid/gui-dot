@@ -8,6 +8,21 @@ enum AxisPosition {
 	RIGHT,
 }
 
+enum AxisID {
+	PRIMARY = 0,
+	SECONDARY = 1,
+	TERTIARY = 2,
+	QUATERNARY = 3,
+	QUINARY = 4,
+	SENARY = 5,
+}
+
+# Axis ID, up to _max_axis_num
+@onready var _axis_id: int = 0
+
+func set_axis_id(ax_id: int) -> void:
+	self._axis_id = ax_id
+
 func _ready() -> void:
 	self.line_color = Guidot_Utils.get_color("white")
 	self.last_line_color = self.line_color
@@ -26,9 +41,16 @@ func _ready() -> void:
 	
 func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node: Node) -> void:
 	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
-	self.axis_width = (display_frame_node.size.x - plot_frame_node.size.x)/2
-	self.offset_left = plot_frame_node.offset_left - self.axis_width
-	self.offset_right = plot_frame_node.offset_left
+	self.axis_width = self.norm_comp_size.x * display_frame_node.size.x
+	if (self._axis_id == 0):
+		self.offset_left = plot_frame_node.offset_left - self.axis_width
+		self.offset_right = plot_frame_node.offset_left
+	else:
+		self.offset_right = plot_frame_node.offset_left - self._axis_id * self.axis_width
+		self.offset_left = self.offset_right - self.axis_width
+
+	self.log(LOG_INFO, [self._axis_id, ": ", self.offset_left, " ", self.offset_right])
+		
 	self.offset_top = plot_frame_node.offset_top
 	self.offset_bottom = plot_frame_node.offset_bottom
 

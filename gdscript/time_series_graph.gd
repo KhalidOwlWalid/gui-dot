@@ -26,8 +26,14 @@ var _selected_channels_name: Array
 
 # Components used for building the graph 
 @onready var plot_node: Guidot_Plot = Guidot_Plot.new()
-@onready var y_axis_node: Guidot_Axis = Guidot_Y_Axis.new()
+@onready var primary_y_axis: Guidot_Axis = Guidot_Y_Axis.new()
+@onready var secondary_y_axis: Guidot_Axis = Guidot_Y_Axis.new()
 @onready var t_axis_node: Guidot_Axis = Guidot_T_Axis.new()
+@onready var y_axis_manager: Dictionary = {
+	# This always needs to be here, and should not be removed.
+	# If removed, it may break the plots
+	0: primary_y_axis,
+}
 
 # Toggle switch
 @onready var _toggle_nerd_stats: bool = false
@@ -45,6 +51,9 @@ var _selected_channels_name: Array
 
 var _current_buffer_mode: Graph_Buffer_Mode
 
+# Axis count is limited up to Guidot_Y_Axis._max_axis_num
+@onready var _curr_y_axis_count: int = 1
+
 @onready var fps_last_update_ms: float = Time.get_ticks_msec()
 
 # Helper tool
@@ -60,24 +69,10 @@ signal parent_focus_requested
 
 func update_debug_info() -> void:
 	self.debug_signals_to_trace = {
-		# "Current buffer Mode": self.get_buffer_mode_str(self._current_buffer_mode),
-		# "t_axis": str(Vector2(t_axis_min, t_axis_max)),
-		# "y_axis": str(Vector2(y_axis_min, y_axis_max)),
-		# "Last Data": str(get_last_data_point()),
-		# "Current Fetch Mode": get_current_data_fetch_mode_str(),
-		# "Preprocess data size": str(plot_node.n_preprocessed_data),
-		# "Postprocess data size": str(plot_node.n_postprocessed_data),
-		# "Head Position": str(plot_node.head_vec2),
-		# "Tail Position": str(plot_node.tail_vec2),
-		# "mouse pressed": str(mouse_pressed_flag),
 		"Graph: mouse in": self._mouse_in,
 		"Graph: in focus": self._is_in_focus,
 		"Graph: mouse filter": self.get_mouse_filter(),
-		# "t axis limit signal": self.t_axis_lim_signal,
-		# "y axis limit signal": self.y_axis_lim_signal,
-		# "data received signal": self.data_received_signal,
 	}
-	# self.debug_signals_to_trace = self.debug_signals_to_trace
 
 func _update_final_debug_trace() -> void:
 	self.update_debug_info()
@@ -92,8 +87,6 @@ func _update_final_debug_trace() -> void:
 	for child in child_array:
 		for debug_signal in child.debug_signals_to_trace:
 			self.final_debug_trace_signals[debug_signal] = child.debug_signals_to_trace[debug_signal]
-
-# WARNING: This is temporary for testing the debug info
 
 ### HELPER FUNCTIONS #####
 @onready var t_axis_lim_signal: int = 0 
@@ -127,28 +120,32 @@ func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 func _setup_plot_node() -> void:
 	plot_node.init_plot(Guidot_Utils.get_color("gd_black"))
 	plot_node.setup_plot_frame_offset(Vector2(self.size.x, self.size.y), \
-		Vector2(t_axis_node.norm_comp_size.y, y_axis_node.norm_comp_size.x), Vector2(1, 0))
+		Vector2(t_axis_node.norm_comp_size.y, primary_y_axis.norm_comp_size.x), Vector2(2, 0))
 
 func _init_plot_node():
 	self._setup_plot_node()
 	self.add_child(plot_node)
 
-func setup_axis(axis_node: Guidot_Axis, axis_name: String, axis_color: Color, axis_min: float, axis_max: float) -> void:
+func _setup_axis(axis_node: Guidot_Axis, axis_id: int, axis_name: String, axis_color: Color, axis_min: float, axis_max: float) -> void:
+	axis_node.set_axis_id(axis_id)
 	axis_node.setup_axis_limit(axis_min, axis_max)
 	axis_node.calculate_offset_from_plot_frame(self, plot_node)
 
 func _init_axis(axis_node: Guidot_Axis, axis_name: String, axis_color: Color, axis_min: float, axis_max: float) -> void:
 	axis_node.setup_axis_node(axis_name, axis_color)
 	axis_node.setup_axis_limit(axis_min, axis_max)
-	axis_node.calculate_offset_from_plot_frame(self, plot_node)
 
 func _init_t_axis_node():
 	self._init_axis(t_axis_node, "t_axis", Guidot_Utils.get_color("gd_black"), t_axis_min, t_axis_max)
 	self.add_child(t_axis_node)
 
-func _init_y_axis_node():
-	self._init_axis(y_axis_node, "y_axis", Guidot_Utils.get_color("gd_black"), y_axis_min, y_axis_max)
-	self.add_child(y_axis_node)
+func _init_primary_y_axis():
+	self._init_axis(primary_y_axis, "y_axis", Guidot_Utils.get_color("gd_black"), y_axis_min, y_axis_max)
+	self.add_child(primary_y_axis)
+
+func _create_single_y_axis(axis_id: int):
+	self._init_axis(secondary_y_axis, "secondary y axis", Guidot_Utils.get_color("gd_black"), 0, 1)
+	self.add_child(secondary_y_axis)
 
 func setup_font() -> void:
 	pass
@@ -217,7 +214,6 @@ func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 				self.log(LOG_WARNING, ["Please select data that you wish to subscribe to: ", server_config_array[0].get_all_data_options()])
 			else:
 				self._selected_channels_name = server_config_array[0].get_selected_data()
-				y_axis_node.queue_redraw()
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -230,8 +226,11 @@ func _ready() -> void:
 	# X/Y axis rectangle anchor offset calculation depends on the plot node anchor offset maths
 	# Hence, plot node needs to be ran first before we run the axis node init
 	self._init_t_axis_node()
-	self._init_y_axis_node()
+	self._init_primary_y_axis()
 	self._init_font()
+
+	secondary_y_axis.set_axis_id(1)
+	self._create_single_y_axis(1)
 
 	var setting_button: Button = Button.new()
 	setting_button.size = Vector2(30, 30)
@@ -245,7 +244,7 @@ func _ready() -> void:
 	self.get_node("/root").add_child.call_deferred(self._graph_manager)
 
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
-	plot_node.update_y_ticks_properties(y_axis_node.n_steps, y_axis_node.ticks_pos)
+	plot_node.update_y_ticks_properties(primary_y_axis.n_steps, primary_y_axis.ticks_pos)
 
 	##########################
 	#         SIGNAL         #
@@ -253,7 +252,7 @@ func _ready() -> void:
 
 	# Axis node signal
 	t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
-	y_axis_node.axis_limit_changed.connect(_on_y_axis_changed)
+	primary_y_axis.axis_limit_changed.connect(_on_y_axis_changed)
 
 	plot_node.focus_requested.connect(_on_focus_requested)
 	
@@ -285,7 +284,7 @@ func set_window_color(color: Color) -> void:
 
 func _draw():
 	# Data line drawing is handled inside the _draw function of plot_node
-	y_axis_node.draw_axis()
+	primary_y_axis.draw_axis()
 	t_axis_node.draw_axis()
 
 func plot_data() -> void:
@@ -301,11 +300,11 @@ func plot_data() -> void:
 
 		self.plot_node.plot_multiple_data(selected_gd_data, Vector2(t_axis_min, t_axis_max))
 
-
 func _on_display_frame_resized() -> void:
 	self._setup_plot_node()
-	setup_axis(y_axis_node, "y_axis", y_axis_node.color, y_axis_min, y_axis_max)
-	setup_axis(t_axis_node, "t_axis", t_axis_node.color, t_axis_min, t_axis_max)
+	self._setup_axis(primary_y_axis, 0, "y_axis",primary_y_axis.color, y_axis_min, y_axis_max)
+	self._setup_axis(secondary_y_axis, 1, "secondary", primary_y_axis.color, 0, 1)
+	self._setup_axis(t_axis_node, 0, "t_axis", t_axis_node.color, t_axis_min, t_axis_max)
 	self.log(LOG_DEBUG, ["Display frame resized"])
 
 ########################################
@@ -332,9 +331,9 @@ func _on_t_axis_changed() -> void:
 
 func _on_y_axis_changed() -> void:
 	self.y_axis_lim_signal += 1
-	y_axis_min = y_axis_node.min_val
-	y_axis_max = y_axis_node.max_val
-	plot_node.update_y_ticks_properties(y_axis_node.n_steps, y_axis_node.ticks_pos)
+	y_axis_min = primary_y_axis.min_val
+	y_axis_max = primary_y_axis.max_val
+	plot_node.update_y_ticks_properties(primary_y_axis.n_steps, primary_y_axis.ticks_pos)
 	self.plot_data()
 
 func _input(event: InputEvent) -> void:

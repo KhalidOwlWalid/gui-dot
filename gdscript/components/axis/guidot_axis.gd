@@ -35,6 +35,9 @@ var bottom_offset
 
 var _axis_config_popup: PopupMenu
 
+func set_axis_id(ax_id: int) -> void:
+	pass
+
 func init_event_handler() -> void:
 	# Setup signal connection if user hovers above the axis
 	self.mouse_entered.connect(_on_mouse_entered)

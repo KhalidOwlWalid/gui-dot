@@ -103,7 +103,7 @@ func init_plot(color: Color = Guidot_Utils.get_color("gd_black")) -> void:
 #											Example: Vector2(2, 2) means that there are 2 y-axis on the left and right side
 func setup_plot_frame_offset(frame_size: Vector2, axis_norm_comp_size: Vector2, n_y_axis: Vector2 = Vector2(1, 0)) -> void:
 
-	n_y_axis = Vector2(1, 0)
+	# n_y_axis = Vector2(1, 0)
 	var n_left_comp: float = n_y_axis.x
 	var n_right_comp: float = n_y_axis.y
 	# Temporary to handle margin
