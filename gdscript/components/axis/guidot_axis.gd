@@ -110,7 +110,7 @@ func _ready() -> void:
 
 	self._setup_axis_config_menu()
 
-	norm_comp_size = 0.2
+	norm_comp_size = Vector2(0.2, 0.2)
 	
 func _draw() -> void:
 	pass

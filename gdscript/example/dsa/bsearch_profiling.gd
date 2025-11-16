@@ -17,6 +17,6 @@ func _ready() -> void:
 	#print("Hello")
 
 func _process(delta: float) -> void:
-	print(typeof(dict.keys()))
+	assert(false, "This is false")
 	#try_bsearch(Vector2(max_val, 10))
 	#try_find(Vector2(max_val, 10))

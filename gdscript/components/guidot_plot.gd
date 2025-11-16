@@ -77,7 +77,7 @@ func _ready() -> void:
 	test_popup.hide_on_item_selection = false
 	test_popup.hide_on_state_item_selection = false
 
-	norm_comp_size = 0.9
+	self.norm_comp_size = Vector2(0.9, 0.9)
 
 	self.set_component_tag_name("PLOT")
 
@@ -95,21 +95,44 @@ func init_plot(color: Color = Guidot_Utils.get_color("gd_black")) -> void:
 	self.clip_contents = true
 	self.color = color
 
-# Setup the plot relative to the size of the graph display frame
-# The plot size 
-func setup_plot(frame_size: Vector2, axis_norm_comp_size: Vector2) -> void:
+# Setup the plot relative to the size of the graph display frame and the existing axis
+# @param	frame_size 			(Vector2):	Frame size of the graph display
+# @param	axis_comp_norm_size (Vector2):	Axis component normalized size (the summation in the x and y should be 1.0)
+# @param	n_y_axis 			(Vector2):	Number of y-axis in the left(x) and right(y). Again, the summation of all
+#											axis components including offset should be 1.0.
+#											Example: Vector2(2, 2) means that there are 2 y-axis on the left and right side
+func setup_plot_frame_offset(frame_size: Vector2, axis_norm_comp_size: Vector2, n_y_axis: Vector2 = Vector2(1, 0)) -> void:
+
+	var n_right_comp: float = n_y_axis.x
+	var n_left_comp: float = n_y_axis.y
+	# Temporary to handle margin
+	var header_margin: float = 0.075
+
+	var norm_x_comp_size: float = header_margin + self.norm_comp_size.x + axis_norm_comp_size.x
+	if (norm_x_comp_size > 1):
+		self.log(LOG_WARNING, ["The normalized component size in the x-axis > 1 with value of ", norm_x_comp_size, ". The plot will draw out of frame."])
+		self.log(LOG_WARNING, ["The following setting has been in placed for each normalized component:"])
+		self.log(LOG_WARNING, ["Normalized component size of the y-axis: ", axis_norm_comp_size.x])
+		self.log(LOG_WARNING, ["Normalized component size of the header margin: ", header_margin])
+	var norm_y_comp_size: float = (n_left_comp * axis_norm_comp_size.y) + (n_right_comp * axis_norm_comp_size.y) \
+		+ self.norm_comp_size.y
+	if (norm_y_comp_size > 1):
+		self.log(LOG_WARNING, ["The normalized component size in the y-axis > 1 with value of ", norm_y_comp_size, ". The plot will draw out of frame."])
+		self.log(LOG_WARNING, ["The following setting has been in placed for each normalized component:"])
+		self.log(LOG_WARNING, ["No of y-axis on the left: ", n_y_axis.x, "| Normalized Component Size: ", axis_norm_comp_size.y])
+		self.log(LOG_WARNING, ["No of y-axis on the right: ", n_y_axis.y, "| Normalized Component Size: ", axis_norm_comp_size.y])
+
 	# Find the necessary offset relative to the graph area
 	var plot_size_scaled: Vector2 = self.norm_comp_size * frame_size
 	# self.setup_center_anchor(plot_x_size_scaled, plot_y_size_scaled)
-	# Temporary to handle margin
-	var b: float = 0.05
 	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
-	var left_offset: int = int(axis_norm_comp_size.x * frame_size.x)
-	var top_offset: int = int(b * frame_size.y)
+	var y_axis_width: float = (axis_norm_comp_size.y * frame_size.x)
+	var left_offset: float = n_right_comp * y_axis_width
+	var top_offset: int = int(header_margin * frame_size.y)
 	self.set_offset(SIDE_LEFT, left_offset)
-	self.set_offset(SIDE_RIGHT, left_offset + plot_size_scaled.x)
+	self.set_offset(SIDE_RIGHT, (left_offset + plot_size_scaled.x))
 	self.set_offset(SIDE_TOP, top_offset)
-	self.set_offset(SIDE_BOTTOM, frame_size.y - axis_norm_comp_size.y * frame_size.y)
+	self.set_offset(SIDE_BOTTOM, frame_size.y - axis_norm_comp_size.x * frame_size.y)
 	
 func _map_data_to_pixel(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2) -> void:
 	pixel_data_points = PackedVector2Array()

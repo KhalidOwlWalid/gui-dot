@@ -124,35 +124,36 @@ func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 		_:
 			return "Not Implemented"
 
-func setup_plot_node() -> void:
+func _setup_plot_node() -> void:
 	plot_node.init_plot(Guidot_Utils.get_color("gd_black"))
-	plot_node.setup_plot(Vector2(self.size.x, self.size.y), Vector2(t_axis_node.norm_comp_size, y_axis_node.norm_comp_size))
+	plot_node.setup_plot_frame_offset(Vector2(self.size.x, self.size.y), \
+		Vector2(t_axis_node.norm_comp_size.y, y_axis_node.norm_comp_size.x), Vector2(1, 0))
 
-func init_plot_node():
-	setup_plot_node()
-	add_child(plot_node)
+func _init_plot_node():
+	self._setup_plot_node()
+	self.add_child(plot_node)
 
 func setup_axis(axis_node: Guidot_Axis, axis_name: String, axis_color: Color, axis_min: float, axis_max: float) -> void:
 	axis_node.setup_axis_limit(axis_min, axis_max)
 	axis_node.calculate_offset_from_plot_frame(self, plot_node)
 
-func init_axis(axis_node: Guidot_Axis, axis_name: String, axis_color: Color, axis_min: float, axis_max: float) -> void:
+func _init_axis(axis_node: Guidot_Axis, axis_name: String, axis_color: Color, axis_min: float, axis_max: float) -> void:
 	axis_node.setup_axis_node(axis_name, axis_color)
 	axis_node.setup_axis_limit(axis_min, axis_max)
 	axis_node.calculate_offset_from_plot_frame(self, plot_node)
 
-func init_t_axis_node():
-	init_axis(t_axis_node, "t_axis", Guidot_Utils.get_color("gd_black"), t_axis_min, t_axis_max)
-	add_child(t_axis_node)
+func _init_t_axis_node():
+	self._init_axis(t_axis_node, "t_axis", Guidot_Utils.get_color("gd_black"), t_axis_min, t_axis_max)
+	self.add_child(t_axis_node)
 
-func init_y_axis_node():
-	init_axis(y_axis_node, "y_axis", Guidot_Utils.get_color("gd_black"), y_axis_min, y_axis_max)
-	add_child(y_axis_node)
+func _init_y_axis_node():
+	self._init_axis(y_axis_node, "y_axis", Guidot_Utils.get_color("gd_black"), y_axis_min, y_axis_max)
+	self.add_child(y_axis_node)
 
 func setup_font() -> void:
 	pass
 
-func init_font() -> void:
+func _init_font() -> void:
 	setup_font()
 
 func _register_hotkeys() -> void:
@@ -174,13 +175,13 @@ func init_server() -> void:
 	# _guidot_server = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)[0]
 	pass
 
-func setup_graph_client() -> void:
+func _setup_graph_client() -> void:
 	self.clip_contents = true
 	self.size = default_window_size
 	self.color = default_window_color
 	self._component_tag = "DISPLAY"
 
-func register_graph_client() -> void:
+func _register_graph_client() -> void:
 	self.name = Guidot_Utils.generate_unique_name(self, Guidot_Common._graph_group_name)
 	self.add_to_group(self._graph_group_name)
 
@@ -221,16 +222,16 @@ func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 
-	self.setup_graph_client()
-	self.register_graph_client()
+	self._setup_graph_client()
+	self._register_graph_client()
 	
 	# Add child node for the graph
-	init_plot_node()
+	self._init_plot_node()
 	# X/Y axis rectangle anchor offset calculation depends on the plot node anchor offset maths
 	# Hence, plot node needs to be ran first before we run the axis node init
-	init_t_axis_node()
-	init_y_axis_node()
-	init_font()
+	self._init_t_axis_node()
+	self._init_y_axis_node()
+	self._init_font()
 
 	var setting_button: Button = Button.new()
 	setting_button.size = Vector2(30, 30)
@@ -278,9 +279,6 @@ func _ready() -> void:
 
 	queue_redraw()
 
-func subscribe_to_data() -> void:
-	pass
-
 # TODO: Implement this with error detection
 func set_window_color(color: Color) -> void:
 	self.color = color
@@ -305,7 +303,7 @@ func plot_data() -> void:
 
 
 func _on_display_frame_resized() -> void:
-	setup_plot_node()
+	self._setup_plot_node()
 	setup_axis(y_axis_node, "y_axis", y_axis_node.color, y_axis_min, y_axis_max)
 	setup_axis(t_axis_node, "t_axis", t_axis_node.color, t_axis_min, t_axis_max)
 	self.log(LOG_DEBUG, ["Display frame resized"])

@@ -22,7 +22,7 @@ func _ready() -> void:
 
 	self._setup_axis_config_menu()
 	self.set_component_tag_name("Y-AXIS")
-	self.norm_comp_size = 0.1
+	self.norm_comp_size = Vector2(0.05, 0.05)
 	
 func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node: Node) -> void:
 	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
