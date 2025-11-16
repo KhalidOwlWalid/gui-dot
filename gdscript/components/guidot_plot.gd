@@ -103,10 +103,13 @@ func init_plot(color: Color = Guidot_Utils.get_color("gd_black")) -> void:
 #											Example: Vector2(2, 2) means that there are 2 y-axis on the left and right side
 func setup_plot_frame_offset(frame_size: Vector2, axis_norm_comp_size: Vector2, n_y_axis: Vector2 = Vector2(1, 0)) -> void:
 
-	var n_right_comp: float = n_y_axis.x
-	var n_left_comp: float = n_y_axis.y
+	n_y_axis = Vector2(1, 0)
+	var n_left_comp: float = n_y_axis.x
+	var n_right_comp: float = n_y_axis.y
 	# Temporary to handle margin
 	var header_margin: float = 0.075
+	# Forced margin to ensure that we always have a little space on the left side of the graph
+	var hard_right_margin: float = 0.025
 
 	var norm_x_comp_size: float = header_margin + self.norm_comp_size.x + axis_norm_comp_size.x
 	if (norm_x_comp_size > 1):
@@ -116,6 +119,7 @@ func setup_plot_frame_offset(frame_size: Vector2, axis_norm_comp_size: Vector2, 
 		self.log(LOG_WARNING, ["Normalized component size of the header margin: ", header_margin])
 	var norm_y_comp_size: float = (n_left_comp * axis_norm_comp_size.y) + (n_right_comp * axis_norm_comp_size.y) \
 		+ self.norm_comp_size.y
+	print(norm_y_comp_size)
 	if (norm_y_comp_size > 1):
 		self.log(LOG_WARNING, ["The normalized component size in the y-axis > 1 with value of ", norm_y_comp_size, ". The plot will draw out of frame."])
 		self.log(LOG_WARNING, ["The following setting has been in placed for each normalized component:"])
@@ -127,10 +131,10 @@ func setup_plot_frame_offset(frame_size: Vector2, axis_norm_comp_size: Vector2, 
 	# self.setup_center_anchor(plot_x_size_scaled, plot_y_size_scaled)
 	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
 	var y_axis_width: float = (axis_norm_comp_size.y * frame_size.x)
-	var left_offset: float = n_right_comp * y_axis_width
+	var left_offset: float = n_left_comp * y_axis_width
 	var top_offset: int = int(header_margin * frame_size.y)
 	self.set_offset(SIDE_LEFT, left_offset)
-	self.set_offset(SIDE_RIGHT, (left_offset + plot_size_scaled.x))
+	self.set_offset(SIDE_RIGHT, (left_offset + plot_size_scaled.x) - n_right_comp * y_axis_width - hard_right_margin * plot_size_scaled.x)
 	self.set_offset(SIDE_TOP, top_offset)
 	self.set_offset(SIDE_BOTTOM, frame_size.y - axis_norm_comp_size.x * frame_size.y)
 	
