@@ -1,13 +1,27 @@
 class_name Guidot_Data
 
+# Name of the channel
+# TODO (Khalid): At the moment, the channel name is used for both unique name and data name
+# Data name is supposed to be editable, but not unique name
 var _name: String = ""
+# Description of what the data is meant for
 var _description: String = ""
+# Unit of the data
 var _unit: String = ""
+# Color of the line on the plot
 var _line_color: Color = Color.RED
 var _line_color_str: String = "red"
+# Minimum expected value from this data
 var _min: float = 0
+# Maximum expected value from this data
 var _max: float = 1
+# Frequency/update rate of the data
 var _freq: float = 60.0
+# Axis can be either left or right on the plot
+var _axis_pos: float = Guidot_Y_Axis.AxisPosition.LEFT
+# Which axis it should be plotted on
+var _axis_n: int = 0
+
 var _last_update_ms: int = Time.get_ticks_msec()
 
 var _metadata: Dictionary = {
@@ -20,6 +34,7 @@ var _metadata: Dictionary = {
 	"min": self._min,
 	"max": self._max, 
 	"expected_frequency": self._freq,
+	"axis_pos": self._axis_pos,
 }
 
 # Setters
@@ -61,6 +76,9 @@ func line_color_options() -> Dictionary:
 # Getters
 func get_line_color() -> Color:
 	return self._line_color
+
+func get_line_color_str() -> String:
+	return self._line_color_str
 
 func get_min_max() -> Vector2:
 	return Vector2(self._min, self._max)

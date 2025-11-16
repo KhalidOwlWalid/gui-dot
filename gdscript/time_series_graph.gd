@@ -15,7 +15,7 @@ var window_color: Color
 # I need to find a better way to interface this
 var _guidot_server: Guidot_Data_Server
 var _curr_data_str: String
-var _selected_channels_name: Array[String]
+var _selected_channels_name: Array
 @onready var _guidot_clock_node: Guidot_Clock = self.get_tree().get_nodes_in_group(Guidot_Common._clock_group_name)[0]
 # TODO: Remove this, since at the moment, without mouse_x being initialized, it breaks
 @onready var _graph_manager: Guidot_Graph_Manager = Guidot_Graph_Manager.new()
@@ -215,14 +215,6 @@ func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 			if (server_config_array[0].get_selected_data().is_empty()):
 				self.log(LOG_WARNING, ["Please select data that you wish to subscribe to: ", server_config_array[0].get_all_data_options()])
 			else:
-				#self._curr_data_str = server_config_array[0].get_selected_data()[0]
-				#var gd_data: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(self._curr_data_str)
-				#var new_y_axis_lim: Vector2 = gd_data.get_min_max()
-				#y_axis_min = new_y_axis_lim.x
-				#y_axis_max = new_y_axis_lim.y
-				#y_axis_node.setup_axis_limit(y_axis_min, y_axis_max)
-				#y_axis_node.queue_redraw()
-
 				self._selected_channels_name = server_config_array[0].get_selected_data()
 				y_axis_node.queue_redraw()
 

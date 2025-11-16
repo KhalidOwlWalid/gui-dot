@@ -12,6 +12,7 @@ func try_bsearch(vector: Vector2) -> void:
 
 func try_find(vector: Vector2) -> void:
 	print(v2_array.find(vector))
+	print("Hello")
 
 func _process(delta: float) -> void:
 	try_bsearch(Vector2(max_val, 10))

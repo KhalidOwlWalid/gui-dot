@@ -65,6 +65,7 @@ func query_data_with_channel_name(channel_name: String) -> PackedVector2Array:
 		self.log(LOG_DEBUG, [channel_name, "found."])
 		return self._data_channel_manager[self.get_channel_id(channel_name)]
 	else:
+		# TODO (Khalid): Popup and inform the user about the error
 		self.log(LOG_WARNING, ["The chosen channel name, [", channel_name, "] does not exist. Returning empty dataset."])
 	return PackedVector2Array()
 
