@@ -8,6 +8,8 @@ var max_val: float
 @onready var n_steps: int = 5
 @onready var axis_name: String = "axis_common"
 @onready var tick_length: int = 0
+@onready var min_width: int = 0
+@onready var max_width: int = 50
 
 # Keep a reference to the plot node, useful for dynamic resizing etc.
 var plot_node_ref: Node
