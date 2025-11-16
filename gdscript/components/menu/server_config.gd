@@ -49,6 +49,9 @@ func get_selected_data() -> Array:
 func get_all_data_options() -> Array[String]:
 	return self.data_subscriber_manager.get_available_data_options()
 
+func _color_selected_callback(idx: int, gd_data_node: Guidot_Data) -> void:
+	gd_data_node.set_line_color_str(color_selection[idx])
+
 # This function creates the row to allow the user to configure the properties
 # of their data
 func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -> HBoxContainer:
@@ -86,6 +89,7 @@ func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -
 	# color_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
 	# color_dropdown.size = Vector2()
 	color_dropdown.get_popup().max_size.y = 100
+	color_dropdown.item_selected.connect(self._color_selected_callback.bind(gd_data_node))
 
 	chan_config_hbox.add_child(chan_label)
 	chan_config_hbox.add_child(axis_dropdown)

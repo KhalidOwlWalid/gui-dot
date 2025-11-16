@@ -51,6 +51,7 @@ func set_max(max_val: float) -> void:
 
 func set_line_color_str(color_str: String) -> void:
 	self._line_color_str = color_str
+	self._line_color = Guidot_Utils.get_color(self._line_color_str)
 	self._metadata["line_color"] = self._line_color_str
 
 func set_unique_name(unique_name_str: String) -> void:

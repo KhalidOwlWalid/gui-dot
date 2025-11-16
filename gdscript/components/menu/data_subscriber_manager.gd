@@ -55,7 +55,6 @@ func set_available_data_for_selection(client_nodes: Dictionary) -> void:
 	for client_node in client_nodes.values():
 		var channel_list: Array[String]  = client_node.get_all_data_channel_name()
 		for channel in channel_list:
-			
 
 			# If the user has previously select the data to be plotted, leave it
 			# This ensures the user to not have to select the data they wish to plot again
