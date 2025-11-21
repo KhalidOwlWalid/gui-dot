@@ -33,9 +33,12 @@ class AxisHandler:
 	var _axis_node: Guidot_Y_Axis
 	var _in_use: bool
 
-	func init_axis(parent: Node, axis_id: Guidot_Y_Axis.AxisID, min_max: Vector2, in_use: bool = false):
+	func init_axis(parent: Node, axis_id: Guidot_Y_Axis.AxisID, axis_pos: Guidot_Y_Axis.AxisPosition, \
+		min_max: Vector2, in_use: bool = false):
+
 		self._axis_node = Guidot_Y_Axis.new()
 		self._axis_node.setup_axis_limit(min_max.x, min_max.y)
+		self._axis_node.set_axis_pos(axis_pos)
 		self._axis_id = axis_id
 		self._in_use = in_use
 		parent.add_child(self._axis_node)
@@ -253,9 +256,9 @@ func _ready() -> void:
 	# Hence, plot node needs to be ran first before we run the axis node init
 	self._init_t_axis_node()
 	
-	self._y_axis1.init_axis(self, Guidot_Y_Axis.AxisID.PRIMARY, Vector2(0, 1), true)
-	self._y_axis2.init_axis(self, Guidot_Y_Axis.AxisID.SECONDARY, Vector2(0, 1), true)
-	self._y_axis3.init_axis(self, Guidot_Y_Axis.AxisID.TERTIARY, Vector2(0, 1), true)
+	self._y_axis1.init_axis(self, Guidot_Y_Axis.AxisID.PRIMARY, Guidot_Y_Axis.AxisPosition.LEFT, Vector2(0, 1), true)
+	self._y_axis2.init_axis(self, Guidot_Y_Axis.AxisID.SECONDARY, Guidot_Y_Axis.AxisPosition.LEFT, Vector2(0, 1), true)
+	self._y_axis3.init_axis(self, Guidot_Y_Axis.AxisID.TERTIARY, Guidot_Y_Axis.AxisPosition.LEFT, Vector2(0, 1), true)
 
 	self._init_font()
 

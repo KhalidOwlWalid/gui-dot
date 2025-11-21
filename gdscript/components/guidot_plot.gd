@@ -77,7 +77,7 @@ func _ready() -> void:
 	test_popup.hide_on_item_selection = false
 	test_popup.hide_on_state_item_selection = false
 
-	self.norm_comp_size = Vector2(0.9, 0.9)
+	self.norm_comp_size = Vector2(0.95, 0.95)
 
 	self.set_component_tag_name("PLOT")
 
@@ -108,8 +108,6 @@ func setup_plot_frame_offset(frame_size: Vector2, axis_norm_comp_size: Vector2, 
 	var n_right_comp: float = n_y_axis.y
 	# Temporary to handle margin
 	var header_margin: float = 0.075
-	# Forced margin to ensure that we always have a little space on the left side of the graph
-	var hard_right_margin: float = 0.05
 
 	var norm_x_comp_size: float = header_margin + self.norm_comp_size.x + axis_norm_comp_size.x
 	if (norm_x_comp_size > 1):
@@ -134,8 +132,7 @@ func setup_plot_frame_offset(frame_size: Vector2, axis_norm_comp_size: Vector2, 
 	var left_offset: float = n_left_comp * y_axis_width
 	var top_offset: int = int(header_margin * frame_size.y)
 	self.set_offset(SIDE_LEFT, left_offset)
-	self.set_offset(SIDE_RIGHT, (left_offset + plot_size_scaled.x) - n_right_comp * y_axis_width - \
-		clampf(hard_right_margin * plot_size_scaled.x, 20, 50))
+	self.set_offset(SIDE_RIGHT, plot_size_scaled.x - n_right_comp * y_axis_width)
 	self.set_offset(SIDE_TOP, top_offset)
 	self.set_offset(SIDE_BOTTOM, frame_size.y - axis_norm_comp_size.x * frame_size.y)
 	

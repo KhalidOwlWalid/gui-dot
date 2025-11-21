@@ -5,8 +5,8 @@ const comp_size_norm_fixed: float = 0.05
 const _max_axis_num: int = 6
 
 enum AxisPosition {
-	LEFT,
-	RIGHT,
+	LEFT = 0,
+	RIGHT = 1,
 }
 
 enum AxisID {
@@ -21,8 +21,7 @@ enum AxisID {
 # Axis ID, up to _max_axis_num
 @onready var _axis_id: int = 0
 
-func set_axis_id(ax_id: int) -> void:
-	self._axis_id = ax_id
+@onready var _axis_pos: AxisPosition = AxisPosition.LEFT
 
 func _ready() -> void:
 	self.line_color = Guidot_Utils.get_color("white")
@@ -39,6 +38,12 @@ func _ready() -> void:
 	self._setup_axis_config_menu()
 	self.set_component_tag_name("Y-AXIS")
 	self.norm_comp_size = Vector2(0.05, 0.05)
+
+func set_axis_id(ax_id: int) -> void:
+	self._axis_id = ax_id
+
+func set_axis_pos(axis_pos: AxisPosition) -> void:
+	self._axis_pos = axis_pos
 	
 func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node: Node) -> void:
 	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
