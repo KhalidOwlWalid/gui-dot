@@ -109,21 +109,6 @@ func setup_plot_frame_offset(frame_size: Vector2, axis_norm_comp_size: Vector2, 
 	# Temporary to handle margin
 	var header_margin: float = 0.075
 
-	var norm_x_comp_size: float = header_margin + self.norm_comp_size.x + axis_norm_comp_size.x
-	if (norm_x_comp_size > 1):
-		self.log(LOG_WARNING, ["The normalized component size in the x-axis > 1 with value of ", norm_x_comp_size, ". The plot will draw out of frame."])
-		self.log(LOG_WARNING, ["The following setting has been in placed for each normalized component:"])
-		self.log(LOG_WARNING, ["Normalized component size of the y-axis: ", axis_norm_comp_size.x])
-		self.log(LOG_WARNING, ["Normalized component size of the header margin: ", header_margin])
-	var norm_y_comp_size: float = (n_left_comp * axis_norm_comp_size.y) + (n_right_comp * axis_norm_comp_size.y) \
-		+ self.norm_comp_size.y
-	print(norm_y_comp_size)
-	if (norm_y_comp_size > 1):
-		self.log(LOG_WARNING, ["The normalized component size in the y-axis > 1 with value of ", norm_y_comp_size, ". The plot will draw out of frame."])
-		self.log(LOG_WARNING, ["The following setting has been in placed for each normalized component:"])
-		self.log(LOG_WARNING, ["No of y-axis on the left: ", n_y_axis.x, "| Normalized Component Size: ", axis_norm_comp_size.y])
-		self.log(LOG_WARNING, ["No of y-axis on the right: ", n_y_axis.y, "| Normalized Component Size: ", axis_norm_comp_size.y])
-
 	# Find the necessary offset relative to the graph area
 	var plot_size_scaled: Vector2 = self.norm_comp_size * frame_size
 	# self.setup_center_anchor(plot_x_size_scaled, plot_y_size_scaled)
