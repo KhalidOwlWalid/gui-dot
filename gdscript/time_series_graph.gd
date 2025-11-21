@@ -26,14 +26,58 @@ var _selected_channels_name: Array
 
 # Components used for building the graph 
 @onready var plot_node: Guidot_Plot = Guidot_Plot.new()
-@onready var primary_y_axis: Guidot_Axis = Guidot_Y_Axis.new()
-@onready var secondary_y_axis: Guidot_Axis = Guidot_Y_Axis.new()
-@onready var t_axis_node: Guidot_Axis = Guidot_T_Axis.new()
-@onready var y_axis_manager: Dictionary = {
-	# This always needs to be here, and should not be removed.
-	# If removed, it may break the plots
-	0: primary_y_axis,
-}
+@onready var primary_y_axis: Guidot_Y_Axis = Guidot_Y_Axis.new()
+@onready var secondary_y_axis: Guidot_Y_Axis = Guidot_Y_Axis.new()
+@onready var t_axis_node: Guidot_T_Axis = Guidot_T_Axis.new()
+
+class AxisHandler:
+	var _axis_id: Guidot_Y_Axis.AxisID
+	var _axis_node: Guidot_Y_Axis
+	var _in_use: bool
+
+	func init_axis(parent: Node, axis_id: Guidot_Y_Axis.AxisID, min_max: Vector2, in_use: bool = false):
+		self._axis_node = Guidot_Y_Axis.new()
+		self._axis_node.setup_axis_limit(min_max.x, min_max.y)
+		self._axis_id = axis_id
+		self._in_use = in_use
+		parent.add_child(self._axis_node)
+
+	func use_axis(flag: bool) -> void:
+		self._in_use = flag
+
+	func set_axis_id(id: Guidot_Y_Axis.AxisID) -> void:
+		# TODO (Khalid): Check if the y-axis ID is valid or not
+		self._axis_id = id
+
+	func get_axis_range() -> Vector2:
+		return self._axis_node.get_axis_range()
+
+	func is_in_use() -> bool:
+		return self._in_use
+
+	func get_axis_node() -> Guidot_Y_Axis:
+		return self._axis_node
+
+	func get_axis_id() -> Guidot_Y_Axis.AxisID:
+		return self._axis_id
+
+# Holds each axis position based on its respective enumeration
+# e.g. primary axis = 0, secondary axis = 1, etc.
+# Dictionary {<axis_enum: AxisHandler>}
+# @onready var _y_axis_manager: Dictionary = {
+# 	# This always needs to be here, and should not be removed.
+# 	# If removed, it may break the plots
+# 	0: primary_y_axis,
+# 	1: secondary_y_axis,
+# }
+@onready var _y_axis1: AxisHandler = AxisHandler.new()
+@onready var _y_axis2: AxisHandler = AxisHandler.new()
+@onready var _y_axis3: AxisHandler = AxisHandler.new()
+@onready var _y_axis_manager: Array[AxisHandler] = [
+	self._y_axis1,
+	self._y_axis2,
+	self._y_axis3,
+]
 
 # Toggle switch
 @onready var _toggle_nerd_stats: bool = false
@@ -120,13 +164,14 @@ func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 func _setup_plot_node() -> void:
 	plot_node.init_plot(Guidot_Utils.get_color("gd_black"))
 	plot_node.setup_plot_frame_offset(Vector2(self.size.x, self.size.y), \
-		Vector2(t_axis_node.norm_comp_size.y, primary_y_axis.norm_comp_size.x), Vector2(2, 0))
+		Vector2(t_axis_node.norm_comp_size.y, Guidot_Y_Axis.comp_size_norm_fixed), Vector2(self._y_axis_manager.size(), 0))
 
 func _init_plot_node():
 	self._setup_plot_node()
 	self.add_child(plot_node)
 
 func _setup_axis(axis_node: Guidot_Axis, axis_id: int, axis_name: String, axis_color: Color, axis_min: float, axis_max: float) -> void:
+	self._init_axis(axis_node, axis_name, axis_color, axis_min, axis_max)
 	axis_node.set_axis_id(axis_id)
 	axis_node.setup_axis_limit(axis_min, axis_max)
 	axis_node.calculate_offset_from_plot_frame(self, plot_node)
@@ -226,11 +271,16 @@ func _ready() -> void:
 	# X/Y axis rectangle anchor offset calculation depends on the plot node anchor offset maths
 	# Hence, plot node needs to be ran first before we run the axis node init
 	self._init_t_axis_node()
-	self._init_primary_y_axis()
-	self._init_font()
+	# self._init_y_axis()
+	
+	self._y_axis1.init_axis(self, Guidot_Y_Axis.AxisID.PRIMARY, Vector2(0, 1), true)
+	self._y_axis2.init_axis(self, Guidot_Y_Axis.AxisID.SECONDARY, Vector2(0, 1), true)
+	self._y_axis3.init_axis(self, Guidot_Y_Axis.AxisID.TERTIARY, Vector2(0, 1), true)
+	# self._init_primary_y_axis()
+	# secondary_y_axis.set_axis_id(1)
+	# self._create_single_y_axis(1)
 
-	secondary_y_axis.set_axis_id(1)
-	self._create_single_y_axis(1)
+	self._init_font()
 
 	var setting_button: Button = Button.new()
 	setting_button.size = Vector2(30, 30)
@@ -301,10 +351,16 @@ func plot_data() -> void:
 		self.plot_node.plot_multiple_data(selected_gd_data, Vector2(t_axis_min, t_axis_max))
 
 func _on_display_frame_resized() -> void:
+
 	self._setup_plot_node()
-	self._setup_axis(primary_y_axis, 0, "y_axis",primary_y_axis.color, y_axis_min, y_axis_max)
-	self._setup_axis(secondary_y_axis, 1, "secondary", primary_y_axis.color, 0, 1)
+	# for axis_enum in self._y_axis_manager.keys():
+	# 	var curr_y_axis: Guidot_Y_Axis = self._y_axis_manager[axis_enum]
+	# 	self._setup_axis(curr_y_axis, axis_enum, "y_axis", curr_y_axis.color, curr_y_axis.min_val, curr_y_axis.max_val)
+	for axis_handler in self._y_axis_manager:
+		self._setup_axis(axis_handler.get_axis_node(), axis_handler.get_axis_id(), "y_axis1", Guidot_Utils.get_color("gd_black"), 0, 1) 
+
 	self._setup_axis(t_axis_node, 0, "t_axis", t_axis_node.color, t_axis_min, t_axis_max)
+
 	self.log(LOG_DEBUG, ["Display frame resized"])
 
 ########################################

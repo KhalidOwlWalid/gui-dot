@@ -1,6 +1,7 @@
 class_name Guidot_Y_Axis
 extends Guidot_Axis
 
+const comp_size_norm_fixed: float = 0.05
 const _max_axis_num: int = 6
 
 enum AxisPosition {
@@ -42,13 +43,14 @@ func _ready() -> void:
 func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node: Node) -> void:
 	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
 	self.axis_width = clamp(self.norm_comp_size.x * display_frame_node.size.x, self.min_width, self.max_width)
+	print(plot_frame_node.offset_left, " ", self.axis_width)
 	if (self._axis_id == 0):
-		self.offset_left = plot_frame_node.offset_left - self.axis_width
 		self.offset_right = plot_frame_node.offset_left
+		self.offset_left = plot_frame_node.offset_left - self.axis_width
 	else:
 		self.offset_right = plot_frame_node.offset_left - self._axis_id * self.axis_width
 		self.offset_left = self.offset_right - self.axis_width
-
+	
 	self.log(LOG_INFO, [self._axis_id, ": ", self.offset_left, " ", self.offset_right])
 		
 	self.offset_top = plot_frame_node.offset_top

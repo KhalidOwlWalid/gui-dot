@@ -59,6 +59,9 @@ func setup_axis_limit(min: float, max: float) -> void:
 	axis_limit_changed.emit()
 	queue_redraw()
 
+func get_axis_range() -> Vector2:
+	return Vector2(self.min_val, self.max_val)
+
 func set_min(min: float) -> void:
 	self.min_val = min
 	axis_limit_changed.emit()
