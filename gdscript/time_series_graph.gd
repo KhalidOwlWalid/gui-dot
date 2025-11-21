@@ -26,8 +26,6 @@ var _selected_channels_name: Array
 
 # Components used for building the graph 
 @onready var plot_node: Guidot_Plot = Guidot_Plot.new()
-@onready var primary_y_axis: Guidot_Y_Axis = Guidot_Y_Axis.new()
-@onready var secondary_y_axis: Guidot_Y_Axis = Guidot_Y_Axis.new()
 @onready var t_axis_node: Guidot_T_Axis = Guidot_T_Axis.new()
 
 class AxisHandler:
@@ -61,15 +59,6 @@ class AxisHandler:
 	func get_axis_id() -> Guidot_Y_Axis.AxisID:
 		return self._axis_id
 
-# Holds each axis position based on its respective enumeration
-# e.g. primary axis = 0, secondary axis = 1, etc.
-# Dictionary {<axis_enum: AxisHandler>}
-# @onready var _y_axis_manager: Dictionary = {
-# 	# This always needs to be here, and should not be removed.
-# 	# If removed, it may break the plots
-# 	0: primary_y_axis,
-# 	1: secondary_y_axis,
-# }
 @onready var _y_axis1: AxisHandler = AxisHandler.new()
 @onready var _y_axis2: AxisHandler = AxisHandler.new()
 @onready var _y_axis3: AxisHandler = AxisHandler.new()
@@ -184,14 +173,6 @@ func _init_t_axis_node():
 	self._init_axis(t_axis_node, "t_axis", Guidot_Utils.get_color("gd_black"), t_axis_min, t_axis_max)
 	self.add_child(t_axis_node)
 
-func _init_primary_y_axis():
-	self._init_axis(primary_y_axis, "y_axis", Guidot_Utils.get_color("gd_black"), y_axis_min, y_axis_max)
-	self.add_child(primary_y_axis)
-
-func _create_single_y_axis(axis_id: int):
-	self._init_axis(secondary_y_axis, "secondary y axis", Guidot_Utils.get_color("gd_black"), 0, 1)
-	self.add_child(secondary_y_axis)
-
 func setup_font() -> void:
 	pass
 
@@ -271,14 +252,10 @@ func _ready() -> void:
 	# X/Y axis rectangle anchor offset calculation depends on the plot node anchor offset maths
 	# Hence, plot node needs to be ran first before we run the axis node init
 	self._init_t_axis_node()
-	# self._init_y_axis()
 	
 	self._y_axis1.init_axis(self, Guidot_Y_Axis.AxisID.PRIMARY, Vector2(0, 1), true)
 	self._y_axis2.init_axis(self, Guidot_Y_Axis.AxisID.SECONDARY, Vector2(0, 1), true)
 	self._y_axis3.init_axis(self, Guidot_Y_Axis.AxisID.TERTIARY, Vector2(0, 1), true)
-	# self._init_primary_y_axis()
-	# secondary_y_axis.set_axis_id(1)
-	# self._create_single_y_axis(1)
 
 	self._init_font()
 
@@ -294,7 +271,6 @@ func _ready() -> void:
 	self.get_node("/root").add_child.call_deferred(self._graph_manager)
 
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
-	plot_node.update_y_ticks_properties(primary_y_axis.n_steps, primary_y_axis.ticks_pos)
 
 	##########################
 	#         SIGNAL         #
@@ -302,7 +278,6 @@ func _ready() -> void:
 
 	# Axis node signal
 	t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
-	primary_y_axis.axis_limit_changed.connect(_on_y_axis_changed)
 
 	plot_node.focus_requested.connect(_on_focus_requested)
 	
@@ -334,7 +309,6 @@ func set_window_color(color: Color) -> void:
 
 func _draw():
 	# Data line drawing is handled inside the _draw function of plot_node
-	primary_y_axis.draw_axis()
 	t_axis_node.draw_axis()
 
 func plot_data() -> void:
@@ -387,9 +361,6 @@ func _on_t_axis_changed() -> void:
 
 func _on_y_axis_changed() -> void:
 	self.y_axis_lim_signal += 1
-	y_axis_min = primary_y_axis.min_val
-	y_axis_max = primary_y_axis.max_val
-	plot_node.update_y_ticks_properties(primary_y_axis.n_steps, primary_y_axis.ticks_pos)
 	self.plot_data()
 
 func _input(event: InputEvent) -> void:
