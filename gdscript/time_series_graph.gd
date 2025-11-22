@@ -155,8 +155,9 @@ func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 
 func _setup_plot_node() -> void:
 	plot_node.init_plot(Guidot_Utils.get_color("gd_black"))
+	# TODO (Khalid): At the moment, the plot frame number of y-axis is hardcoded, just to get a PoC working
 	plot_node.setup_plot_frame_offset(Vector2(self.size.x, self.size.y), \
-		Vector2(t_axis_node.norm_comp_size.y, Guidot_Y_Axis.comp_size_norm_fixed), Vector2(self._y_axis_manager.size(), 0))
+		Vector2(t_axis_node.norm_comp_size.y, Guidot_Y_Axis.comp_size_norm_fixed), Vector2(1, 2))
 
 func _init_plot_node():
 	self._setup_plot_node()
@@ -256,9 +257,9 @@ func _ready() -> void:
 	# Hence, plot node needs to be ran first before we run the axis node init
 	self._init_t_axis_node()
 	
-	self._y_axis1.init_axis(self, Guidot_Y_Axis.AxisID.PRIMARY, Guidot_Y_Axis.AxisPosition.LEFT, Vector2(0, 1), true)
-	self._y_axis2.init_axis(self, Guidot_Y_Axis.AxisID.SECONDARY, Guidot_Y_Axis.AxisPosition.LEFT, Vector2(0, 1), true)
-	self._y_axis3.init_axis(self, Guidot_Y_Axis.AxisID.TERTIARY, Guidot_Y_Axis.AxisPosition.LEFT, Vector2(0, 1), true)
+	self._y_axis1.init_axis(self, Guidot_Y_Axis.AxisID.PRIMARY_LEFT, Guidot_Y_Axis.AxisPosition.LEFT, Vector2(0, 1), true)
+	self._y_axis2.init_axis(self, Guidot_Y_Axis.AxisID.PRIMARY_RIGHT, Guidot_Y_Axis.AxisPosition.LEFT, Vector2(0, 1), true)
+	self._y_axis3.init_axis(self, Guidot_Y_Axis.AxisID.SECONDARY_RIGHT, Guidot_Y_Axis.AxisPosition.LEFT, Vector2(0, 1), true)
 
 	self._init_font()
 
