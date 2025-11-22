@@ -33,12 +33,9 @@ class AxisHandler:
 	var _axis_node: Guidot_Y_Axis
 	var _in_use: bool
 
-	func init_axis(parent: Node, axis_id: Guidot_Y_Axis.AxisID, axis_pos: Guidot_Y_Axis.AxisPosition, \
-		min_max: Vector2, in_use: bool = false):
-
+	func init_axis(parent: Node, axis_id: Guidot_Y_Axis.AxisID, min_max: Vector2, in_use: bool = false):
 		self._axis_node = Guidot_Y_Axis.new()
 		self._axis_node.setup_axis_limit(min_max.x, min_max.y)
-		self._axis_node.set_axis_pos(axis_pos)
 		self._axis_id = axis_id
 		self._in_use = in_use
 		parent.add_child(self._axis_node)
@@ -62,14 +59,56 @@ class AxisHandler:
 	func get_axis_id() -> Guidot_Y_Axis.AxisID:
 		return self._axis_id
 
-@onready var _y_axis1: AxisHandler = AxisHandler.new()
-@onready var _y_axis2: AxisHandler = AxisHandler.new()
-@onready var _y_axis3: AxisHandler = AxisHandler.new()
-@onready var _y_axis_manager: Array[AxisHandler] = [
-	self._y_axis1,
-	self._y_axis2,
-	self._y_axis3,
-]
+# For handling multiple y-axis
+class AxisManager:
+
+	var _axis_manager: Dictionary
+	var _parent_node: Node
+	var _tag: String = "Axis Manager"
+
+	# TODO: This should initialize with a default, mandatory primary y-axis
+	# This is to ensure we always have at least a single y-axis to display
+	func init_axis_manager(parent_node: Node) -> void:
+		self._parent_node = parent_node
+		self.add_axis_handler(Guidot_Y_Axis.AxisID.PRIMARY_LEFT)
+
+	# TODO: This function should take care of any conflict between the assigned axis
+	# Each axis should have its own unique AxisID and should not conflict
+	# If conflicts occur, axis manager should handle this smartly
+	func add_axis_handler(ax_id: Guidot_Y_Axis.AxisID) -> void:
+		var ax1: AxisHandler = AxisHandler.new()
+		
+		if (self._axis_manager.has(ax_id)):
+			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, [str(ax_id), " is already available. Please select another AxisID."])
+			return
+
+		ax1.init_axis(self._parent_node, ax_id, Vector2(0, 1), true)
+		self._axis_manager[ax_id] = ax1
+
+	func get_available_axis_handler() -> Array:
+		return self._axis_manager.values()
+
+	func get_axis_handler(ax_id: Guidot_Y_Axis.AxisID) -> AxisHandler:
+		return self._axis_manager[ax_id]
+
+	func has_axis_handler(ax_id: Guidot_Y_Axis.AxisID) -> bool:
+		return self._axis_manager.has(ax_id)
+
+	func delete_axis_handler(ax_id: Guidot_Y_Axis.AxisID) -> bool:
+		return true
+
+	# This function returns the number of axis that is on the left and right side of the graph
+	# It will return Vector2(n_left_axis, n_right_axis)
+	func get_axis_count() -> Vector2:
+		var count: Vector2
+		for i in self._axis_manager.keys():
+			if (i < 0):
+				count.x += 1
+			else:
+				count.y += 1
+		return count
+
+@onready var _y_axis_manager: AxisManager = AxisManager.new()
 
 # Toggle switch
 @onready var _toggle_nerd_stats: bool = false
@@ -157,7 +196,7 @@ func _setup_plot_node() -> void:
 	plot_node.init_plot(Guidot_Utils.get_color("gd_black"))
 	# TODO (Khalid): At the moment, the plot frame number of y-axis is hardcoded, just to get a PoC working
 	plot_node.setup_plot_frame_offset(Vector2(self.size.x, self.size.y), \
-		Vector2(t_axis_node.norm_comp_size.y, Guidot_Y_Axis.comp_size_norm_fixed), Vector2(1, 2))
+		Vector2(t_axis_node.norm_comp_size.y, Guidot_Y_Axis.comp_size_norm_fixed), self._y_axis_manager.get_axis_count())
 
 func _init_plot_node():
 	self._setup_plot_node()
@@ -256,11 +295,10 @@ func _ready() -> void:
 	# X/Y axis rectangle anchor offset calculation depends on the plot node anchor offset maths
 	# Hence, plot node needs to be ran first before we run the axis node init
 	self._init_t_axis_node()
-	
-	self._y_axis1.init_axis(self, Guidot_Y_Axis.AxisID.PRIMARY_LEFT, Guidot_Y_Axis.AxisPosition.LEFT, Vector2(0, 1), true)
-	self._y_axis2.init_axis(self, Guidot_Y_Axis.AxisID.PRIMARY_RIGHT, Guidot_Y_Axis.AxisPosition.LEFT, Vector2(0, 1), true)
-	self._y_axis3.init_axis(self, Guidot_Y_Axis.AxisID.SECONDARY_RIGHT, Guidot_Y_Axis.AxisPosition.LEFT, Vector2(0, 1), true)
 
+	self._y_axis_manager.init_axis_manager(self)
+	self._y_axis_manager.add_axis_handler(Guidot_Y_Axis.AxisID.PRIMARY_RIGHT)
+	
 	self._init_font()
 
 	var setting_button: Button = Button.new()
@@ -334,7 +372,7 @@ func _on_display_frame_resized() -> void:
 	# for axis_enum in self._y_axis_manager.keys():
 	# 	var curr_y_axis: Guidot_Y_Axis = self._y_axis_manager[axis_enum]
 	# 	self._setup_axis(curr_y_axis, axis_enum, "y_axis", curr_y_axis.color, curr_y_axis.min_val, curr_y_axis.max_val)
-	for axis_handler in self._y_axis_manager:
+	for axis_handler in self._y_axis_manager.get_available_axis_handler():
 		self._setup_axis(axis_handler.get_axis_node(), axis_handler.get_axis_id(), "y_axis1", Guidot_Utils.get_color("gd_black"), 0, 1) 
 
 	self._setup_axis(t_axis_node, 0, "t_axis", t_axis_node.color, t_axis_min, t_axis_max)

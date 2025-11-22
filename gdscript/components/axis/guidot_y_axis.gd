@@ -29,8 +29,6 @@ enum AxisID {
 # Axis ID, up to _max_axis_num
 @onready var _axis_id: int = 0
 
-@onready var _axis_pos: AxisPosition = AxisPosition.LEFT
-
 func _ready() -> void:
 	self.line_color = Guidot_Utils.get_color("white")
 	self.last_line_color = self.line_color
@@ -49,9 +47,6 @@ func _ready() -> void:
 
 func set_axis_id(ax_id: int) -> void:
 	self._axis_id = ax_id
-
-func set_axis_pos(axis_pos: AxisPosition) -> void:
-	self._axis_pos = axis_pos
 	
 func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node: Node) -> void:
 	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
