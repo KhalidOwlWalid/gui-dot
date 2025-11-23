@@ -65,15 +65,6 @@ func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node:
 	# Invalid ID has been passed (e.g. a value of 0 is invalid)
 	else:
 		self.log(LOG_ERROR, ["Invalid ID has been passed to ", self.name, "[", self.get_instance_id(), "] with axis ID of ", self._axis_id])
-
-	# if (self._axis_id == 0):
-	# 	self.offset_right = plot_frame_node.offset_left
-	# 	self.offset_left = plot_frame_node.offset_left - self.axis_width
-	# else:
-	# 	self.offset_right = plot_frame_node.offset_left - self._axis_id * self.axis_width
-	# 	self.offset_left = self.offset_right - self.axis_width
-	
-	self.log(LOG_INFO, [self._axis_id, ": ", self.offset_left, " ", self.offset_right])
 		
 	self.offset_top = plot_frame_node.offset_top
 	self.offset_bottom = plot_frame_node.offset_bottom

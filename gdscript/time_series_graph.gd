@@ -75,31 +75,55 @@ class AxisManager:
 	# TODO: This function should take care of any conflict between the assigned axis
 	# Each axis should have its own unique AxisID and should not conflict
 	# If conflicts occur, axis manager should handle this smartly
-	func add_axis_handler(ax_id: Guidot_Y_Axis.AxisID) -> void:
+	func add_axis_handler(ax_id: Guidot_Y_Axis.AxisID) -> bool:
+		
+		if (ax_id not in Guidot_Y_Axis.AxisID.values()):
+			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Invalid Axis ID (", ax_id, ") has been passed."])
+			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Please choose from the following options: ", Guidot_Y_Axis.AxisID.keys()])
+			return false
+
 		var ax1: AxisHandler = AxisHandler.new()
 		
 		# TODO: Check if an invalid ID has been passed
 		if (self.has_axis_handler(ax_id)):
 			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, [ax_id, " is already available. Please select another AxisID."])
-			return
+			return false
 
 		if (not self._axis_manager.is_empty()):
+			# Isolate left and right axis for ease of comparison later
 			var all_left_axis: Array = self._axis_manager.keys().filter(func(n): return n < 0)
 			var all_right_axis: Array = self._axis_manager.keys().filter(func(n): return n > 0)
 			var new_ax_id: Guidot_Y_Axis.AxisID
-			if (not all_left_axis.is_empty()):
-				if (ax_id < 0 and ax_id < all_left_axis.min()):
+			
+			# Since the y-axis drawing offset is handled by figuring out its offset based on its width and axis position
+			# it is important that the axis is in incremental order such that secondary axis needs to exist if we want to create the
+			# third axis
+			# Refer to the function: calculate_offset_from_plot_frame() to see how the axis offsets are handled
+			if (ax_id < 0 and not all_left_axis.is_empty()):
+				if (abs(int(ax_id - all_left_axis.min())) > 1):
 					new_ax_id = all_left_axis.min() - 1
 					Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_id, " to ", new_ax_id])
 					ax_id = new_ax_id
-			if (not all_right_axis.is_empty()):
-				if (ax_id > 0 and ax_id > all_right_axis.max()):
+			# If there are no axis on the left side, then force it to be primary left
+			elif (ax_id < 0 and all_left_axis.is_empty()):
+				new_ax_id = Guidot_Y_Axis.AxisID.PRIMARY_LEFT
+				Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_id, " to ", new_ax_id])
+				ax_id = new_ax_id
+
+			if (ax_id > 0 and not all_right_axis.is_empty()):
+				if (abs(int(ax_id - all_right_axis.max())) > 1):
 					new_ax_id = all_right_axis.max() + 1
 					Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_id, " to ", new_ax_id])
 					ax_id = new_ax_id
+			# If there are no axis on the right side, then force it to be primary right
+			elif (ax_id > 0 and all_right_axis.is_empty()):
+				new_ax_id = Guidot_Y_Axis.AxisID.PRIMARY_RIGHT
+				Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_id, " to ", new_ax_id])
+				ax_id = new_ax_id
 		
 		ax1.init_axis(self._parent_node, ax_id, Vector2(0, 1), true)
 		self._axis_manager[ax_id] = ax1
+		return true
 
 	func get_available_axis_handler() -> Array:
 		return self._axis_manager.values()
@@ -385,9 +409,6 @@ func plot_data() -> void:
 func _on_display_frame_resized() -> void:
 
 	self._setup_plot_node()
-	# for axis_enum in self._y_axis_manager.keys():
-	# 	var curr_y_axis: Guidot_Y_Axis = self._y_axis_manager[axis_enum]
-	# 	self._setup_axis(curr_y_axis, axis_enum, "y_axis", curr_y_axis.color, curr_y_axis.min_val, curr_y_axis.max_val)
 	for axis_handler in self._y_axis_manager.get_available_axis_handler():
 		self._setup_axis(axis_handler.get_axis_node(), axis_handler.get_axis_id(), "y_axis1", Guidot_Utils.get_color("gd_black"), 0, 1) 
 
