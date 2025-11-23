@@ -29,6 +29,7 @@ enum AxisID {
 # Axis ID, up to _max_axis_num
 @onready var _axis_id: int = 0
 
+
 func _ready() -> void:
 	self.line_color = Guidot_Utils.get_color("white")
 	self.last_line_color = self.line_color

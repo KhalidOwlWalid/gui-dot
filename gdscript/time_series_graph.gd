@@ -78,10 +78,26 @@ class AxisManager:
 	func add_axis_handler(ax_id: Guidot_Y_Axis.AxisID) -> void:
 		var ax1: AxisHandler = AxisHandler.new()
 		
-		if (self._axis_manager.has(ax_id)):
-			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, [str(ax_id), " is already available. Please select another AxisID."])
+		# TODO: Check if an invalid ID has been passed
+		if (self.has_axis_handler(ax_id)):
+			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, [ax_id, " is already available. Please select another AxisID."])
 			return
 
+		if (not self._axis_manager.is_empty()):
+			var all_left_axis: Array = self._axis_manager.keys().filter(func(n): return n < 0)
+			var all_right_axis: Array = self._axis_manager.keys().filter(func(n): return n > 0)
+			var new_ax_id: Guidot_Y_Axis.AxisID
+			if (not all_left_axis.is_empty()):
+				if (ax_id < 0 and ax_id < all_left_axis.min()):
+					new_ax_id = all_left_axis.min() - 1
+					Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_id, " to ", new_ax_id])
+					ax_id = new_ax_id
+			if (not all_right_axis.is_empty()):
+				if (ax_id > 0 and ax_id > all_right_axis.max()):
+					new_ax_id = all_right_axis.max() + 1
+					Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_id, " to ", new_ax_id])
+					ax_id = new_ax_id
+		
 		ax1.init_axis(self._parent_node, ax_id, Vector2(0, 1), true)
 		self._axis_manager[ax_id] = ax1
 
@@ -108,6 +124,7 @@ class AxisManager:
 				count.y += 1
 		return count
 
+# Will handle the creation of all of the y-axis
 @onready var _y_axis_manager: AxisManager = AxisManager.new()
 
 # Toggle switch
@@ -297,7 +314,6 @@ func _ready() -> void:
 	self._init_t_axis_node()
 
 	self._y_axis_manager.init_axis_manager(self)
-	self._y_axis_manager.add_axis_handler(Guidot_Y_Axis.AxisID.PRIMARY_RIGHT)
 	
 	self._init_font()
 
