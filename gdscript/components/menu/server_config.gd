@@ -52,6 +52,30 @@ func get_all_data_options() -> Array[String]:
 func _color_selected_callback(idx: int, gd_data_node: Guidot_Data) -> void:
 	gd_data_node.set_line_color_str(color_selection[idx])
 
+func _axis_pos_selected_callback(idx: int, gd_data_node: Guidot_Data, option_node: OptionButton) -> void:
+	self.log(LOG_DEBUG, ["Axis pos selected: ", idx, " , option button: ", option_node.get_item_text(idx)])
+
+	var axis_pos_str: String = option_node.get_item_text(idx)
+	var axis_pos_enum: Guidot_Y_Axis.AxisPosition
+
+	if (axis_pos_str == "left"):
+		axis_pos_enum = Guidot_Y_Axis.AxisPosition.LEFT
+	elif (axis_pos_str == "right"):
+		axis_pos_enum = Guidot_Y_Axis.AxisPosition.RIGHT
+	else:
+		self.log(LOG_WARNING, ["Invalid Axis Position selection. There is only: ", Guidot_Y_Axis.AxisPosition])
+	gd_data_node.set_axis_pos(axis_pos_enum)
+
+func _axis_number_selected_callback(idx: int, gd_data_node: Guidot_Data, option_node: OptionButton) -> void:
+	self.log(LOG_DEBUG, ["Axis number selected: ", idx, " , option button: ", option_node.get_item_text(idx)])
+	gd_data_node.set_axis_number(int(option_node.get_item_text(idx)))
+
+func _axis_id_selected_callback(idx: int, gd_data_node: Guidot_Data, option_node: OptionButton) -> void:
+	var axis_id_str: String = option_node.get_item_text(idx)
+	gd_data_node.set_axis_id(Guidot_Y_Axis.AxisID[axis_id_str])
+	self.log(LOG_INFO, ["Axis ID of enum ", axis_id_str, "(", Guidot_Y_Axis.AxisID[axis_id_str], \
+		") has been selected"])
+
 # This function creates the row to allow the user to configure the properties
 # of their data
 func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -> HBoxContainer:
@@ -64,6 +88,7 @@ func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -
 	var pos_dropdown: OptionButton = OptionButton.new()
 	# Color data selection for the data
 	var color_dropdown: OptionButton = OptionButton.new()
+	var axis_id_dropdown: OptionButton = OptionButton.new()
 
 	var label_norm_size: float = 0.3
 	var n_dropdown: float = 3
@@ -73,14 +98,22 @@ func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -
 	chan_label.text = chan_name
 	chan_label.custom_minimum_size = Vector2(label_norm_size * self.size.x, 20)
 
-	for i in range(Guidot_Y_Axis._max_axis_num):
-		axis_dropdown.add_item(str(i))
-	axis_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
-	axis_dropdown.get_popup().max_size.y = 100
+	# for i in range(Guidot_Y_Axis._max_axis_num):
+	# 	axis_dropdown.add_item(str(i + 1))
+	# axis_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
+	# axis_dropdown.get_popup().max_size.y = 100
+	# axis_dropdown.item_selected.connect(self._axis_number_selected_callback.bind(gd_data_node, axis_dropdown))
 
-	for i in range(axis_pos_selection.size()):
-		pos_dropdown.add_item(str(axis_pos_selection[i]).to_lower())
-	pos_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
+	# for i in range(axis_pos_selection.size()):
+	# 	pos_dropdown.add_item(str(axis_pos_selection[i]).to_lower())
+	# pos_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
+	# pos_dropdown.item_selected.connect(self._axis_pos_selected_callback.bind(gd_data_node, pos_dropdown))
+
+	for id in Guidot_Y_Axis.AxisID.keys():
+		axis_id_dropdown.add_item(id)
+	axis_id_dropdown.get_popup().max_size.y = 100
+	axis_id_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
+	axis_id_dropdown.item_selected.connect(self._axis_id_selected_callback.bind(gd_data_node, axis_id_dropdown))
 
 	for i in range(color_selection.size()):
 		color_dropdown.add_item(color_selection[i])
@@ -92,8 +125,9 @@ func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -
 	color_dropdown.item_selected.connect(self._color_selected_callback.bind(gd_data_node))
 
 	chan_config_hbox.add_child(chan_label)
-	chan_config_hbox.add_child(axis_dropdown)
-	chan_config_hbox.add_child(pos_dropdown)
+	# chan_config_hbox.add_child(axis_dropdown)
+	# chan_config_hbox.add_child(pos_dropdown)
+	chan_config_hbox.add_child(axis_id_dropdown)
 	chan_config_hbox.add_child(color_dropdown)
 	return chan_config_hbox
 
@@ -131,6 +165,10 @@ func get_selected_server() -> Guidot_Data_Server:
 func _ready() -> void:
 	super._ready()
 	self.show_panel()
+	
+	var new_tag_name: String = "Server_Config[" + str(self.get_instance_id()) + "]"
+	self.name = new_tag_name
+	self.set_component_tag_name(self.name)
 
 	var vbox: VBoxContainer = VBoxContainer.new()
 	self.add_child_to_container(vbox)

@@ -53,7 +53,7 @@ func setup_axis_node(name: String, color: Color) -> void:
 	self.color = color
 	self.init_event_handler()
 
-func setup_axis_limit(min: float, max: float) -> void:
+func setup_axis_range(min: float, max: float) -> void:
 	self.min_val = min
 	self.max_val = max
 	axis_limit_changed.emit()

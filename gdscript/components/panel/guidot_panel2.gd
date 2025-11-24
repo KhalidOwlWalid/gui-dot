@@ -39,6 +39,10 @@ func _ready() -> void:
 	add_theme_stylebox_override("panel", _outline_stylebox)
 	self._inner_container.add_theme_stylebox_override("panel", _inner_container_stylebox)
 
+# Used for logging tag
+func set_component_tag_name(new_tag: String) -> void:
+	self._component_tag = new_tag
+
 func set_margin_size(val: int) -> void:
 	_outline_stylebox.content_margin_left = val
 	_outline_stylebox.content_margin_right = val

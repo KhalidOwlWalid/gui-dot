@@ -2,10 +2,13 @@ class_name Guidot_Y_Axis
 extends Guidot_Axis
 
 const comp_size_norm_fixed: float = 0.05
+# This needs to be updated in parallel to the number of AxisID
+# Left and right is counted as 1
+# e.g. Primary Left and Right is considered as 1
 const _max_axis_num: int = 6
 
 enum AxisPosition {
-	LEFT = 0,
+	LEFT = -1,
 	RIGHT = 1,
 }
 
@@ -25,6 +28,9 @@ enum AxisID {
 	QUINARY_RIGHT    = 5,
 	SENARY_RIGHT     = 6,
 }
+
+# static func get_axis_id_enum_from_value(value: int) -> Guidot_Y_Axis.AxisID:
+# 	pass
 
 # Axis ID, up to _max_axis_num
 @onready var _axis_id: int = 0

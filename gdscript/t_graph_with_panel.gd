@@ -367,14 +367,13 @@ func _process(delta: float) -> void:
 		self._current_ui_mode = UI_Mode.DATA_DISPLAY
 
 	if (self._is_holding_left_click):
-		self.log(LOG_DEBUG, ["I am holding my left click still"])
+		# self.log(LOG_DEBUG, ["I am holding my left click still"])
 		pass
 	else:
-		self.log(LOG_DEBUG, ["I have released my left click"])
+		# self.log(LOG_DEBUG, ["I have released my left click"])
 		pass
 
-	self.log(LOG_DEBUG, ["Mouse pos local: ", self.get_local_mouse_position()])
-
+	# self.log(LOG_DEBUG, ["Mouse pos local: ", self.get_local_mouse_position()])
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
 	Guidot_Log.gd_log(log_level, "MASTER_PANEL", msg)

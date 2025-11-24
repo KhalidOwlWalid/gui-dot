@@ -113,7 +113,7 @@ func _ready() -> void:
 			curr_row += 1
 
 func _process(delta: float) -> void:
-	self.log(LOG_DEBUG, [self._guidot_debug_info])
+	# self.log(LOG_DEBUG, [self._guidot_debug_info])
 
 	var hbox_array: Array[Node] = self._debug_panel_vbox_cont.get_children()
 

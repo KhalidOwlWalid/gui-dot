@@ -27,17 +27,19 @@ var _selected_channels_name: Array
 # Components used for building the graph 
 @onready var plot_node: Guidot_Plot = Guidot_Plot.new()
 @onready var t_axis_node: Guidot_T_Axis = Guidot_T_Axis.new()
+@onready var _setting_button: Button = Button.new()
 
 class AxisHandler:
 	var _axis_id: Guidot_Y_Axis.AxisID
 	var _axis_node: Guidot_Y_Axis
 	var _in_use: bool
 
-	func init_axis(parent: Node, axis_id: Guidot_Y_Axis.AxisID, min_max: Vector2, in_use: bool = false):
+	func init_axis(parent: Node, axis_id: Guidot_Y_Axis.AxisID, axis_range: Vector2, in_use: bool = false):
 		self._axis_node = Guidot_Y_Axis.new()
-		self._axis_node.setup_axis_limit(min_max.x, min_max.y)
+		self._axis_node.setup_axis_range(axis_range.x, axis_range.y)
 		self._axis_id = axis_id
 		self._in_use = in_use
+		self._axis_node.axis_limit_changed.connect(self._on_axis_changed)
 		parent.add_child(self._axis_node)
 
 	func use_axis(flag: bool) -> void:
@@ -46,6 +48,9 @@ class AxisHandler:
 	func set_axis_id(id: Guidot_Y_Axis.AxisID) -> void:
 		# TODO (Khalid): Check if the y-axis ID is valid or not
 		self._axis_id = id
+
+	func set_axis_range(new_range: Vector2) -> void:
+		self._axis_node.setup_axis_range(new_range.x, new_range.y)
 
 	func get_axis_range() -> Vector2:
 		return self._axis_node.get_axis_range()
@@ -58,6 +63,9 @@ class AxisHandler:
 
 	func get_axis_id() -> Guidot_Y_Axis.AxisID:
 		return self._axis_id
+
+	func _on_axis_changed() -> void:
+		pass
 
 # For handling multiple y-axis
 class AxisManager:
@@ -110,7 +118,7 @@ class AxisManager:
 				Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_id, " to ", new_ax_id])
 				ax_id = new_ax_id
 
-			if (ax_id > 0 and not all_right_axis.is_empty()):
+			elif (ax_id > 0 and not all_right_axis.is_empty()):
 				if (abs(int(ax_id - all_right_axis.max())) > 1):
 					new_ax_id = all_right_axis.max() + 1
 					Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_id, " to ", new_ax_id])
@@ -128,7 +136,11 @@ class AxisManager:
 	func get_available_axis_handler() -> Array:
 		return self._axis_manager.values()
 
+	# Returns null if the requested axis handler does not exist	
 	func get_axis_handler(ax_id: Guidot_Y_Axis.AxisID) -> AxisHandler:
+		# TODO: Ensure the axis exist
+		if (not self.has_axis_handler(ax_id)):
+			return null
 		return self._axis_manager[ax_id]
 
 	func has_axis_handler(ax_id: Guidot_Y_Axis.AxisID) -> bool:
@@ -243,18 +255,18 @@ func _init_plot_node():
 	self._setup_plot_node()
 	self.add_child(plot_node)
 
-func _setup_axis(axis_node: Guidot_Axis, axis_id: int, axis_name: String, axis_color: Color, axis_min: float, axis_max: float) -> void:
-	self._init_axis(axis_node, axis_name, axis_color, axis_min, axis_max)
+func _setup_axis(axis_node: Guidot_Axis, axis_id: int, axis_name: String, axis_color: Color, axis_range: Vector2) -> void:
+	self._init_axis(axis_node, axis_name, axis_color, axis_range)
 	axis_node.set_axis_id(axis_id)
-	axis_node.setup_axis_limit(axis_min, axis_max)
+	axis_node.setup_axis_range(axis_range.x, axis_range.y)
 	axis_node.calculate_offset_from_plot_frame(self, plot_node)
 
-func _init_axis(axis_node: Guidot_Axis, axis_name: String, axis_color: Color, axis_min: float, axis_max: float) -> void:
+func _init_axis(axis_node: Guidot_Axis, axis_name: String, axis_color: Color, axis_range: Vector2) -> void:
 	axis_node.setup_axis_node(axis_name, axis_color)
-	axis_node.setup_axis_limit(axis_min, axis_max)
+	axis_node.setup_axis_range(axis_range.x, axis_range.y)
 
 func _init_t_axis_node():
-	self._init_axis(t_axis_node, "t_axis", Guidot_Utils.get_color("gd_black"), t_axis_min, t_axis_max)
+	self._init_axis(t_axis_node, "t_axis", Guidot_Utils.get_color("gd_black"), Vector2(t_axis_min, t_axis_max))
 	self.add_child(t_axis_node)
 
 func setup_font() -> void:
@@ -338,15 +350,15 @@ func _ready() -> void:
 	self._init_t_axis_node()
 
 	self._y_axis_manager.init_axis_manager(self)
+	self._y_axis_manager.add_axis_handler(Guidot_Y_Axis.AxisID.SECONDARY_LEFT)
 	
 	self._init_font()
 
-	var setting_button: Button = Button.new()
-	setting_button.size = Vector2(30, 30)
-	setting_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
-	setting_button.position = Vector2(self.size.x - setting_button.size.x, 0)
-	setting_button.pressed.connect(self._on_setting_pressed)
-	self.add_child(setting_button)
+	self._setting_button.size = Vector2(30, 30)
+	self._setting_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
+	self._setting_button.position = Vector2(self.size.x - self._setting_button.size.x, 0)
+	self._setting_button.pressed.connect(self._on_setting_pressed)
+	self.add_child(self._setting_button)
 
 	# call_deferred is required as the parent is actually busy handling the child node (self, in particular)
 	# will need to be deferred
@@ -393,7 +405,7 @@ func _draw():
 	# Data line drawing is handled inside the _draw function of plot_node
 	t_axis_node.draw_axis()
 
-func plot_data() -> void:
+func plot_realtime_data() -> void:
 	
 	if (self._guidot_server != null):
 
@@ -404,15 +416,18 @@ func plot_data() -> void:
 			var channel_data_points: PackedVector2Array = self._guidot_server.query_data_with_channel_name(channel_name)
 			selected_gd_data[gd_data] = channel_data_points
 
-		self.plot_node.plot_multiple_data(selected_gd_data, Vector2(t_axis_min, t_axis_max))
+		self.plot_node.plot_multiple_data(selected_gd_data, self._y_axis_manager, Vector2(t_axis_min, t_axis_max))
 
 func _on_display_frame_resized() -> void:
 
 	self._setup_plot_node()
 	for axis_handler in self._y_axis_manager.get_available_axis_handler():
-		self._setup_axis(axis_handler.get_axis_node(), axis_handler.get_axis_id(), "y_axis1", Guidot_Utils.get_color("gd_black"), 0, 1) 
-
-	self._setup_axis(t_axis_node, 0, "t_axis", t_axis_node.color, t_axis_min, t_axis_max)
+		self._setup_axis(axis_handler.get_axis_node(), axis_handler.get_axis_id(), "y_axis1", Guidot_Utils.get_color("gd_black"), \
+			axis_handler.get_axis_range()) 
+	self._setup_axis(t_axis_node, 0, "t_axis", t_axis_node.color, Vector2(t_axis_min, t_axis_max))
+	
+	# Ensure the settings button are always at the top right during resizing
+	self._setting_button.position = Vector2(self.size.x - self._setting_button.size.x, 0)
 
 	self.log(LOG_DEBUG, ["Display frame resized"])
 
@@ -424,7 +439,7 @@ func _on_data_received() -> void:
 		self.data_received_signal += 1
 		t_axis_min = t_axis_node.min_val
 		t_axis_max = t_axis_node.max_val
-		self.plot_data()
+		self.plot_realtime_data()
 		queue_redraw()
 
 func _on_focus_requested() -> void:
@@ -436,11 +451,11 @@ func _on_t_axis_changed() -> void:
 	t_axis_min = t_axis_node.min_val
 	t_axis_max = t_axis_node.max_val
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
-	self.plot_data()
+	self.plot_realtime_data()
 
 func _on_y_axis_changed() -> void:
 	self.y_axis_lim_signal += 1
-	self.plot_data()
+	self.plot_realtime_data()
 
 func _input(event: InputEvent) -> void:
 
@@ -475,7 +490,7 @@ func _input(event: InputEvent) -> void:
 
 # Please note that if physics_process is used here, this will caused a lot of lag as the physics process
 # will be consistent at the 60 Hz frame rate (or loop rate configured through the physics setting)
-# If the physics_process is used here, the setup_axis_limit() function in the realtime mode
+# If the physics_process is used here, the setup_axis_range() function in the realtime mode
 # gets called consistently even when the fps is dropping. This causes the process function to get
 # overloaded as it could not keep up with the constant update
 func _process(delta: float) -> void:
@@ -510,7 +525,7 @@ func _process(delta: float) -> void:
 							# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
 							# simply an increasing integer, or absolute or relative time etc.
 							var curr_s: float = self._guidot_clock_node.get_current_time_s()
-							t_axis_node.setup_axis_limit(curr_s- t_axis_node._sliding_window_s, curr_s)
+							t_axis_node.setup_axis_range(curr_s- t_axis_node._sliding_window_s, curr_s)
 
 				self.fps_last_update_ms = curr_ms
 
