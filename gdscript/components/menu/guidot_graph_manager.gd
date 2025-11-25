@@ -16,6 +16,9 @@ var selected_server: String
 
 @onready var _server_config_manager: Array[Guidot_Server_Config] = []
 
+# The graph node that the graph manager is responsible for
+var _y_axis_manager_ref: Guidot_T_Series_Graph.AxisManager
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	pass
@@ -64,6 +67,7 @@ func _on_add_server_pressed() -> void:
 	var gd_server_conf1 = Guidot_Server_Config.new()
 	var gd_sub_manager1 = Guidot_Data_Sub_Manager.new()
 	gd_server_conf1.register_data_sub_manager(gd_sub_manager1)
+	gd_server_conf1.register_y_axis_manager(self._y_axis_manager_ref)
 	self.add_child(gd_sub_manager1)
 	self.add_config_rows(self._server_config_tab, [gd_server_conf1])
 	self._server_config_manager.append(gd_server_conf1)
@@ -71,6 +75,9 @@ func _on_add_server_pressed() -> void:
 func _on_apply_changes_to_graph() -> void:
 	changes_applied.emit(self._server_config_manager)
 	pass
+
+func register_axis_manager(axis_manager: Guidot_T_Series_Graph.AxisManager) -> void:
+	self._y_axis_manager_ref = axis_manager
 
 func _ready() -> void:
 

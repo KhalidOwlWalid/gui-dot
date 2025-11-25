@@ -15,6 +15,8 @@ var curr_server_node: Guidot_Data_Server
 @onready var axis_pos_selection: Array = Guidot_Y_Axis.AxisPosition.keys()
 @onready var color_selection: Array = Guidot_Utils.color_dict.keys()
 
+var _y_axis_manager_ref: Guidot_T_Series_Graph.AxisManager
+
 func _get_server_dropdown() -> OptionButton:
 	var hbox_server_sel: HBoxContainer = self.server_selection.get_child(0)
 	var server_dropdown: OptionButton = hbox_server_sel.get_child(1)
@@ -52,29 +54,27 @@ func get_all_data_options() -> Array[String]:
 func _color_selected_callback(idx: int, gd_data_node: Guidot_Data) -> void:
 	gd_data_node.set_line_color_str(color_selection[idx])
 
-func _axis_pos_selected_callback(idx: int, gd_data_node: Guidot_Data, option_node: OptionButton) -> void:
-	self.log(LOG_DEBUG, ["Axis pos selected: ", idx, " , option button: ", option_node.get_item_text(idx)])
-
-	var axis_pos_str: String = option_node.get_item_text(idx)
-	var axis_pos_enum: Guidot_Y_Axis.AxisPosition
-
-	if (axis_pos_str == "left"):
-		axis_pos_enum = Guidot_Y_Axis.AxisPosition.LEFT
-	elif (axis_pos_str == "right"):
-		axis_pos_enum = Guidot_Y_Axis.AxisPosition.RIGHT
-	else:
-		self.log(LOG_WARNING, ["Invalid Axis Position selection. There is only: ", Guidot_Y_Axis.AxisPosition])
-	gd_data_node.set_axis_pos(axis_pos_enum)
-
-func _axis_number_selected_callback(idx: int, gd_data_node: Guidot_Data, option_node: OptionButton) -> void:
-	self.log(LOG_DEBUG, ["Axis number selected: ", idx, " , option button: ", option_node.get_item_text(idx)])
-	gd_data_node.set_axis_number(int(option_node.get_item_text(idx)))
-
 func _axis_id_selected_callback(idx: int, gd_data_node: Guidot_Data, option_node: OptionButton) -> void:
 	var axis_id_str: String = option_node.get_item_text(idx)
-	gd_data_node.set_axis_id(Guidot_Y_Axis.AxisID[axis_id_str])
-	self.log(LOG_INFO, ["Axis ID of enum ", axis_id_str, "(", Guidot_Y_Axis.AxisID[axis_id_str], \
-		") has been selected"])
+	var axis_id_enum: Guidot_Y_Axis.AxisID = Guidot_Y_Axis.AxisID[axis_id_str]
+
+	if axis_id_enum in (self._y_axis_manager_ref.get_axis_manager_dict().keys()):
+		gd_data_node.set_axis_id(axis_id_enum)
+		self.log(LOG_DEBUG, ["Axis ID of enum ", axis_id_str, "(", Guidot_Y_Axis.AxisID[axis_id_str], \
+			") has been selected"])
+	else:
+		axis_id_enum = self._y_axis_manager_ref.add_axis_handler(axis_id_enum)
+
+		# Fails to add axis ID due to invalid ID being passed
+		if (axis_id_enum == 0):
+			pass
+
+		var axis_id_list: Array = Guidot_Y_Axis.AxisID.values()
+		option_node.select(axis_id_list.find(axis_id_enum))
+		gd_data_node.set_axis_id(axis_id_enum)
+
+func register_y_axis_manager(axis_manager_ref: Guidot_T_Series_Graph.AxisManager) -> void:
+	self._y_axis_manager_ref = axis_manager_ref
 
 # This function creates the row to allow the user to configure the properties
 # of their data
@@ -82,32 +82,15 @@ func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -
 	var chan_config_hbox: HBoxContainer = HBoxContainer.new()
 	var chan_label: Label = Label.new()
 
-	# Allows the selection for which axis do we want to plot the data to
-	var axis_dropdown: OptionButton = OptionButton.new()
-	# Where do we want to place the y axis node, left or right?
-	var pos_dropdown: OptionButton = OptionButton.new()
 	# Color data selection for the data
 	var color_dropdown: OptionButton = OptionButton.new()
 	var axis_id_dropdown: OptionButton = OptionButton.new()
 
 	var label_norm_size: float = 0.3
 	var n_dropdown: float = 3
-	# The last substration here is 
-	# var dropdown_norm_size: float = ((1 - label_norm_size)/n_dropdown)
 	var dropdown_norm_size: float = 0.1
 	chan_label.text = chan_name
 	chan_label.custom_minimum_size = Vector2(label_norm_size * self.size.x, 20)
-
-	# for i in range(Guidot_Y_Axis._max_axis_num):
-	# 	axis_dropdown.add_item(str(i + 1))
-	# axis_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
-	# axis_dropdown.get_popup().max_size.y = 100
-	# axis_dropdown.item_selected.connect(self._axis_number_selected_callback.bind(gd_data_node, axis_dropdown))
-
-	# for i in range(axis_pos_selection.size()):
-	# 	pos_dropdown.add_item(str(axis_pos_selection[i]).to_lower())
-	# pos_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
-	# pos_dropdown.item_selected.connect(self._axis_pos_selected_callback.bind(gd_data_node, pos_dropdown))
 
 	for id in Guidot_Y_Axis.AxisID.keys():
 		axis_id_dropdown.add_item(id)
@@ -125,8 +108,6 @@ func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -
 	color_dropdown.item_selected.connect(self._color_selected_callback.bind(gd_data_node))
 
 	chan_config_hbox.add_child(chan_label)
-	# chan_config_hbox.add_child(axis_dropdown)
-	# chan_config_hbox.add_child(pos_dropdown)
 	chan_config_hbox.add_child(axis_id_dropdown)
 	chan_config_hbox.add_child(color_dropdown)
 	return chan_config_hbox

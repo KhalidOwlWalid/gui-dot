@@ -83,19 +83,20 @@ class AxisManager:
 	# TODO: This function should take care of any conflict between the assigned axis
 	# Each axis should have its own unique AxisID and should not conflict
 	# If conflicts occur, axis manager should handle this smartly
-	func add_axis_handler(ax_id: Guidot_Y_Axis.AxisID) -> bool:
+	# Returns 0 if invalid ID has been chosen
+	func add_axis_handler(ax_id: Guidot_Y_Axis.AxisID) -> Guidot_Y_Axis.AxisID:
 		
 		if (ax_id not in Guidot_Y_Axis.AxisID.values()):
 			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Invalid Axis ID (", ax_id, ") has been passed."])
 			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Please choose from the following options: ", Guidot_Y_Axis.AxisID.keys()])
-			return false
+			return 0
 
 		var ax1: AxisHandler = AxisHandler.new()
 		
 		# TODO: Check if an invalid ID has been passed
 		if (self.has_axis_handler(ax_id)):
 			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, [ax_id, " is already available. Please select another AxisID."])
-			return false
+			return 0
 
 		if (not self._axis_manager.is_empty()):
 			# Isolate left and right axis for ease of comparison later
@@ -129,10 +130,14 @@ class AxisManager:
 				Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_id, " to ", new_ax_id])
 				ax_id = new_ax_id
 		
-		ax1.init_axis(self._parent_node, ax_id, Vector2(0, 1), true)
+		ax1.init_axis(self._parent_node, ax_id, Vector2(-1, 1), true)
 		self._axis_manager[ax_id] = ax1
-		return true
+		return ax_id
 
+	func get_axis_manager_dict() -> Dictionary:
+		return self._axis_manager
+
+	# The keys holds the axis ID which can easily help us identify which axis already exist
 	func get_available_axis_handler() -> Array:
 		return self._axis_manager.values()
 
@@ -337,6 +342,11 @@ func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 			else:
 				self._selected_channels_name = server_config_array[0].get_selected_data()
 
+	self.resized.emit()
+
+func get_y_axis_manager() -> AxisManager:
+	return self._y_axis_manager
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 
@@ -350,7 +360,7 @@ func _ready() -> void:
 	self._init_t_axis_node()
 
 	self._y_axis_manager.init_axis_manager(self)
-	self._y_axis_manager.add_axis_handler(Guidot_Y_Axis.AxisID.SECONDARY_LEFT)
+	self._y_axis_manager.add_axis_handler(Guidot_Y_Axis.AxisID.PRIMARY_RIGHT)
 	
 	self._init_font()
 
@@ -392,6 +402,7 @@ func _ready() -> void:
 	debug_panel.override_guidot_debug_info(self.final_debug_trace_signals)
 
 	self._graph_manager.changes_applied.connect(self._on_changes_applied)
+	self._graph_manager.register_axis_manager(self._y_axis_manager)
 
 	self.log(LOG_INFO, ["Time series graph initialized"])
 
