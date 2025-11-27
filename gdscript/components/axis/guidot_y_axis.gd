@@ -29,6 +29,13 @@ enum AxisID {
 	SENARY_RIGHT     = 6,
 }
 
+static func get_axis_id_str_from_value(axis_val: int) -> String:
+	var axis_values: Array = AxisID.values()
+	var axis_enum: Array = AxisID.keys()
+	var n: int = axis_values.find(axis_val)
+	assert(axis_values.size() == axis_enum.size(), "Axis values and Axis enums are not of the same size.")
+	return axis_enum[n]	
+
 # static func get_axis_id_enum_from_value(value: int) -> Guidot_Y_Axis.AxisID:
 # 	pass
 

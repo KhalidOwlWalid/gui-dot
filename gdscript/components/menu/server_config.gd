@@ -97,6 +97,14 @@ func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -
 	axis_id_dropdown.get_popup().max_size.y = 100
 	axis_id_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
 	axis_id_dropdown.item_selected.connect(self._axis_id_selected_callback.bind(gd_data_node, axis_id_dropdown))
+	var curr_chan_node: Guidot_Data = self.curr_server_node.get_node_id_with_channel_name(chan_name)
+	var axis_id_str: String = Guidot_Y_Axis.get_axis_id_str_from_value(curr_chan_node.get_axis_id())
+	# Ensuring that the shown axis ID always uses the Guidot_Data node axis ID
+	axis_id_dropdown.select(Guidot_Y_Axis.AxisID.keys().find(axis_id_str))
+
+	var curr_axis_handler = self._y_axis_manager_ref.get_axis_handler(curr_chan_node.get_axis_id())
+	curr_axis_handler.add_use_count()
+	self.log(LOG_INFO, ["Use count for ", curr_axis_handler.get_axis_id(), ": ", curr_axis_handler.get_use_count()])
 
 	for i in range(color_selection.size()):
 		color_dropdown.add_item(color_selection[i])
@@ -117,6 +125,9 @@ func _on_data_selected(sel_data_array: Dictionary) -> void:
 	# Clear the vbox from the previously selected label
 	for n in sub_data_vbox.get_children():
 		sub_data_vbox.remove_child(n)
+
+	for axis_handler in self._y_axis_manager_ref.get_available_axis_handler():
+		axis_handler.clear_use_count()
 
 	# This will be used by the time series graph to query for the data of each respective channel name
 	self.selected_data = sel_data_array

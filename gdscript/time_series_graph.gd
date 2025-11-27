@@ -33,6 +33,7 @@ class AxisHandler:
 	var _axis_id: Guidot_Y_Axis.AxisID
 	var _axis_node: Guidot_Y_Axis
 	var _in_use: bool
+	var _use_count: int = 0
 
 	func init_axis(parent: Node, axis_id: Guidot_Y_Axis.AxisID, axis_range: Vector2, in_use: bool = false):
 		self._axis_node = Guidot_Y_Axis.new()
@@ -66,6 +67,15 @@ class AxisHandler:
 
 	func _on_axis_changed() -> void:
 		pass
+
+	func clear_use_count() -> void:
+		self._use_count = 0
+
+	func add_use_count() -> void:
+		self._use_count += 1
+
+	func get_use_count() -> int:
+		return self._use_count
 
 # For handling multiple y-axis
 class AxisManager:
@@ -360,7 +370,6 @@ func _ready() -> void:
 	self._init_t_axis_node()
 
 	self._y_axis_manager.init_axis_manager(self)
-	self._y_axis_manager.add_axis_handler(Guidot_Y_Axis.AxisID.PRIMARY_RIGHT)
 	
 	self._init_font()
 
