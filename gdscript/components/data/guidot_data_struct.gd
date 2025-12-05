@@ -17,11 +17,11 @@ var _min: float = 0
 var _max: float = 1
 # Frequency/update rate of the data
 var _freq: float = 60.0
-# Axis can be either left or right on the plot
-var _axis_pos: Guidot_Y_Axis.AxisPosition = Guidot_Y_Axis.AxisPosition.LEFT
+# # Axis can be either left or right on the plot
+# var _axis_pos: Guidot_Y_Axis.AxisPosition = Guidot_Y_Axis.AxisPosition.LEFT
 var _axis_n: int = 1
 # Which axis it should be plotted on
-var _axis_id: Guidot_Y_Axis.AxisID = Guidot_Y_Axis.AxisID.PRIMARY_LEFT
+var _axis_id: Guidot_Y_Axis.AxisPosition = Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT
 
 
 var _last_update_ms: int = Time.get_ticks_msec()
@@ -36,7 +36,7 @@ var _metadata: Dictionary = {
 	"min": self._min,
 	"max": self._max, 
 	"expected_frequency": self._freq,
-	"axis_pos": self._axis_pos,
+	# "axis_pos": self._axis_pos,
 	"axis_n": self._axis_n,
 	"axis_id": self._axis_id,
 }
@@ -75,21 +75,21 @@ func set_frequency(freq: float) -> void:
 	self._freq = freq
 	self._metadata["expected_frequency"] = self._freq
 
-func set_axis_id(ax_id: Guidot_Y_Axis.AxisID) -> void:
+func set_axis_id(ax_id: Guidot_Y_Axis.AxisPosition) -> void:
 	self._axis_id = ax_id
 	self._metadata["axis_id"] = self._axis_id
 
-func set_axis_pos(ax_pos: Guidot_Y_Axis.AxisPosition) -> void:
-	self._axis_pos = ax_pos
-	self._metadata["axis_pos"] = self._axis_pos
-	# For now, I am making the assumption that this will correctly cast it to an existing enum
-	self._axis_id = self._axis_pos * self._axis_n
+# func set_axis_pos(ax_pos: Guidot_Y_Axis.AxisPosition) -> void:
+# 	self._axis_pos = ax_pos
+# 	self._metadata["axis_pos"] = self._axis_pos
+# 	# For now, I am making the assumption that this will correctly cast it to an existing enum
+# 	self._axis_id = self._axis_pos * self._axis_n
 
-func set_axis_number(ax_n: int) -> void:
-	self._axis_n = ax_n
-	self._metadata["axis_n"] = self._axis_n
-	# For now, I am making the assumption that this will correctly cast it to an existing enum
-	self._axis_id = self._axis_pos * self._axis_n
+# func set_axis_number(ax_n: int) -> void:
+# 	self._axis_n = ax_n
+# 	self._metadata["axis_n"] = self._axis_n
+# 	# For now, I am making the assumption that this will correctly cast it to an existing enum
+# 	self._axis_id = self._axis_pos * self._axis_n
 
 func line_color_options() -> Dictionary:
 	return self._color_options
@@ -119,7 +119,7 @@ func get_unique_id() -> int:
 func get_expected_freq() -> float:
 	return self._freq
 
-func get_axis_id() -> Guidot_Y_Axis.AxisID:
+func get_axis_id() -> Guidot_Y_Axis.AxisPosition:
 	return self._axis_id
 
 func _set_metadata(name: String, unit: String, description: String, min: float, max: float, line_color: String) -> void:

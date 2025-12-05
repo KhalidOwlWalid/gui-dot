@@ -1,18 +1,20 @@
 class_name Guidot_Y_Axis
 extends Guidot_Axis
 
+signal axis_removed
+
 const comp_size_norm_fixed: float = 0.05
-# This needs to be updated in parallel to the number of AxisID
+# This needs to be updated in parallel to the number of AxisPosition
 # Left and right is counted as 1
 # e.g. Primary Left and Right is considered as 1
 const _max_axis_num: int = 6
 
-enum AxisPosition {
-	LEFT = -1,
-	RIGHT = 1,
-}
+# enum AxisPosition {
+# 	LEFT = -1,
+# 	RIGHT = 1,
+# }
 
-enum AxisID {
+enum AxisPosition {
 	# This allows for ease of calculations on grid spacing when drawing the y-axis
 	PRIMARY_LEFT    = -1,
 	SECONDARY_LEFT  = -2,
@@ -30,18 +32,14 @@ enum AxisID {
 }
 
 static func get_axis_id_str_from_value(axis_val: int) -> String:
-	var axis_values: Array = AxisID.values()
-	var axis_enum: Array = AxisID.keys()
+	var axis_values: Array = AxisPosition.values()
+	var axis_enum: Array = AxisPosition.keys()
 	var n: int = axis_values.find(axis_val)
 	assert(axis_values.size() == axis_enum.size(), "Axis values and Axis enums are not of the same size.")
 	return axis_enum[n]	
 
-# static func get_axis_id_enum_from_value(value: int) -> Guidot_Y_Axis.AxisID:
-# 	pass
-
 # Axis ID, up to _max_axis_num
 @onready var _axis_id: int = 0
-
 
 func _ready() -> void:
 	self.line_color = Guidot_Utils.get_color("white")
