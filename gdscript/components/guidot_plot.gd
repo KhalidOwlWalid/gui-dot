@@ -374,11 +374,15 @@ func plot_multiple_data(datasets: Dictionary, y_axis_manager: RefCounted, time_r
 	# Clears the dictionary before adding new entries for each data channel
 	self._data_channel_pixel_pos.clear()
 	
-	for gd_data in datasets.keys():
-		var axis_handler: RefCounted = y_axis_manager.get_axis_handler(gd_data.get_axis_id())
-		var y_axis_limit: Vector2 = axis_handler.get_axis_range()
-		var data_channel_pixel_pos: PackedVector2Array = self._map_data_points_to_pixel_pos(datasets[gd_data], time_range, y_axis_limit)
-		self._data_channel_pixel_pos[gd_data] = data_channel_pixel_pos
+	# for gd_data in datasets.keys():
+	# 	var axis_handler: RefCounted = y_axis_manager.get_axis_handler(gd_data.get_axis_id())
+	# 	var y_axis_limit: Vector2 = axis_handler.get_axis_range()
+	# 	var data_channel_pixel_pos: PackedVector2Array = self._map_data_points_to_pixel_pos(datasets[gd_data], time_range, y_axis_limit)
+	# 	self._data_channel_pixel_pos[gd_data] = data_channel_pixel_pos
+
+	for axis_handler in y_axis_manager.get_axis_manager_dict().keys():
+		# Get the 
+		pass
 
 	queue_redraw()
 

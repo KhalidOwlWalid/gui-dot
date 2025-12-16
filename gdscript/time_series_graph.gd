@@ -15,7 +15,7 @@ var window_color: Color
 # I need to find a better way to interface this
 var _guidot_server: Guidot_Data_Server
 var _curr_data_str: String
-var _selected_channels_name: Array
+var _selected_channels_name: Array[String]
 @onready var _guidot_clock_node: Guidot_Clock = self.get_tree().get_nodes_in_group(Guidot_Common._clock_group_name)[0]
 # TODO: Remove this, since at the moment, without mouse_x being initialized, it breaks
 @onready var _graph_manager: Guidot_Graph_Manager = Guidot_Graph_Manager.new()
@@ -33,7 +33,13 @@ class AxisHandler:
 
 	signal id_reassigned
 
-	var _axis_id: Guidot_Y_Axis.AxisPosition
+	# Axis position ensures that when we draw the axis, it will handle the offset from the plot frame
+	# accordingly, where an axis_pos of -1, will be drawn left to the plot frame, axis_pos of -2 drawn left
+	# to the first y-axis etc.
+	# axis_pos of 1 will draw to the right of the plot frame etc.
+	var _axis_pos: Guidot_Y_Axis.AxisPosition
+
+	var _axis_id: int
 	var _axis_node: Guidot_Y_Axis
 	var _in_use: bool
 	var _use_count: int = 0
@@ -41,7 +47,7 @@ class AxisHandler:
 	func init_axis(parent: Node, axis_id: Guidot_Y_Axis.AxisPosition, axis_range: Vector2, in_use: bool = false):
 		self._axis_node = Guidot_Y_Axis.new()
 		self._axis_node.setup_axis_range(axis_range.x, axis_range.y)
-		self._axis_id = axis_id
+		self._axis_pos = axis_id
 		self._in_use = in_use
 		self._axis_node.axis_limit_changed.connect(self._on_axis_changed)
 		parent.add_child(self._axis_node)
@@ -51,7 +57,7 @@ class AxisHandler:
 
 	func set_axis_id(id: Guidot_Y_Axis.AxisPosition) -> void:
 		# TODO (Khalid): Check if the y-axis ID is valid or not
-		self._axis_id = id
+		self._axis_pos = id
 
 	func set_axis_range(new_range: Vector2) -> void:
 		self._axis_node.setup_axis_range(new_range.x, new_range.y)
@@ -66,7 +72,7 @@ class AxisHandler:
 		return self._axis_node
 
 	func get_axis_id() -> Guidot_Y_Axis.AxisPosition:
-		return self._axis_id
+		return self._axis_pos
 
 	func _on_axis_changed() -> void:
 		pass
@@ -85,12 +91,13 @@ class AxisHandler:
 
 	func reassign_axis_id(new_ax_id: Guidot_Y_Axis.AxisPosition) -> void:
 		self._ax_id = new_ax_id
-		self.id_reassigned.emit(self._axis_id)
+		self.id_reassigned.emit(self._axis_pos)
 
 # For handling multiple y-axis
 class AxisManager:
 
 	var _axis_manager: Dictionary
+	var _data_to_axis_map: Dictionary
 	var _parent_node: Node
 	var _tag: String = "Axis Manager"
 
@@ -104,60 +111,66 @@ class AxisManager:
 	# Each axis should have its own unique AxisID and should not conflict
 	# If conflicts occur, axis manager should handle this smartly
 	# Returns 0 if invalid ID has been chosen
-	func add_axis_handler(ax_id: Guidot_Y_Axis.AxisPosition, axis_range: Vector2 = Vector2(-1, 1)) -> Guidot_Y_Axis.AxisPosition:
+	func add_axis_handler(ax_pos: Guidot_Y_Axis.AxisPosition, axis_range: Vector2 = Vector2(-1, 1)) -> Guidot_Y_Axis.AxisPosition:
 		
-		if (ax_id not in Guidot_Y_Axis.AxisPosition.values()):
-			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Invalid Axis ID (", ax_id, ") has been passed."])
+		if (ax_pos not in Guidot_Y_Axis.AxisPosition.values()):
+			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Invalid Axis ID (", ax_pos, ") has been passed."])
 			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Please choose from the following options: ", Guidot_Y_Axis.AxisPosition.keys()])
 			return 0
 
 		var ax1: AxisHandler = AxisHandler.new()
 		
 		# TODO: Check if an invalid ID has been passed
-		if (self.has_axis_handler(ax_id)):
-			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, [ax_id, " is already available. Please select another AxisID."])
+		if (self.has_axis_handler(ax_pos)):
+			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, [ax_pos, " is already available. Please select another AxisID."])
 			return 0
 
 		if (not self._axis_manager.is_empty()):
 			# Isolate left and right axis for ease of comparison later
 			var all_left_axis: Array = self._axis_manager.keys().filter(func(n): return n < 0)
 			var all_right_axis: Array = self._axis_manager.keys().filter(func(n): return n > 0)
-			var new_ax_id: Guidot_Y_Axis.AxisPosition
+			var new_ax_pos: Guidot_Y_Axis.AxisPosition
 			
 			# Since the y-axis drawing offset is handled by figuring out its offset based on its width and axis position
 			# it is important that the axis is in incremental order such that secondary axis needs to exist if we want to create the
 			# third axis
 			# Refer to the function: calculate_offset_from_plot_frame() to see how the axis offsets are handled
-			if (ax_id < 0 and not all_left_axis.is_empty()):
-				if (abs(int(ax_id - all_left_axis.min())) > 1):
-					new_ax_id = all_left_axis.min() - 1
-					Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_id, " to ", new_ax_id])
-					ax_id = new_ax_id
+			if (ax_pos < 0 and not all_left_axis.is_empty()):
+				if (abs(int(ax_pos - all_left_axis.min())) > 1):
+					new_ax_pos = all_left_axis.min() - 1
+					Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_pos, " to ", new_ax_pos])
+					ax_pos = new_ax_pos
 			# If there are no axis on the left side, then force it to be primary left
-			elif (ax_id < 0 and all_left_axis.is_empty()):
-				new_ax_id = Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT
-				Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_id, " to ", new_ax_id])
-				ax_id = new_ax_id
+			elif (ax_pos < 0 and all_left_axis.is_empty()):
+				new_ax_pos = Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT
+				Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_pos, " to ", new_ax_pos])
+				ax_pos = new_ax_pos
 
-			elif (ax_id > 0 and not all_right_axis.is_empty()):
-				if (abs(int(ax_id - all_right_axis.max())) > 1):
-					new_ax_id = all_right_axis.max() + 1
-					Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_id, " to ", new_ax_id])
-					ax_id = new_ax_id
+			elif (ax_pos > 0 and not all_right_axis.is_empty()):
+				if (abs(int(ax_pos - all_right_axis.max())) > 1):
+					new_ax_pos = all_right_axis.max() + 1
+					Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_pos, " to ", new_ax_pos])
+					ax_pos = new_ax_pos
 			# If there are no axis on the right side, then force it to be primary right
-			elif (ax_id > 0 and all_right_axis.is_empty()):
-				new_ax_id = Guidot_Y_Axis.AxisPosition.PRIMARY_RIGHT
-				Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_id, " to ", new_ax_id])
-				ax_id = new_ax_id
+			elif (ax_pos > 0 and all_right_axis.is_empty()):
+				new_ax_pos = Guidot_Y_Axis.AxisPosition.PRIMARY_RIGHT
+				Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_pos, " to ", new_ax_pos])
+				ax_pos = new_ax_pos
 		
-		ax1.init_axis(self._parent_node, ax_id, axis_range, true)
-		self._axis_manager[ax_id] = ax1
-		return ax_id
+		ax1.init_axis(self._parent_node, ax_pos, axis_range, true)
+		self._axis_manager[ax_pos] = ax1
+		return ax_pos
 
 	func remove_axis_handler(ax_id: AxisHandler) -> bool:
 		if (not self._axis_manager.erase(ax_id)):
 			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Axis Handler of ID ", ax_id, " does not exist"])
 			return false
+		return true
+
+	func remove_all_axis_handler() -> bool:
+		for ax_handler in self._axis_manager.keys():
+			self._axis_manager[ax_handler].get_axis_node().queue_free()
+		self._axis_manager.clear()
 		return true
 
 	func get_axis_manager_dict() -> Dictionary:
@@ -168,16 +181,16 @@ class AxisManager:
 		return self._axis_manager.values()
 
 	# Returns null if the requested axis handler does not exist	
-	func get_axis_handler(ax_id: Guidot_Y_Axis.AxisPosition) -> AxisHandler:
+	func get_axis_handler(ax_pos: Guidot_Y_Axis.AxisPosition) -> AxisHandler:
 		# TODO: Ensure the axis exist
-		if (not self.has_axis_handler(ax_id)):
+		if (not self.has_axis_handler(ax_pos)):
 			return null
-		return self._axis_manager[ax_id]
+		return self._axis_manager[ax_pos]
 
-	func has_axis_handler(ax_id: Guidot_Y_Axis.AxisPosition) -> bool:
-		return self._axis_manager.has(ax_id)
+	func has_axis_handler(ax_pos: Guidot_Y_Axis.AxisPosition) -> bool:
+		return self._axis_manager.has(ax_pos)
 
-	func delete_axis_handler(ax_id: Guidot_Y_Axis.AxisPosition) -> bool:
+	func delete_axis_handler(ax_pos: Guidot_Y_Axis.AxisPosition) -> bool:
 		return true
 
 	# This function returns the number of axis that is on the left and right side of the graph
@@ -281,6 +294,7 @@ func _setup_plot_node() -> void:
 	# TODO (Khalid): At the moment, the plot frame number of y-axis is hardcoded, just to get a PoC working
 	plot_node.setup_plot_frame_offset(Vector2(self.size.x, self.size.y), \
 		Vector2(t_axis_node.norm_comp_size.y, Guidot_Y_Axis.comp_size_norm_fixed), self._y_axis_manager.get_axis_count())
+	self.log(LOG_DEBUG, ["Inside setup plot node: ", self._y_axis_manager.get_axis_count()])
 
 func _init_plot_node():
 	self._setup_plot_node()
@@ -370,6 +384,26 @@ func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 
 	self.resized.emit()
 
+func _on_y_axis_changes_applied(n_axis) -> void:
+	self.log(LOG_DEBUG, [n_axis])
+	var n_left: int = n_axis[0]
+	var n_right: int = n_axis[1]
+	self.log(LOG_DEBUG, ["Before: ", self._y_axis_manager.get_axis_manager_dict()])
+	self._y_axis_manager.remove_all_axis_handler()
+	self.log(LOG_DEBUG, ["After removed: ", self._y_axis_manager.get_axis_manager_dict()])
+
+	self.resized.emit()
+
+	for i in range(1, n_left + 1):
+		self._y_axis_manager.add_axis_handler(-i)
+
+	for i in range(1, n_right + 1):
+		self._y_axis_manager.add_axis_handler(i)
+
+	self.log(LOG_DEBUG, ["After: ", self._y_axis_manager.get_axis_manager_dict()])
+	
+	self.resized.emit()
+
 func get_y_axis_manager() -> AxisManager:
 	return self._y_axis_manager
 
@@ -427,6 +461,7 @@ func _ready() -> void:
 	debug_panel.override_guidot_debug_info(self.final_debug_trace_signals)
 
 	self._graph_manager.changes_applied.connect(self._on_changes_applied)
+	self._graph_manager.y_axis_changes_applied.connect(self._on_y_axis_changes_applied)
 	self._graph_manager.register_axis_manager(self._y_axis_manager)
 
 	self.log(LOG_INFO, ["Time series graph initialized"])
@@ -457,6 +492,7 @@ func plot_realtime_data() -> void:
 func _on_display_frame_resized() -> void:
 
 	self._setup_plot_node()
+	self.log(LOG_DEBUG, ["The number of available axis handler is: ", len(self._y_axis_manager.get_available_axis_handler())])
 	for axis_handler in self._y_axis_manager.get_available_axis_handler():
 		self._setup_axis(axis_handler.get_axis_node(), axis_handler.get_axis_id(), "y_axis1", Guidot_Utils.get_color("gd_black"), \
 			axis_handler.get_axis_range()) 

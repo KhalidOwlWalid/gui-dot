@@ -124,6 +124,7 @@ func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -
 	return chan_config_hbox
 
 # Receiving Dictionary[channel_name] = <Guidot_Data Object>
+# channel_name: String
 func _on_data_selected(sel_data_array: Dictionary) -> void:
 	# Clear the vbox from the previously selected label
 	for n in sub_data_vbox.get_children():

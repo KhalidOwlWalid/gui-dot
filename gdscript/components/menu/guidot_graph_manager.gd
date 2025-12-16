@@ -2,6 +2,7 @@ class_name Guidot_Graph_Manager
 extends Guidot_Panel2
 
 signal changes_applied
+signal y_axis_changes_applied
 
 var selected_server: String
 
@@ -11,8 +12,15 @@ var selected_server: String
 
 # Setting tabs
 @onready var _server_config_tab: ScrollContainer
-
 @onready var _apply_changes_btn: Button = Button.new()
+
+@onready var _y_axis_config_tab: ScrollContainer
+@onready var _apply_y_axis_changes_btn: Button = Button.new()
+@onready var _n_left_axis: LineEdit = LineEdit.new()
+@onready var _n_axis: Vector2 = Vector2(1, 0)
+
+@onready var _t_axis_config_tab: ScrollContainer
+
 
 @onready var _server_config_manager: Array[Guidot_Server_Config] = []
 
@@ -76,8 +84,15 @@ func _on_apply_changes_to_graph() -> void:
 	changes_applied.emit(self._server_config_manager)
 	pass
 
+func _on_apply_y_axis_changes() -> void:
+	self.y_axis_changes_applied.emit(self._n_axis)
+
 func register_axis_manager(axis_manager: Guidot_T_Series_Graph.AxisManager) -> void:
 	self._y_axis_manager_ref = axis_manager
+
+func _on_n_axis_changes(n_axis_input: String) -> void:
+	var n_axis: PackedStringArray = n_axis_input.split(",")
+	self._n_axis = Vector2(n_axis[0].to_int(), n_axis[1].to_int())
 
 func _ready() -> void:
 
@@ -127,3 +142,15 @@ func _ready() -> void:
 	
 	var server_config_rows: Array[Node] = [graph_buffer_mode_label, add_server_btn, self._apply_changes_btn]
 	self.add_config_rows(self._server_config_tab, server_config_rows)
+
+	# Setup y-axis configurator
+	self._y_axis_config_tab = self.create_configuration_tab("Y-Axis")
+	self._graph_config_tab_cont.add_child(self._y_axis_config_tab)
+	self._apply_y_axis_changes_btn.text = "Apply changes"
+	self._apply_y_axis_changes_btn.pressed.connect(self._on_apply_y_axis_changes)
+	self._n_left_axis.text_submitted.connect(self._on_n_axis_changes)
+
+	self.add_config_rows(self._y_axis_config_tab, [self._apply_y_axis_changes_btn, self._n_left_axis])
+
+	self._t_axis_config_tab = self.create_configuration_tab("T-Axis")
+	self._graph_config_tab_cont.add_child(self._t_axis_config_tab)
