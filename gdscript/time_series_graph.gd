@@ -96,6 +96,8 @@ class AxisHandler:
 # For handling multiple y-axis
 class AxisManager:
 
+	signal updated
+
 	var _axis_manager: Dictionary
 	var _data_to_axis_map: Dictionary
 	var _parent_node: Node
@@ -392,6 +394,9 @@ func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 func _on_y_axis_changes_applied(n_axis) -> void:
 	var n_left: int = n_axis[0]
 	var n_right: int = n_axis[1]
+	# Instead of trying to dynamically find existing axis handler and then try and fit the remaining axis as per requested by the
+	# user, simply delete all y-axis, and create new instances of it. This is not too computationally expensive as this operation
+	# should only occur only when the user wishes to add more y-axis
 	self._y_axis_manager.remove_all_axis_handler()
 
 	for i in range(1, n_left + 1):
@@ -400,7 +405,9 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 	for i in range(1, n_right + 1):
 		self._y_axis_manager.add_axis_handler(i)
 	
+	# Trigger the resized signal so that we redraw the newly configured axis
 	self.resized.emit()
+	self._y_axis_manager.updated.emit()
 
 func get_y_axis_manager() -> AxisManager:
 	return self._y_axis_manager

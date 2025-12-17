@@ -78,8 +78,13 @@ func _axis_id_selected_callback(idx: int, gd_data_node: Guidot_Data, option_node
 		option_node.select(axis_id_list.find(axis_id_enum))
 		gd_data_node.set_axis_id(axis_id_enum)
 
+func _on_update_y_axis_manager() -> void:
+	self.log(LOG_DEBUG, ["y-axis updated emit"])
+	self._on_data_selected(self.selected_data)
+
 func register_y_axis_manager(axis_manager_ref: Guidot_T_Series_Graph.AxisManager) -> void:
 	self._y_axis_manager_ref = axis_manager_ref
+	self._y_axis_manager_ref.updated.connect(self._on_update_y_axis_manager)
 
 # This function creates the row to allow the user to configure the properties
 # of their data
@@ -97,19 +102,23 @@ func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -
 	chan_label.text = chan_name
 	chan_label.custom_minimum_size = Vector2(label_norm_size * self.size.x, 20)
 
-	for id in Guidot_Y_Axis.AxisPosition.keys():
-		axis_id_dropdown.add_item(id)
+	for ax_pos in self._y_axis_manager_ref.get_axis_manager_dict().keys():
+		axis_id_dropdown.add_item(str(ax_pos))
 	axis_id_dropdown.get_popup().max_size.y = 100
-	axis_id_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
-	axis_id_dropdown.item_selected.connect(self._axis_id_selected_callback.bind(gd_data_node, axis_id_dropdown))
-	var curr_chan_node: Guidot_Data = self.curr_server_node.get_node_id_with_channel_name(chan_name)
-	var axis_id_str: String = Guidot_Y_Axis.get_axis_id_str_from_value(curr_chan_node.get_axis_id())
-	# Ensuring that the shown axis ID always uses the current Guidot_Data node axis ID
-	axis_id_dropdown.select(Guidot_Y_Axis.AxisPosition.keys().find(axis_id_str))
 
-	var curr_axis_handler = self._y_axis_manager_ref.get_axis_handler(curr_chan_node.get_axis_id())
-	curr_axis_handler.increment_use_count()
-	self.log(LOG_DEBUG, ["Use count for ", curr_axis_handler.get_axis_id(), ": ", curr_axis_handler.get_use_count()])
+	# for id in Guidot_Y_Axis.AxisPosition.keys():
+	# 	axis_id_dropdown.add_item(id)
+	# axis_id_dropdown.get_popup().max_size.y = 100
+	# axis_id_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
+	# axis_id_dropdown.item_selected.connect(self._axis_id_selected_callback.bind(gd_data_node, axis_id_dropdown))
+	# var curr_chan_node: Guidot_Data = self.curr_server_node.get_node_id_with_channel_name(chan_name)
+	# var axis_id_str: String = Guidot_Y_Axis.get_axis_id_str_from_value(curr_chan_node.get_axis_id())
+	# # Ensuring that the shown axis ID always uses the current Guidot_Data node axis ID
+	# axis_id_dropdown.select(Guidot_Y_Axis.AxisPosition.keys().find(axis_id_str))
+
+	# var curr_axis_handler = self._y_axis_manager_ref.get_axis_handler(curr_chan_node.get_axis_id())
+	# curr_axis_handler.increment_use_count()
+	# self.log(LOG_DEBUG, ["Use count for ", curr_axis_handler.get_axis_id(), ": ", curr_axis_handler.get_use_count()])
 
 	for i in range(color_selection.size()):
 		color_dropdown.add_item(color_selection[i])
