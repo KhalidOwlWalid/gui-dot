@@ -130,9 +130,6 @@ func _on_data_selected(sel_data_array: Dictionary) -> void:
 	for n in sub_data_vbox.get_children():
 		sub_data_vbox.remove_child(n)
 
-	for axis_handler in self._y_axis_manager_ref.get_available_axis_handler():
-		axis_handler.clear_use_count()
-
 	# This will be used by the time series graph to query for the data of each respective channel name
 	self.selected_data = sel_data_array
 

@@ -15,7 +15,7 @@ var window_color: Color
 # I need to find a better way to interface this
 var _guidot_server: Guidot_Data_Server
 var _curr_data_str: String
-var _selected_channels_name: Array[String]
+var _selected_channels_name: Array
 @onready var _guidot_clock_node: Guidot_Clock = self.get_tree().get_nodes_in_group(Guidot_Common._clock_group_name)[0]
 # TODO: Remove this, since at the moment, without mouse_x being initialized, it breaks
 @onready var _graph_manager: Guidot_Graph_Manager = Guidot_Graph_Manager.new()
@@ -168,6 +168,10 @@ class AxisManager:
 		return true
 
 	func remove_all_axis_handler() -> bool:
+		# This step is to ensure that all y-axis node are queued free, before we release the resource
+		# If this step is not done, if we remove the resource - clearing the dictionary consisting of the AxisHandler (RefCounted object)
+		# prior to deleting the node, the y-axis node will remain in the axis
+		# node anymore.
 		for ax_handler in self._axis_manager.keys():
 			self._axis_manager[ax_handler].get_axis_node().queue_free()
 		self._axis_manager.clear()
@@ -380,27 +384,21 @@ func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 			if (server_config_array[0].get_selected_data().is_empty()):
 				self.log(LOG_WARNING, ["Please select data that you wish to subscribe to: ", server_config_array[0].get_all_data_options()])
 			else:
+				var test = server_config_array[0].get_selected_data()
 				self._selected_channels_name = server_config_array[0].get_selected_data()
 
 	self.resized.emit()
 
 func _on_y_axis_changes_applied(n_axis) -> void:
-	self.log(LOG_DEBUG, [n_axis])
 	var n_left: int = n_axis[0]
 	var n_right: int = n_axis[1]
-	self.log(LOG_DEBUG, ["Before: ", self._y_axis_manager.get_axis_manager_dict()])
 	self._y_axis_manager.remove_all_axis_handler()
-	self.log(LOG_DEBUG, ["After removed: ", self._y_axis_manager.get_axis_manager_dict()])
-
-	self.resized.emit()
 
 	for i in range(1, n_left + 1):
 		self._y_axis_manager.add_axis_handler(-i)
 
 	for i in range(1, n_right + 1):
 		self._y_axis_manager.add_axis_handler(i)
-
-	self.log(LOG_DEBUG, ["After: ", self._y_axis_manager.get_axis_manager_dict()])
 	
 	self.resized.emit()
 
