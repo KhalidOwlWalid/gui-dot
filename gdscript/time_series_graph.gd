@@ -98,16 +98,36 @@ class AxisManager:
 
 	signal updated
 
+	# Format: { (int)<Guidot_Y_Axis.AxisPosition>: (Node)<AxisHandler Node> }
 	var _axis_manager: Dictionary
+	# Format: { (int)<Guidot_Data_RefCounted>: (String)<Guidot_Y_Axis.AxisPosition> }
 	var _data_to_axis_map: Dictionary
 	var _parent_node: Node
-	var _tag: String = "Axis Manager"
+	var _tag: String = "Axis_Manager"
 
 	# TODO: This should initialize with a default, mandatory primary y-axis
 	# This is to ensure we always have at least a single y-axis to display
 	func init_axis_manager(parent_node: Node) -> void:
 		self._parent_node = parent_node
 		self.add_axis_handler(Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT)
+
+	func add_data_to_axis(gd_data_server: Guidot_Data_Server, chan_name: String, axis_id_enum_str: String) -> bool:
+		var gd_data_node: Guidot_Data = gd_data_server.get_channel_id(chan_name)
+		# TODO (Khalid): Check if the following already exists or not
+		# Also, need to check if the user has deselect the channel, it should not be assigned to any id
+		self._data_to_axis_map[gd_data_node] = axis_id_enum_str
+		return true
+
+	func set_data_to_axis(gd_data_server: Guidot_Data_Server, chan_name: String, axis_id_enum_str: String) -> bool:
+		var gd_data_node: Guidot_Data = gd_data_server.get_channel_id(chan_name)
+		if gd_data_node in self._data_to_axis_map.keys():
+			self.add_data_to_axis(gd_data_server, chan_name, axis_id_enum_str)
+		else:
+			self._data_to_axis_map[gd_data_node] = axis_id_enum_str
+		return true
+
+	func get_data_to_axis_map() -> Dictionary:
+		return self._data_to_axis_map
 
 	# TODO: This function should take care of any conflict between the assigned axis
 	# Each axis should have its own unique AxisID and should not conflict

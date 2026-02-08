@@ -175,20 +175,17 @@ func plot_multiple_data(datasets: Dictionary, y_axis_manager: RefCounted, time_r
 
 	# Clears the dictionary before adding new entries for each data channel
 	self._data_channel_pixel_pos.clear()
+	var data_axis_map: Dictionary = y_axis_manager.get_data_to_axis_map()
 	
 	for gd_data in datasets.keys():
-		var axis_handler: RefCounted = y_axis_manager.get_axis_handler(-1)
+		# TODO (Khalid): At the moment, all data are plotted on left primary axis
+		# This needs to be properly handled where the user should be allowed to configure the axis position of the data
+		# dynamically
+		var ax_id: Guidot_Y_Axis.AxisPosition =  Guidot_Y_Axis.AxisPosition[data_axis_map[gd_data]]
+		var axis_handler: RefCounted = y_axis_manager.get_axis_handler(ax_id)
 		var y_axis_limit: Vector2 = axis_handler.get_axis_range()
 		var data_channel_pixel_pos: PackedVector2Array = self._map_data_points_to_pixel_pos(datasets[gd_data], time_range, y_axis_limit)
 		self._data_channel_pixel_pos[gd_data] = data_channel_pixel_pos
-
-	# for axis_enum in y_axis_manager.get_axis_manager_dict().keys():
-	# 	# Get the 
-	# 	var axis_handler = y_axis_manager.get_axis_handler(-1)
-	# 	# var axis_node: RefCounted = y_axis_manager.get_axis_manager_dict()[axis_enum]
-	# 	var y_axis_limit: Vector2 = axis_handler.get_axis_range()
-	# 	var data_channel_pixel_pos: PackedVector2Array = self._map_data_points_to_pixel_pos(datasets[gd_data], time_range, y_axis_limit)
-	# 	self._data_channel_pixel_pos[gd_data] = data_channel_pixel_pos
 
 	queue_redraw()
 

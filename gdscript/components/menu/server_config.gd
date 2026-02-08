@@ -54,29 +54,10 @@ func get_all_data_options() -> Array[String]:
 func _color_selected_callback(idx: int, gd_data_node: Guidot_Data) -> void:
 	gd_data_node.set_line_color_str(color_selection[idx])
 
-func _axis_id_selected_callback(idx: int, gd_data_node: Guidot_Data, option_node: OptionButton) -> void:
+func _axis_id_selected_callback(idx: int, chan_name: String, option_node: OptionButton) -> void:
 	var axis_id_str: String = option_node.get_item_text(idx)
-	var axis_id_enum: Guidot_Y_Axis.AxisPosition = Guidot_Y_Axis.AxisPosition[axis_id_str]
-
-	if axis_id_enum in (self._y_axis_manager_ref.get_axis_manager_dict().keys()):
-		var selected_axis_handler =  self._y_axis_manager_ref.get_axis_handler(gd_data_node.get_axis_id())
-		selected_axis_handler.decrement_use_count()
-		gd_data_node.set_axis_id(axis_id_enum)
-		selected_axis_handler =  self._y_axis_manager_ref.get_axis_handler(gd_data_node.get_axis_id())
-		selected_axis_handler.increment_use_count()
-		self.log(LOG_DEBUG, ["Axis ID of enum ", axis_id_str, "(", Guidot_Y_Axis.AxisPosition[axis_id_str], \
-			") has been selected"])
-		self.log(LOG_INFO, ["Now ", selected_axis_handler.get_axis_id(), " has use_count of ", selected_axis_handler.get_use_count()])
-	else:
-		axis_id_enum = self._y_axis_manager_ref.add_axis_handler(axis_id_enum)
-
-		# Fails to add axis ID due to invalid ID being passed
-		if (axis_id_enum == 0):
-			pass
-
-		var axis_id_list: Array = Guidot_Y_Axis.AxisPosition.values()
-		option_node.select(axis_id_list.find(axis_id_enum))
-		gd_data_node.set_axis_id(axis_id_enum)
+	var axis_id_enum_str: String = Guidot_Y_Axis.get_axis_id_str_from_value(int(axis_id_str))
+	self._y_axis_manager_ref.set_data_to_axis(self.get_selected_server(), chan_name, axis_id_enum_str)
 
 func _on_update_y_axis_manager() -> void:
 	self.log(LOG_DEBUG, ["y-axis updated emit"])
@@ -105,20 +86,8 @@ func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -
 	for ax_pos in self._y_axis_manager_ref.get_axis_manager_dict().keys():
 		axis_id_dropdown.add_item(str(ax_pos))
 	axis_id_dropdown.get_popup().max_size.y = 100
-
-	# for id in Guidot_Y_Axis.AxisPosition.keys():
-	# 	axis_id_dropdown.add_item(id)
-	# axis_id_dropdown.get_popup().max_size.y = 100
-	# axis_id_dropdown.custom_minimum_size = Vector2(dropdown_norm_size * self.size.x, 20)
-	# axis_id_dropdown.item_selected.connect(self._axis_id_selected_callback.bind(gd_data_node, axis_id_dropdown))
-	# var curr_chan_node: Guidot_Data = self.curr_server_node.get_node_id_with_channel_name(chan_name)
-	# var axis_id_str: String = Guidot_Y_Axis.get_axis_id_str_from_value(curr_chan_node.get_axis_id())
-	# # Ensuring that the shown axis ID always uses the current Guidot_Data node axis ID
-	# axis_id_dropdown.select(Guidot_Y_Axis.AxisPosition.keys().find(axis_id_str))
-
-	# var curr_axis_handler = self._y_axis_manager_ref.get_axis_handler(curr_chan_node.get_axis_id())
-	# curr_axis_handler.increment_use_count()
-	# self.log(LOG_DEBUG, ["Use count for ", curr_axis_handler.get_axis_id(), ": ", curr_axis_handler.get_use_count()])
+	axis_id_dropdown.item_selected.connect(self._axis_id_selected_callback.bind(chan_name, axis_id_dropdown))
+	self._y_axis_manager_ref.set_data_to_axis(self.get_selected_server(), chan_name, "PRIMARY_LEFT")
 
 	for i in range(color_selection.size()):
 		color_dropdown.add_item(color_selection[i])

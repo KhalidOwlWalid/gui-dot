@@ -29,6 +29,8 @@ enum AxisPosition {
 	QUATERNARY_RIGHT = 4,
 	QUINARY_RIGHT    = 5,
 	SENARY_RIGHT     = 6,
+
+	AXIS_UNKNOWN = 0,
 }
 
 static func get_axis_id_str_from_value(axis_val: int) -> String:

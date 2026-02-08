@@ -90,6 +90,7 @@ func _on_apply_y_axis_changes() -> void:
 func register_axis_manager(axis_manager: Guidot_T_Series_Graph.AxisManager) -> void:
 	self._y_axis_manager_ref = axis_manager
 
+# You need to press enter for this to be activated
 func _on_n_axis_changes(n_axis_input: String) -> void:
 	var n_axis: PackedStringArray = n_axis_input.split(",")
 	self._n_axis = Vector2(n_axis[0].to_int(), n_axis[1].to_int())
