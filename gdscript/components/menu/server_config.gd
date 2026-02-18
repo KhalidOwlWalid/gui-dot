@@ -69,7 +69,8 @@ func register_y_axis_manager(axis_manager_ref: Guidot_T_Series_Graph.AxisManager
 
 # This function creates the row to allow the user to configure the properties
 # of their data
-func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -> HBoxContainer:
+# ax_id takes in String of Guidot_Y_Axis.AxisPosition
+func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data, ax_id: String) -> HBoxContainer:
 	var chan_config_hbox: HBoxContainer = HBoxContainer.new()
 	var chan_label: Label = Label.new()
 
@@ -83,11 +84,20 @@ func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -
 	chan_label.text = chan_name
 	chan_label.custom_minimum_size = Vector2(label_norm_size * self.size.x, 20)
 
-	for ax_pos in self._y_axis_manager_ref.get_axis_manager_dict().keys():
-		axis_id_dropdown.add_item(str(ax_pos))
+	var available_axis = self._y_axis_manager_ref.get_axis_manager_dict().keys()
+	for i in range(available_axis.size()):
+		axis_id_dropdown.add_item(str(available_axis[i]))
+
+		var ax_id_enum: Guidot_Y_Axis.AxisPosition = Guidot_Y_Axis.AxisPosition[ax_id]
+		if (ax_id_enum == available_axis[i]):
+			axis_id_dropdown.select(i)
+		else:
+			pass
+
+	# axis_id_dropdown.select(0)
 	axis_id_dropdown.get_popup().max_size.y = 100
 	axis_id_dropdown.item_selected.connect(self._axis_id_selected_callback.bind(chan_name, axis_id_dropdown))
-	self._y_axis_manager_ref.set_data_to_axis(self.get_selected_server(), chan_name, "PRIMARY_LEFT")
+	self._y_axis_manager_ref.set_data_to_axis(self.get_selected_server(), chan_name, ax_id)
 
 	for i in range(color_selection.size()):
 		color_dropdown.add_item(color_selection[i])
@@ -105,16 +115,25 @@ func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data) -
 # channel_name: String
 func _on_data_selected(sel_data_array: Dictionary) -> void:
 	# Clear the vbox from the previously selected label
-	for n in sub_data_vbox.get_children():
-		sub_data_vbox.remove_child(n)
+	for node in sub_data_vbox.get_children():
+		sub_data_vbox.remove_child(node)
 
 	# This will be used by the time series graph to query for the data of each respective channel name
 	self.selected_data = sel_data_array
 
 	# Populate selected labels
+	var ax_id_str: String
+	var curr_axis_to_data_map: Dictionary = self._y_axis_manager_ref.get_data_to_axis_map()
 	for chan_name in sel_data_array.keys():
-		var hbox: HBoxContainer = self._create_channel_config_name(chan_name, sel_data_array[chan_name])
+		if (sel_data_array[chan_name] in curr_axis_to_data_map.keys()): 
+			ax_id_str = curr_axis_to_data_map[sel_data_array[chan_name]]	
+		else:
+			self.log(LOG_DEBUG, [chan_name, " is not in the axis-data map. Defaulting to PRIMARY_LEFT"])
+			ax_id_str = "PRIMARY_LEFT"
+		var hbox: HBoxContainer = self._create_channel_config_name(chan_name, sel_data_array[chan_name], ax_id_str)
 		sub_data_vbox.add_child(hbox)
+
+	self.log(LOG_INFO, [self._y_axis_manager_ref.get_data_to_axis_map()])
 
 func get_available_gd_server() -> Array[String]:
 	var gd_servers: Array[Node] = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)

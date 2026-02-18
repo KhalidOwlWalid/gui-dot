@@ -120,10 +120,11 @@ class AxisManager:
 
 	func set_data_to_axis(gd_data_server: Guidot_Data_Server, chan_name: String, axis_id_enum_str: String) -> bool:
 		var gd_data_node: Guidot_Data = gd_data_server.get_channel_id(chan_name)
+		# If the data node already exists in the map, then simply re-assigned the axis id
 		if gd_data_node in self._data_to_axis_map.keys():
-			self.add_data_to_axis(gd_data_server, chan_name, axis_id_enum_str)
-		else:
 			self._data_to_axis_map[gd_data_node] = axis_id_enum_str
+		else:
+			self.add_data_to_axis(gd_data_server, chan_name, "PRIMARY_LEFT")
 		return true
 
 	func get_data_to_axis_map() -> Dictionary:
