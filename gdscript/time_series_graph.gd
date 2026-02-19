@@ -415,6 +415,7 @@ func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 func _on_y_axis_changes_applied(n_axis) -> void:
 	var n_left: int = n_axis[0]
 	var n_right: int = n_axis[1]
+
 	# Instead of trying to dynamically find existing axis handler and then try and fit the remaining axis as per requested by the
 	# user, simply delete all y-axis, and create new instances of it. This is not too computationally expensive as this operation
 	# should only occur only when the user wishes to add more y-axis
@@ -435,7 +436,8 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 		if (not Guidot_Y_Axis.AxisPosition[curr_ax_id_str] in available_axis):
 			self._y_axis_manager.get_data_to_axis_map()[data_node] = "PRIMARY_LEFT"
 		else:
-			pass
+			var axis_node: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition[curr_ax_id_str]]
+			axis_node.set_axis_range(data_node.get_min_max())
 	
 	# Trigger the resized signal so that we redraw the newly configured axis
 	self.resized.emit()
