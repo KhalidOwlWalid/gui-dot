@@ -8,21 +8,35 @@ var data_subscriber_manager: Guidot_Data_Sub_Manager
 @onready var sub_data_vbox: VBoxContainer = VBoxContainer.new()
 
 @onready var available_server: Dictionary = {}
-@onready var selected_data: Array[String] = []
-@onready var selected_server: Guidot_Data_Server = Guidot_Data_Server.new()
+@onready var selected_data: Dictionary = {}
+@onready var selected_server: String = ""
+var curr_server_node: Guidot_Data_Server
+
+@onready var axis_pos_selection: Array = Guidot_Y_Axis.AxisPosition.keys()
+@onready var color_selection: Array = Guidot_Utils.color_dict.keys()
+
+var _y_axis_manager_ref: Guidot_T_Series_Graph.AxisManager
+
+func _get_server_dropdown() -> OptionButton:
+	var hbox_server_sel: HBoxContainer = self.server_selection.get_child(0)
+	var server_dropdown: OptionButton = hbox_server_sel.get_child(1)
+	return server_dropdown
+
+func _get_dropdown_selected_id() -> String:
+	var server_dropdown: OptionButton = self._get_server_dropdown()
+	return server_dropdown.get_item_text(server_dropdown.get_selected_id())
 
 func _get_selected_data_display() -> void:
 	var vbox = sub_data_scroll_cont.get_children()
 
 func _on_subscribe_pressed() -> void:
-	var hbox_server_sel: HBoxContainer = self.server_selection.get_child(0)
-	var server_dropdown: OptionButton = hbox_server_sel.get_child(1)
-	var selected_server: String = server_dropdown.get_item_text(server_dropdown.get_selected_id())
+
+	selected_server = self._get_dropdown_selected_id()
 
 	self.data_subscriber_manager.visible = true
-	var server_node: Guidot_Data_Server = self.available_server[selected_server]
+	curr_server_node = self.available_server[selected_server]
 
-	self.data_subscriber_manager.set_available_data_for_selection(server_node.get_all_registered_clients())
+	self.data_subscriber_manager.set_available_data_for_selection(curr_server_node.get_all_registered_clients())
 
 func _on_close_submenu_button_pressed(panel: Node) -> void:
 	panel.visible = false
@@ -31,21 +45,95 @@ func register_data_sub_manager(dsub_node: Guidot_Data_Sub_Manager) -> void:
 	self.data_subscriber_manager = dsub_node
 	self.data_subscriber_manager.data_selected.connect(self._on_data_selected)
 
-func get_selected_data() -> Array[String]:
-	return self.selected_data
+func get_selected_data() -> Array:
+	return self.selected_data.keys()
 
-func _on_data_selected(sel_data_array: Array[String]) -> void:
+func get_all_data_options() -> Array[String]:
+	return self.data_subscriber_manager.get_available_data_options()
+
+func _color_selected_callback(idx: int, gd_data_node: Guidot_Data) -> void:
+	gd_data_node.set_line_color_str(color_selection[idx])
+
+func _axis_id_selected_callback(idx: int, chan_name: String, option_node: OptionButton) -> void:
+	var axis_id_str: String = option_node.get_item_text(idx)
+	var axis_id_enum_str: String = Guidot_Y_Axis.get_axis_id_str_from_value(int(axis_id_str))
+	self._y_axis_manager_ref.set_data_to_axis(self.get_selected_server(), chan_name, axis_id_enum_str)
+
+func _on_update_y_axis_manager() -> void:
+	self.log(LOG_DEBUG, ["y-axis updated emit"])
+	self._on_data_selected(self.selected_data)
+
+func register_y_axis_manager(axis_manager_ref: Guidot_T_Series_Graph.AxisManager) -> void:
+	self._y_axis_manager_ref = axis_manager_ref
+	self._y_axis_manager_ref.updated.connect(self._on_update_y_axis_manager)
+
+# This function creates the row to allow the user to configure the properties
+# of their data
+# ax_id takes in String of Guidot_Y_Axis.AxisPosition
+func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data, ax_id: String) -> HBoxContainer:
+	var chan_config_hbox: HBoxContainer = HBoxContainer.new()
+	var chan_label: Label = Label.new()
+
+	# Color data selection for the data
+	var color_dropdown: OptionButton = OptionButton.new()
+	var axis_id_dropdown: OptionButton = OptionButton.new()
+
+	var label_norm_size: float = 0.3
+	var n_dropdown: float = 3
+	var dropdown_norm_size: float = 0.1
+	chan_label.text = chan_name
+	chan_label.custom_minimum_size = Vector2(label_norm_size * self.size.x, 20)
+
+	var available_axis = self._y_axis_manager_ref.get_axis_manager_dict().keys()
+	for i in range(available_axis.size()):
+		axis_id_dropdown.add_item(str(available_axis[i]))
+
+		var ax_id_enum: Guidot_Y_Axis.AxisPosition = Guidot_Y_Axis.AxisPosition[ax_id]
+		if (ax_id_enum == available_axis[i]):
+			axis_id_dropdown.select(i)
+		else:
+			pass
+
+	# axis_id_dropdown.select(0)
+	axis_id_dropdown.get_popup().max_size.y = 100
+	axis_id_dropdown.item_selected.connect(self._axis_id_selected_callback.bind(chan_name, axis_id_dropdown))
+	self._y_axis_manager_ref.set_data_to_axis(self.get_selected_server(), chan_name, ax_id)
+
+	for i in range(color_selection.size()):
+		color_dropdown.add_item(color_selection[i])
+		if (gd_data_node.get_line_color_str() == color_selection[i]):
+			color_dropdown.select(i)
+	color_dropdown.get_popup().max_size.y = 100
+	color_dropdown.item_selected.connect(self._color_selected_callback.bind(gd_data_node))
+
+	chan_config_hbox.add_child(chan_label)
+	chan_config_hbox.add_child(axis_id_dropdown)
+	chan_config_hbox.add_child(color_dropdown)
+	return chan_config_hbox
+
+# Receiving Dictionary[channel_name] = <Guidot_Data Object>
+# channel_name: String
+func _on_data_selected(sel_data_array: Dictionary) -> void:
 	# Clear the vbox from the previously selected label
-	for n in sub_data_vbox.get_children():
-		sub_data_vbox.remove_child(n)
+	for node in sub_data_vbox.get_children():
+		sub_data_vbox.remove_child(node)
 
+	# This will be used by the time series graph to query for the data of each respective channel name
 	self.selected_data = sel_data_array
 
 	# Populate selected labels
-	for item in sel_data_array:
-		var label: Label = Label.new()
-		label.text = item
-		sub_data_vbox.add_child(label)
+	var ax_id_str: String
+	var curr_axis_to_data_map: Dictionary = self._y_axis_manager_ref.get_data_to_axis_map()
+	for chan_name in sel_data_array.keys():
+		if (sel_data_array[chan_name] in curr_axis_to_data_map.keys()): 
+			ax_id_str = curr_axis_to_data_map[sel_data_array[chan_name]]	
+		else:
+			self.log(LOG_DEBUG, [chan_name, " is not in the axis-data map. Defaulting to PRIMARY_LEFT"])
+			ax_id_str = "PRIMARY_LEFT"
+		var hbox: HBoxContainer = self._create_channel_config_name(chan_name, sel_data_array[chan_name], ax_id_str)
+		sub_data_vbox.add_child(hbox)
+
+	self.log(LOG_INFO, [self._y_axis_manager_ref.get_data_to_axis_map()])
 
 func get_available_gd_server() -> Array[String]:
 	var gd_servers: Array[Node] = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)
@@ -61,11 +149,16 @@ func get_available_gd_server() -> Array[String]:
 	return gd_servers_str
 
 func get_selected_server() -> Guidot_Data_Server:
-	return Guidot_Data_Server.new()
+	self.curr_server_node = self.available_server[self._get_dropdown_selected_id()]
+	return self.curr_server_node
 	
 func _ready() -> void:
 	super._ready()
 	self.show_panel()
+	
+	var new_tag_name: String = "Server_Config[" + str(self.get_instance_id()) + "]"
+	self.name = new_tag_name
+	self.set_component_tag_name(self.name)
 
 	var vbox: VBoxContainer = VBoxContainer.new()
 	self.add_child_to_container(vbox)
@@ -82,14 +175,9 @@ func _ready() -> void:
 	subscribe_data_button.text = "+ Subscribe to data"
 	subscribe_data_button.pressed.connect(self._on_subscribe_pressed)
 
-	# TODO (Khalid): Use a scroll container to allow us to go through all of the subscribed data
-	sub_data_scroll_cont.custom_minimum_size = Vector2(100, 100)
+	sub_data_scroll_cont.custom_minimum_size = Vector2(50, 300)
 	sub_data_scroll_cont.add_child(sub_data_vbox)
 
 	vbox.add_child(server_selection)
 	vbox.add_child(margin_cont1)
 	vbox.add_child(sub_data_scroll_cont)
-
-func _process(delta: float) -> void:
-	pass
-	# pass

@@ -119,10 +119,6 @@ func _ready() -> void:
 	self._last_position = self.position
 	self._last_mouse_position = self.get_viewport().get_mouse_position()
 
-	self.log(LOG_INFO, ["Before", guidot_graph.debug_signals_to_trace])
-	guidot_graph.add_debug_info("test", "hello")
-	self.log(LOG_INFO, ["After", guidot_graph.debug_signals_to_trace])
-
 	# Signals connection
 	guidot_graph.parent_focus_requested.connect(_on_parent_focused)
 	self.mouse_entered.connect(_on_mouse_entered)
@@ -371,14 +367,13 @@ func _process(delta: float) -> void:
 		self._current_ui_mode = UI_Mode.DATA_DISPLAY
 
 	if (self._is_holding_left_click):
-		self.log(LOG_DEBUG, ["I am holding my left click still"])
+		# self.log(LOG_DEBUG, ["I am holding my left click still"])
 		pass
 	else:
-		self.log(LOG_DEBUG, ["I have released my left click"])
+		# self.log(LOG_DEBUG, ["I have released my left click"])
 		pass
 
-	self.log(LOG_DEBUG, ["Mouse pos local: ", self.get_local_mouse_position()])
-
+	# self.log(LOG_DEBUG, ["Mouse pos local: ", self.get_local_mouse_position()])
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
 	Guidot_Log.gd_log(log_level, "MASTER_PANEL", msg)

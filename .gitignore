@@ -6,3 +6,7 @@ src/*.os
 bin/*.so
 .sconsign.dblite
 .vscode/*
+.godot-backup/
+addons/
+lazygit
+*.tar.gz

@@ -43,7 +43,7 @@ func scan_for_server() -> void:
 	else:
 		self.log(LOG_INFO, [server_nodes.size(), "instance(s) of Guidot Server found."])
 		
-		# For now, we are going to grab the first server we see.
+		# TODO (Khalid): For now, we are going to grab the first server we see.
 		# In the future, we may want to allow the user to be able to select servers that they wish to listen to.
 		self._server_node = server_nodes[0]
 		self.log(LOG_INFO, ["Connected to server", self._server_node])
@@ -79,7 +79,7 @@ func add_data_point(data_channel_node: Guidot_Data, data_point: float) -> void:
 	self._server_node.add_data_point(data_channel_node, data_point)
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
-	Guidot_Log.gd_log(log_level, self._comp_tag, msg)
+	Guidot_Log.gd_log(log_level, self.name, msg)
 
 func get_all_data_channels() -> Dictionary:
 	return self._data_channel_node_ref

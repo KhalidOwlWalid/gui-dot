@@ -5,6 +5,7 @@ extends Guidot_Data_Core
 signal connected
 signal disconnected
 signal graph_buffer_mode_changed
+signal new_data_received
 
 const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG
 const LOG_WARNING = Guidot_Log.Log_Level.WARNING
@@ -22,7 +23,7 @@ const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 
 # Stores the unique name as key and Guidot_Data node as value for ease of reference
 # e.g. {"data_channel1": Guidot_Data<unique_id>}
-@onready var _data_channel_map: Dictionary = {}
+@onready var _data_channel_id_manager: Dictionary = {}
 
 const Graph_Buffer_Mode = Guidot_Common.Graph_Buffer_Mode
 var _graph_buffer_mode: Graph_Buffer_Mode = Graph_Buffer_Mode.REALTIME
@@ -53,35 +54,44 @@ func register_client(node: Guidot_Data_Client) -> bool:
 	return true
 
 func get_channel_id(channel_name: String) -> Guidot_Data:
-	return self._data_channel_map[channel_name]
+	return self._data_channel_id_manager[channel_name]
 
+# Returns the data points for the specified channel name
 func query_data_with_channel_name(channel_name: String) -> PackedVector2Array:
 	# Use the channel mapping to get the correct node ID
-	# var channel_id: Guidot_Data = self._data_channel_map[channel_name]
-	return self._data_channel_manager[self.get_channel_id(channel_name)]
+	var has_key: bool = self._data_channel_id_manager.has(channel_name)
+
+	if (has_key):
+		# self.log(LOG_DEBUG, [channel_name, "found."])
+		return self._data_channel_manager[self.get_channel_id(channel_name)]
+	else:
+		# TODO (Khalid): Popup and inform the user about the error
+		self.log(LOG_WARNING, ["The chosen channel name, [", channel_name, "] does not exist. Returning empty dataset."])
+	return PackedVector2Array()
 
 func query_data_line_color(channel_name: String) -> Color:
-	var channel_id: Guidot_Data = self._data_channel_map[channel_name]
+	var channel_id: Guidot_Data = self._data_channel_id_manager[channel_name]
 	return channel_id.get_line_color()
 
 func query_data_with_node_id(data_node: Guidot_Data) -> void:
 	var data_channel: Guidot_Data = self._data_channel_manager[data_node]
 
 func get_node_id_with_channel_name(channel_name: String) -> Guidot_Data:
-	return self._data_channel_map[channel_name] 
+	return self._data_channel_id_manager[channel_name] 
 
 func update_channel_manager(node: Guidot_Data_Client) -> bool:
 	for data_node_id in node.get_all_data_channels().keys():
 		var data_channel_name: String = node.get_data_channel_name(data_node_id)
 		self._data_channel_manager[data_node_id] = PackedVector2Array()
-		self._data_channel_map[data_channel_name] = data_node_id
+		self._data_channel_id_manager[data_channel_name] = data_node_id
 	return true
 
 func add_data_point(data_channel_node: Guidot_Data, data_point: float) -> void:
 	self._data_channel_manager[data_channel_node].append(Vector2(self._clock_node.get_current_time_s(), data_point))
+	self.new_data_received.emit()
 
 func _physics_process(delta: float) -> void:
 	pass
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
-	Guidot_Log.gd_log(log_level, self._comp_tag, msg)
+	Guidot_Log.gd_log(log_level, self.name, msg)
