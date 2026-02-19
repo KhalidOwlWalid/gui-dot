@@ -34,7 +34,7 @@ enum Origin {
 # e.g. in the horizontal direction, n * y_axis + plot area + margin = 1
 # Failure to comply with the following will cause the components to get clipped by the parent
 # In drawing each component, the parent will have a center anchor which will be used as a reference to draw
-@onready var norm_comp_size: float = 1
+@onready var norm_comp_size: Vector2 = Vector2(1, 1)
 
 @onready var _mouse_in: bool = false
 @onready var _new_position: Vector2 = Vector2()

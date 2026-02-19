@@ -8,6 +8,8 @@ var max_val: float
 @onready var n_steps: int = 5
 @onready var axis_name: String = "axis_common"
 @onready var tick_length: int = 0
+@onready var min_width: int = 0
+@onready var max_width: int = 50
 
 # Keep a reference to the plot node, useful for dynamic resizing etc.
 var plot_node_ref: Node
@@ -35,6 +37,9 @@ var bottom_offset
 
 var _axis_config_popup: PopupMenu
 
+func set_axis_id(ax_id: int) -> void:
+	pass
+
 func init_event_handler() -> void:
 	# Setup signal connection if user hovers above the axis
 	self.mouse_entered.connect(_on_mouse_entered)
@@ -48,11 +53,14 @@ func setup_axis_node(name: String, color: Color) -> void:
 	self.color = color
 	self.init_event_handler()
 
-func setup_axis_limit(min: float, max: float) -> void:
+func setup_axis_range(min: float, max: float) -> void:
 	self.min_val = min
 	self.max_val = max
 	axis_limit_changed.emit()
 	queue_redraw()
+
+func get_axis_range() -> Vector2:
+	return Vector2(self.min_val, self.max_val)
 
 func set_min(min: float) -> void:
 	self.min_val = min
@@ -110,7 +118,7 @@ func _ready() -> void:
 
 	self._setup_axis_config_menu()
 
-	norm_comp_size = 0.2
+	norm_comp_size = Vector2(0.2, 0.2)
 	
 func _draw() -> void:
 	pass
