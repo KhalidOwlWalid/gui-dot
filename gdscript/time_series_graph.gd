@@ -203,7 +203,7 @@ class AxisManager:
 	func get_axis_manager_dict() -> Dictionary:
 		return self._axis_manager
 
-	# The keys holds the axis ID which can easily help us identify which axis already exist
+	# The keys hold the axis ID which can easily help us identify which axis already exist
 	func get_available_axis_handler() -> Array:
 		return self._axis_manager.values()
 
@@ -425,6 +425,17 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 
 	for i in range(1, n_right + 1):
 		self._y_axis_manager.add_axis_handler(i)
+
+	var available_axis: Array = self._y_axis_manager.get_axis_manager_dict().keys()
+
+	# If in the case that the number of axis had been resized down, force the data that uses the non-existent axis to revert back to
+	# PRIMARY_LEFT
+	for data_node in self._y_axis_manager.get_data_to_axis_map().keys():
+		var curr_ax_id_str: String = self._y_axis_manager.get_data_to_axis_map()[data_node]
+		if (not Guidot_Y_Axis.AxisPosition[curr_ax_id_str] in available_axis):
+			self._y_axis_manager.get_data_to_axis_map()[data_node] = "PRIMARY_LEFT"
+		else:
+			pass
 	
 	# Trigger the resized signal so that we redraw the newly configured axis
 	self.resized.emit()
