@@ -15,7 +15,10 @@ func show_for_axis(axis_min: float, axis_max: float, pos: Vector2) -> void:
 func _on_apply_pressed() -> void:
 	var new_min: float = _min_input.text.to_float()
 	var new_max: float = _max_input.text.to_float()
-	if new_min >= new_max:
+	# Equal values are rejected because a zero-span axis causes division by zero
+	# when computing tick intervals.  min > max is intentionally allowed so the
+	# user can flip the axis (i.e. render the plot upside-down).
+	if new_min == new_max:
 		return
 	limits_applied.emit(new_min, new_max)
 	self.hide()
