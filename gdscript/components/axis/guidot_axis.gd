@@ -36,6 +36,7 @@ var top_offset
 var bottom_offset
 
 var _axis_config_popup: PopupMenu
+var _axis_limit_config: Guidot_Axis_Limit_Config
 
 func set_axis_id(ax_id: int) -> void:
 	pass
@@ -78,6 +79,11 @@ func axis_diff() -> float:
 func draw_axis():
 	pass
 
+func _on_axis_config_menu_index_pressed(index: int) -> void:
+	if index == 0:
+		var pos: Vector2 = self.get_viewport().get_mouse_position()
+		_axis_limit_config.show_for_axis(self.min_val, self.max_val, pos)
+
 func _setup_axis_config_menu() -> void:
 	# Setup the axis configuration popup menu
 	_axis_config_popup = PopupMenu.new()
@@ -85,8 +91,14 @@ func _setup_axis_config_menu() -> void:
 	_axis_config_popup.name = "Axis Configuration Menu"
 	_axis_config_popup.add_item("Axis Limit Settings")
 	_axis_config_popup.hide_on_checkable_item_selection = false
-	_axis_config_popup.hide_on_item_selection = false
+	_axis_config_popup.hide_on_item_selection = true
 	_axis_config_popup.hide_on_state_item_selection = false
+	_axis_config_popup.index_pressed.connect(_on_axis_config_menu_index_pressed)
+
+	# Setup the axis limit config panel
+	_axis_limit_config = Guidot_Axis_Limit_Config.new()
+	_axis_limit_config.limits_applied.connect(func(new_min: float, new_max: float): self.setup_axis_range(new_min, new_max))
+	add_child(_axis_limit_config)
 
 func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node: Node) -> void:
 	pass
