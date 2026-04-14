@@ -42,26 +42,6 @@ static func get_axis_id_str_from_value(axis_val: int) -> String:
 var _display_frame_node: Node = null
 var _plot_frame_node: Node = null
 
-# ── Inline label editing ──────────────────────────────────────────────────────
-# Hit-test rects for the topmost (max_val) and bottommost (min_val) tick labels.
-# Recomputed every _draw_ticks() call so they always match the rendered position.
-var _top_label_rect: Rect2 = Rect2()
-var _bottom_label_rect: Rect2 = Rect2()
-
-var _hover_top: bool = false
-var _hover_bottom: bool = false
-
-# Single reusable LineEdit overlay; repositioned for whichever label is active.
-var _inline_edit: LineEdit
-
-# true  → user is editing max_val (top label)
-# false → user is editing min_val (bottom label)
-var _editing_max: bool = true
-
-# Cached from the last _draw_ticks() so _start_inline_edit() can size the widget.
-var _cached_label_width: float = 30.0
-# -----------------------------------------------------------------------------
-
 func _ready() -> void:
 	self.line_color = Guidot_Utils.get_color("white")
 	self.last_line_color = self.line_color
@@ -75,18 +55,9 @@ func _ready() -> void:
 		self.ticks_pos.append(Vector2(tick_x_pos, tick_y_pos))
 
 	self._setup_axis_config_menu()
+	self._setup_inline_edit()
 	self.set_component_tag_name("Y-AXIS")
 	self.norm_comp_size = Vector2(0.05, 0.05)
-
-	# Inline edit widget — hidden until the user clicks a label
-	_inline_edit = LineEdit.new()
-	_inline_edit.visible = false
-	_inline_edit.add_theme_font_size_override("font_size", int(font_size))
-	_inline_edit.text_submitted.connect(_on_inline_edit_submitted)
-	_inline_edit.gui_input.connect(_on_inline_edit_gui_input)
-	# Clicking anywhere else discards the edit
-	_inline_edit.focus_exited.connect(func(): _inline_edit.visible = false)
-	add_child(_inline_edit)
 
 func set_axis_id(ax_id: int) -> void:
 	self._axis_id = ax_id
@@ -209,16 +180,16 @@ func _draw_ticks() -> void:
 	# (baseline - font_size) to (baseline + ~4px).
 	var top_tick_y: int    = self.top_right().y
 	var bottom_tick_y: int = self.top_right().y + n_steps * increments
-	_top_label_rect    = Rect2(label_x - 2, top_tick_y    + 5 - font_size, max_label_width + 8, font_size + 6)
-	_bottom_label_rect = Rect2(label_x - 2, bottom_tick_y + 5 - font_size, max_label_width + 8, font_size + 6)
+	_max_label_rect = Rect2(label_x - 2, top_tick_y    + 5 - font_size, max_label_width + 8, font_size + 6)
+	_min_label_rect = Rect2(label_x - 2, bottom_tick_y + 5 - font_size, max_label_width + 8, font_size + 6)
 
 	for i in range(n_steps + 1):
 		var tick_y_pos: int = self.top_right().y + i * increments
 		# Highlight the top or bottom label when the mouse hovers over it
 		var color: Color = self.line_color
-		if i == 0 and _hover_top:
+		if i == 0 and _hover_max:
 			color = Guidot_Utils.get_color("gd_bright_yellow")
-		elif i == n_steps and _hover_bottom:
+		elif i == n_steps and _hover_min:
 			color = Guidot_Utils.get_color("gd_bright_yellow")
 		self._draw_single_tick_with_label(
 			Vector2(tick_x_pos, tick_y_pos),
@@ -249,82 +220,3 @@ func draw_y_axis() -> void:
 
 func _draw() -> void:
 	self.draw_y_axis()
-
-func _process(_delta: float) -> void:
-	# Track whether the mouse is hovering over either editable label so _draw()
-	# knows which one to highlight.  Only runs when the inline edit is closed to
-	# avoid fighting with the LineEdit for hover state.
-	if _inline_edit.visible:
-		return
-
-	var local_mouse: Vector2 = get_local_mouse_position()
-	var new_hover_top:    bool = _mouse_in and _top_label_rect.has_point(local_mouse)
-	var new_hover_bottom: bool = _mouse_in and _bottom_label_rect.has_point(local_mouse)
-
-	if new_hover_top != _hover_top or new_hover_bottom != _hover_bottom:
-		_hover_top    = new_hover_top
-		_hover_bottom = new_hover_bottom
-		queue_redraw()
-
-func _input(event: InputEvent) -> void:
-	# While the inline editor is open, suppress all axis interactions so wheel
-	# zoom and right-click menus don't interfere.
-	if _inline_edit.visible:
-		return
-
-	# Check for a left-click on the top or bottom tick label BEFORE calling
-	# super, so we don't also emit the generic focus-request signal.
-	if _mouse_in and event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			# Double-click anywhere on the axis opens the full limit settings panel.
-			if event.double_click:
-				_axis_limit_config.show_for_axis(self.min_val, self.max_val, get_viewport().get_mouse_position())
-				return
-			var local_mouse: Vector2 = get_local_mouse_position()
-			if _top_label_rect.has_point(local_mouse):
-				_start_inline_edit(true)
-				return
-			elif _bottom_label_rect.has_point(local_mouse):
-				_start_inline_edit(false)
-				return
-
-	super._input(event)
-
-# Show the inline LineEdit positioned over the chosen label.
-# We always display and accept the raw axis value here — the "x10^N" label on
-# the axis is purely a cosmetic scale indicator and must NOT be folded into the
-# edit field.  Showing the mantissa caused a compounding-exponent bug: if the
-# user typed the raw value instead of the mantissa (easy mistake), the result
-# was raw_value × 10^N instead of raw_value, which then raised the exponent for
-# the next edit, creating an exponential runaway.
-func _start_inline_edit(editing_max: bool) -> void:
-	_editing_max = editing_max
-	var rect: Rect2    = _top_label_rect if editing_max else _bottom_label_rect
-	var current_val: float = self.max_val if editing_max else self.min_val
-
-	_inline_edit.text     = "%g" % current_val
-	_inline_edit.position = rect.position
-	_inline_edit.size     = Vector2(_cached_label_width + 24, font_size + 8)
-	_inline_edit.visible  = true
-	_inline_edit.grab_focus()
-	_inline_edit.select_all()
-
-# Enter pressed — the text is the raw limit value, no exponent involved.
-func _on_inline_edit_submitted(new_text: String) -> void:
-	var new_value: float = new_text.to_float()
-
-	if _editing_max:
-		if new_value != self.min_val:
-			setup_axis_range(self.min_val, new_value)
-	else:
-		if new_value != self.max_val:
-			setup_axis_range(new_value, self.max_val)
-
-	_inline_edit.visible = false
-
-# Escape pressed — discard and close without changing anything.
-func _on_inline_edit_gui_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.pressed:
-		if event.keycode == KEY_ESCAPE:
-			_inline_edit.visible = false
-			get_viewport().set_input_as_handled()

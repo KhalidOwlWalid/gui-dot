@@ -535,7 +535,9 @@ func _on_display_frame_resized() -> void:
 	for axis_handler in self._y_axis_manager.get_available_axis_handler():
 		self._setup_axis(axis_handler.get_axis_node(), axis_handler.get_axis_id(), "y_axis1", Guidot_Utils.get_color("gd_black"), \
 			axis_handler.get_axis_range()) 
-	self._setup_axis(t_axis_node, 0, "t_axis", t_axis_node.color, Vector2(t_axis_min, t_axis_max))
+	# Only reposition the t-axis — do not call setup_axis_range() here because
+	# that would force the axis into FIXED mode, overriding SLIDING_WINDOW mode.
+	t_axis_node.calculate_offset_from_plot_frame(self, plot_node)
 	
 	# Ensure the settings button are always at the top right during resizing
 	self._setting_button.position = Vector2(self.size.x - self._setting_button.size.x, 0)
@@ -636,7 +638,7 @@ func _process(delta: float) -> void:
 							# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
 							# simply an increasing integer, or absolute or relative time etc.
 							var curr_s: float = self._guidot_clock_node.get_current_time_s()
-							t_axis_node.setup_axis_range(curr_s- t_axis_node._sliding_window_s, curr_s)
+							t_axis_node.update_to_latest(curr_s)
 
 				self.fps_last_update_ms = curr_ms
 
