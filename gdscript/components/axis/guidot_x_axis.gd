@@ -18,6 +18,7 @@ func _ready() -> void:
 		self.ticks_pos.append(Vector2(tick_x_pos, tick_y_pos))
 
 	self._setup_axis_config_menu()
+	self._setup_inline_edit()
 	self.set_component_tag_name("X-AXIS")
 
 	self.norm_comp_size = Vector2(0.1, 0.1)
@@ -67,6 +68,3 @@ func draw_x_axis() -> void:
 
 func _draw() -> void:
 	self.draw_x_axis()
-
-func _process(delta: float) -> void:
-	pass
