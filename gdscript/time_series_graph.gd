@@ -459,6 +459,10 @@ func _ready() -> void:
 	self._init_t_axis_node()
 
 	self._y_axis_manager.init_axis_manager(self)
+	var paxis_handler: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
+	var primary_axis: Guidot_Y_Axis = paxis_handler.get_axis_node()
+	primary_axis.axis_limit_changed.connect(_on_y_axis_changed.bind(primary_axis))
+	# primary_axis.axis_limit_changed.connect(_on_y_axis_changed.bind(primary_axis.n_steps, primary_axis.ticks_pos))
 	
 	self._init_font()
 
@@ -566,9 +570,11 @@ func _on_t_axis_changed() -> void:
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
 	self.plot_realtime_data()
 
-func _on_y_axis_changed() -> void:
+# This needs to be tied to the primary axis to draw the horizontal grids
+func _on_y_axis_changed(primary_axis: Guidot_Y_Axis) -> void:
 	self.y_axis_lim_signal += 1
-	self.plot_realtime_data()
+	plot_node.update_y_ticks_properties(primary_axis.n_steps, primary_axis.ticks_pos)
+	# plot_node.update_y_ticks_properties(n_steps, ticks_pos)
 
 func _input(event: InputEvent) -> void:
 

@@ -178,9 +178,6 @@ func plot_multiple_data(datasets: Dictionary, y_axis_manager: RefCounted, time_r
 	var data_axis_map: Dictionary = y_axis_manager.get_data_to_axis_map()
 	
 	for gd_data in datasets.keys():
-		# TODO (Khalid): At the moment, all data are plotted on left primary axis
-		# This needs to be properly handled where the user should be allowed to configure the axis position of the data
-		# dynamically
 		var ax_id: Guidot_Y_Axis.AxisPosition =  Guidot_Y_Axis.AxisPosition[data_axis_map[gd_data]]
 		var axis_handler: RefCounted = y_axis_manager.get_axis_handler(ax_id)
 		var y_axis_limit: Vector2 = axis_handler.get_axis_range()
