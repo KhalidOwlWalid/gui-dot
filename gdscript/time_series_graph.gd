@@ -416,6 +416,12 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 	var n_left: int = n_axis[0]
 	var n_right: int = n_axis[1]
 
+	# Disconnect the pre-existing primary axis from handling the horizontal axis drawing
+	# This will get re-assigned once all of the axis has been initialized again
+	var paxis_handler: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
+	var primary_axis: Guidot_Y_Axis = paxis_handler.get_axis_node()
+	primary_axis.axis_limit_changed.disconnect(_on_y_axis_changed)
+
 	# Instead of trying to dynamically find existing axis handler and then try and fit the remaining axis as per requested by the
 	# user, simply delete all y-axis, and create new instances of it. This is not too computationally expensive as this operation
 	# should only occur only when the user wishes to add more y-axis
@@ -426,6 +432,17 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 
 	for i in range(1, n_right + 1):
 		self._y_axis_manager.add_axis_handler(i)
+
+	# Renew the primary axis connection for drawing the horizontal axis
+	paxis_handler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
+	primary_axis = paxis_handler.get_axis_node()
+	primary_axis.axis_limit_changed.connect(_on_y_axis_changed.bind(primary_axis))
+	
+	self._init_font()
+
+	self._setting_button.size = Vector2(30, 30)
+	self._setting_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
+	self._setting_button.position = Vector2(self.size.x - self._setting_button.size.x, 0)
 
 	var available_axis: Array = self._y_axis_manager.get_axis_manager_dict().keys()
 
@@ -459,6 +476,9 @@ func _ready() -> void:
 	self._init_t_axis_node()
 
 	self._y_axis_manager.init_axis_manager(self)
+	var paxis_handler: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
+	var primary_axis: Guidot_Y_Axis = paxis_handler.get_axis_node()
+	primary_axis.axis_limit_changed.connect(_on_y_axis_changed.bind(primary_axis))
 	
 	self._init_font()
 
@@ -566,9 +586,11 @@ func _on_t_axis_changed() -> void:
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
 	self.plot_realtime_data()
 
-func _on_y_axis_changed() -> void:
+# This needs to be tied to the primary axis to draw the horizontal grids
+func _on_y_axis_changed(primary_axis: Guidot_Y_Axis) -> void:
 	self.y_axis_lim_signal += 1
-	self.plot_realtime_data()
+	plot_node.update_y_ticks_properties(primary_axis.n_steps, primary_axis.ticks_pos)
+	# plot_node.update_y_ticks_properties(n_steps, ticks_pos)
 
 func _input(event: InputEvent) -> void:
 

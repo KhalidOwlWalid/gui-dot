@@ -65,8 +65,8 @@ func set_axis_id(ax_id: int) -> void:
 # Returns the power-of-10 exponent to use as a common scale factor for the
 # current min/max range.  Returns 0 when no scaling is needed.
 #
-#   >= 1000  or  < 0.001  →  scale so mantissa values sit in [1, 1000)
-#   everything else       →  no scaling (return 0)
+#   >= 1000  or  < 0.001  ->  scale so mantissa values sit in [1, 1000)
+#   everything else       -> no scaling (return 0)
 func _get_scale_exponent() -> int:
 	var scale: float = max(abs(self.min_val), abs(self.max_val))
 	if scale == 0.0:
@@ -155,7 +155,17 @@ func _draw_ticks() -> void:
 	var font: Font = get_theme_default_font()
 	var tick_x_pos: int = self.top_right().x
 	var axis_frame_size: Vector2 = self.get_component_size()
-	var increments: int = axis_frame_size.y / n_steps
+
+	var range_span: float = abs(self.max_val - self.min_val)
+	var y_increment: float = _nice_increment(range_span / 5.0)
+
+	var y1: float = ceil(self.min_val / y_increment) * y_increment
+	var y2: float = floor(self.max_val / y_increment) * y_increment
+	self.n_steps = int(round((y2 - y1) / y_increment))
+	if self.n_steps <= 0:
+		self.n_steps = 1
+
+	var increments: int = axis_frame_size.y / self.n_steps
 	var tick_interval: float = (self.max_val - self.min_val) / self.n_steps
 	var exponent: int = _get_scale_exponent()
 
