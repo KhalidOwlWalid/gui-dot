@@ -152,22 +152,3 @@ func _draw_ticks() -> void:
 	_max_label_rect = Rect2(last_tick_pos.x  + tick_label_offset.x - 2,
 							tick_y + tick_label_offset.y - font_size,
 							_cached_label_width + 8, font_size + 6)
-
-# Returns the nearest 'nice' increment (1, 2, or 5 × 10^N) at or below raw.
-# This keeps tick labels at round numbers regardless of window size.
-static func _nice_increment(raw: float) -> float:
-	if raw <= 0.0:
-		return 1.0
-	var exp: int = int(floor(log(raw) / log(10.0)))
-	var base: float = pow(10.0, exp)
-	var frac: float = raw / base
-	var nice: float
-	if frac < 1.5:
-		nice = 1.0
-	elif frac < 3.5:
-		nice = 2.0
-	elif frac < 7.5:
-		nice = 5.0
-	else:
-		nice = 10.0
-	return nice * base

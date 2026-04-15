@@ -212,6 +212,27 @@ func _on_mouse_exited() -> void:
 	self._mouse_in = false
 	queue_redraw()
 
+# Returns the nearest 'nice' increment (1, 2, or 5 × 10^N) at or below raw.
+# This keeps tick labels at round numbers regardless of window size.
+# Resource: http://vis.stanford.edu/files/2010-TickLabels-InfoVis.pdf
+static func _nice_increment(raw: float) -> float:
+	if raw <= 0.0:
+		return 1.0
+	var exp: int = int(floor(log(raw) / log(10.0)))
+	var base: float = pow(10.0, exp)
+	var frac: float = raw / base
+	var nice: float
+	if frac < 1.5:
+		nice = 1.0
+	elif frac < 3.5:
+		nice = 2.0
+	elif frac < 7.5:
+		nice = 5.0
+	else:
+		nice = 10.0
+	return nice * base
+
+
 func _input(event):
 	# While the inline editor is open suppress all other axis interactions.
 	if _inline_edit != null and _inline_edit.visible:
