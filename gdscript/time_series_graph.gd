@@ -416,6 +416,12 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 	var n_left: int = n_axis[0]
 	var n_right: int = n_axis[1]
 
+	# Disconnect the pre-existing primary axis from handling the horizontal axis drawing
+	# This will get re-assigned once all of the axis has been initialized again
+	var paxis_handler: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
+	var primary_axis: Guidot_Y_Axis = paxis_handler.get_axis_node()
+	primary_axis.axis_limit_changed.disconnect(_on_y_axis_changed)
+
 	# Instead of trying to dynamically find existing axis handler and then try and fit the remaining axis as per requested by the
 	# user, simply delete all y-axis, and create new instances of it. This is not too computationally expensive as this operation
 	# should only occur only when the user wishes to add more y-axis
@@ -426,6 +432,17 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 
 	for i in range(1, n_right + 1):
 		self._y_axis_manager.add_axis_handler(i)
+
+	# Renew the primary axis connection for drawing the horizontal axis
+	paxis_handler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
+	primary_axis = paxis_handler.get_axis_node()
+	primary_axis.axis_limit_changed.connect(_on_y_axis_changed.bind(primary_axis))
+	
+	self._init_font()
+
+	self._setting_button.size = Vector2(30, 30)
+	self._setting_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
+	self._setting_button.position = Vector2(self.size.x - self._setting_button.size.x, 0)
 
 	var available_axis: Array = self._y_axis_manager.get_axis_manager_dict().keys()
 
@@ -459,6 +476,9 @@ func _ready() -> void:
 	self._init_t_axis_node()
 
 	self._y_axis_manager.init_axis_manager(self)
+	var paxis_handler: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
+	var primary_axis: Guidot_Y_Axis = paxis_handler.get_axis_node()
+	primary_axis.axis_limit_changed.connect(_on_y_axis_changed.bind(primary_axis))
 	
 	self._init_font()
 
@@ -535,7 +555,9 @@ func _on_display_frame_resized() -> void:
 	for axis_handler in self._y_axis_manager.get_available_axis_handler():
 		self._setup_axis(axis_handler.get_axis_node(), axis_handler.get_axis_id(), "y_axis1", Guidot_Utils.get_color("gd_black"), \
 			axis_handler.get_axis_range()) 
-	self._setup_axis(t_axis_node, 0, "t_axis", t_axis_node.color, Vector2(t_axis_min, t_axis_max))
+	# Only reposition the t-axis — do not call setup_axis_range() here because
+	# that would force the axis into FIXED mode, overriding SLIDING_WINDOW mode.
+	t_axis_node.calculate_offset_from_plot_frame(self, plot_node)
 	
 	# Ensure the settings button are always at the top right during resizing
 	self._setting_button.position = Vector2(self.size.x - self._setting_button.size.x, 0)
@@ -564,9 +586,11 @@ func _on_t_axis_changed() -> void:
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
 	self.plot_realtime_data()
 
-func _on_y_axis_changed() -> void:
+# This needs to be tied to the primary axis to draw the horizontal grids
+func _on_y_axis_changed(primary_axis: Guidot_Y_Axis) -> void:
 	self.y_axis_lim_signal += 1
-	self.plot_realtime_data()
+	plot_node.update_y_ticks_properties(primary_axis.n_steps, primary_axis.ticks_pos)
+	# plot_node.update_y_ticks_properties(n_steps, ticks_pos)
 
 func _input(event: InputEvent) -> void:
 
@@ -636,7 +660,7 @@ func _process(delta: float) -> void:
 							# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
 							# simply an increasing integer, or absolute or relative time etc.
 							var curr_s: float = self._guidot_clock_node.get_current_time_s()
-							t_axis_node.setup_axis_range(curr_s- t_axis_node._sliding_window_s, curr_s)
+							t_axis_node.update_to_latest(curr_s)
 
 				self.fps_last_update_ms = curr_ms
 
