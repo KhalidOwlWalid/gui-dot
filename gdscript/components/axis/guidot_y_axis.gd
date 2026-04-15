@@ -224,8 +224,6 @@ func _draw_ticks() -> void:
 				HORIZONTAL_ALIGNMENT_LEFT, -1, font_size,
 				Guidot_Utils.get_color("gd_bright_yellow"))
 
-	axis_limit_changed.emit()
-
 func draw_y_axis() -> void:
 	draw_line(self.top_right(), self.bottom_right(), self.line_color, 1.0, true)
 	_draw_ticks()

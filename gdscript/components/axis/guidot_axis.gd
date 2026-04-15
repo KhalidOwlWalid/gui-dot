@@ -249,13 +249,11 @@ func _input(event):
 		if event is InputEventMouseButton and event.pressed:
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 				new_range = current_range / zoom_factor
-				self.set_min(curr_axis_centre - new_range * r1)
-				self.set_max(curr_axis_centre + new_range * r2)
+				self.setup_axis_range(curr_axis_centre - new_range * r1, curr_axis_centre + new_range * r2)
 
 			if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 				new_range = current_range * zoom_factor
-				self.set_min(curr_axis_centre - new_range * r2)
-				self.set_max(curr_axis_centre + new_range * r2)
+				self.setup_axis_range(curr_axis_centre - new_range * r2, curr_axis_centre + new_range * r2)
 
 			if event.button_index == MOUSE_BUTTON_RIGHT:
 				var curr_mouse_pos: Vector2 = self.get_viewport().get_mouse_position()

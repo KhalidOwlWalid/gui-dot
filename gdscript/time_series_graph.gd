@@ -416,6 +416,8 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 	var n_left: int = n_axis[0]
 	var n_right: int = n_axis[1]
 
+	# Disconnect the pre-existing primary axis from handling the horizontal axis drawing
+	# This will get re-assigned once all of the axis has been initialized again
 	var paxis_handler: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
 	var primary_axis: Guidot_Y_Axis = paxis_handler.get_axis_node()
 	primary_axis.axis_limit_changed.disconnect(_on_y_axis_changed)
