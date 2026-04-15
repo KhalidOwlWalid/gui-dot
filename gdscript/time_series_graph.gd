@@ -416,6 +416,10 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 	var n_left: int = n_axis[0]
 	var n_right: int = n_axis[1]
 
+	var paxis_handler: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
+	var primary_axis: Guidot_Y_Axis = paxis_handler.get_axis_node()
+	primary_axis.axis_limit_changed.disconnect(_on_y_axis_changed)
+
 	# Instead of trying to dynamically find existing axis handler and then try and fit the remaining axis as per requested by the
 	# user, simply delete all y-axis, and create new instances of it. This is not too computationally expensive as this operation
 	# should only occur only when the user wishes to add more y-axis
@@ -426,6 +430,17 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 
 	for i in range(1, n_right + 1):
 		self._y_axis_manager.add_axis_handler(i)
+
+	# Renew the primary axis connection for drawing the horizontal axis
+	paxis_handler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
+	primary_axis = paxis_handler.get_axis_node()
+	primary_axis.axis_limit_changed.connect(_on_y_axis_changed.bind(primary_axis))
+	
+	self._init_font()
+
+	self._setting_button.size = Vector2(30, 30)
+	self._setting_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
+	self._setting_button.position = Vector2(self.size.x - self._setting_button.size.x, 0)
 
 	var available_axis: Array = self._y_axis_manager.get_axis_manager_dict().keys()
 
@@ -462,7 +477,6 @@ func _ready() -> void:
 	var paxis_handler: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
 	var primary_axis: Guidot_Y_Axis = paxis_handler.get_axis_node()
 	primary_axis.axis_limit_changed.connect(_on_y_axis_changed.bind(primary_axis))
-	# primary_axis.axis_limit_changed.connect(_on_y_axis_changed.bind(primary_axis.n_steps, primary_axis.ticks_pos))
 	
 	self._init_font()
 
