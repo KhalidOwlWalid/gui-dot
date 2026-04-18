@@ -103,6 +103,19 @@ func draw_axis():
 func _apply_drag_delta(_pixel_delta: Vector2) -> void:
 	pass
 
+# Called once when Ctrl+Left-Click drag begins; override to lock per-drag state.
+func _on_drag_start() -> void:
+	pass
+
+# Override in subclass to clean up per-drag state when drag ends.
+func _commit_drag() -> void:
+	pass
+
+func _stop_drag() -> void:
+	if _drag_active:
+		_commit_drag()
+	_drag_active = false
+
 func _on_axis_config_menu_index_pressed(index: int) -> void:
 	if index == 0:
 		var pos: Vector2 = self.get_viewport().get_mouse_position()
@@ -224,7 +237,7 @@ func _on_mouse_exited() -> void:
 	self.color = self.last_box_color
 	self.line_color = self.last_line_color
 	self._mouse_in = false
-	_drag_active = false
+	_stop_drag()
 	_axis_drag_mode_active = false
 	queue_redraw()
 
@@ -255,12 +268,12 @@ func _input(event):
 
 	# Release drag if Ctrl is lifted anywhere.
 	if event is InputEventKey and not event.pressed and event.keycode == KEY_CTRL:
-		_drag_active = false
+		_stop_drag()
 		_axis_drag_mode_active = false
 
 	# Release drag if left button released anywhere.
 	if event is InputEventMouseButton and not event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_drag_active = false
+		_stop_drag()
 
 	if not self._mouse_in:
 		return
@@ -278,6 +291,7 @@ func _input(event):
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 			_drag_active = true
 			_axis_drag_mouse_pos = get_local_mouse_position()
+			_on_drag_start()
 			return
 
 		if event is InputEventMouseMotion and _drag_active:
@@ -287,7 +301,7 @@ func _input(event):
 			_axis_drag_mouse_pos = local_mouse
 			return
 	else:
-		_drag_active = false
+		_stop_drag()
 		_axis_drag_mode_active = false
 
 		if event is InputEventMouseButton and event.pressed:
