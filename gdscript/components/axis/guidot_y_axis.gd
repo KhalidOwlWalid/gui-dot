@@ -42,6 +42,8 @@ static func get_axis_id_str_from_value(axis_val: int) -> String:
 var _display_frame_node: Node = null
 var _plot_frame_node: Node = null
 
+var _drag_tick_increment_cached: float = 0.0
+
 func _ready() -> void:
 	self.line_color = Guidot_Utils.get_color("white")
 	self.last_line_color = self.line_color
@@ -154,10 +156,25 @@ func _draw_ticks() -> void:
 
 	var font: Font = get_theme_default_font()
 	var tick_x_pos: int = self.top_right().x
-	var axis_frame_size: Vector2 = self.get_component_size()
+	var top_y: float = self.top_right().y
+	var pixel_height: float = size.y
+	if pixel_height <= 0.0:
+		return
 
-	var range_span: float = abs(self.max_val - self.min_val)
-	var y_increment: float = _nice_increment(range_span / 5.0)
+	var range_span: float = self.max_val - self.min_val
+	if range_span == 0.0:
+		return
+
+	var pixels_per_unit: float = pixel_height / range_span
+	var exponent: int = _get_scale_exponent()
+
+	# Lock the tick increment for the whole drag so ticks slide smoothly
+	# instead of snapping when the nice-number boundary changes.
+	var y_increment: float
+	if _drag_active and _drag_tick_increment_cached > 0.0:
+		y_increment = _drag_tick_increment_cached
+	else:
+		y_increment = _nice_increment(abs(range_span) / 5.0)
 
 	var y1: float = ceil(self.min_val / y_increment) * y_increment
 	var y2: float = floor(self.max_val / y_increment) * y_increment
@@ -165,44 +182,52 @@ func _draw_ticks() -> void:
 	if self.n_steps <= 0:
 		self.n_steps = 1
 
-	var increments: int = axis_frame_size.y / self.n_steps
-	var tick_interval: float = (self.max_val - self.min_val) / self.n_steps
-	var exponent: int = _get_scale_exponent()
-
-	# Pre-compute all labels so we can measure the widest before drawing any.
+	# Pre-compute labels; also measure the endpoint labels for max width.
+	var tick_vals: Array[float] = []
 	var labels: Array[String] = []
 	var max_label_width: float = 0.0
-	for i in range(n_steps + 1):
-		var label: String = _format_tick_label(self.max_val - i * tick_interval, exponent)
+	var tick_count: int = self.n_steps + 1
+	for i in range(tick_count):
+		var v: float = y2 - i * y_increment
+		tick_vals.append(v)
+		var label: String = _format_tick_label(v, exponent)
 		labels.append(label)
 		var w: float = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 		if w > max_label_width:
 			max_label_width = w
 
-	_cached_label_width = max_label_width
+	var max_endpoint_label: String = _format_tick_label(self.max_val, exponent)
+	var min_endpoint_label: String = _format_tick_label(self.min_val, exponent)
+	for lbl in [max_endpoint_label, min_endpoint_label]:
+		var w: float = font.get_string_size(lbl, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		if w > max_label_width:
+			max_label_width = w
 
-	# Right-align every label against the tick mark with a 3 px gap.
+	_cached_label_width = max_label_width
 	var label_x: float = tick_x_pos - (max_label_width + 3)
 	var tick_label_offset: Vector2 = Vector2(-(max_label_width + 3), 5)
+	# Keep a margin around axis edges so interior ticks never overlap the endpoint labels.
+	var edge_margin: float = font_size * 2.0
 
-	# Update hit-test rects for the top (max_val) and bottom (min_val) labels.
-	# draw_string baseline is at tick_y + 5, so the text body spans
-	# (baseline - font_size) to (baseline + ~4px).
-	var top_tick_y: int    = self.top_right().y
-	var bottom_tick_y: int = self.top_right().y + n_steps * increments
-	_max_label_rect = Rect2(label_x - 2, top_tick_y    + 5 - font_size, max_label_width + 8, font_size + 6)
-	_min_label_rect = Rect2(label_x - 2, bottom_tick_y + 5 - font_size, max_label_width + 8, font_size + 6)
+	_max_label_rect = Rect2(label_x - 2, top_y + 5 - font_size,                   max_label_width + 8, font_size + 6)
+	_min_label_rect = Rect2(label_x - 2, top_y + pixel_height + 5 - font_size,    max_label_width + 8, font_size + 6)
 
-	for i in range(n_steps + 1):
-		var tick_y_pos: int = self.top_right().y + i * increments
-		# Highlight the top or bottom label when the mouse hovers over it
+	# Interior sliding ticks — skip any that fall within the edge margin so they
+	# don't visually clash with the always-visible endpoint labels.
+	for i in range(tick_count):
+		var tick_y: float = top_y + (self.max_val - tick_vals[i]) * pixels_per_unit
+		if tick_y < top_y + edge_margin or tick_y > top_y + pixel_height - edge_margin:
+			continue
+
 		var color: Color = self.line_color
-		if i == 0 and _hover_max:
-			color = Guidot_Utils.get_color("gd_bright_yellow")
-		elif i == n_steps and _hover_min:
-			color = Guidot_Utils.get_color("gd_bright_yellow")
+		if not _drag_active:
+			if i == 0 and _hover_max:
+				color = Guidot_Utils.get_color("gd_bright_yellow")
+			elif i == tick_count - 1 and _hover_min:
+				color = Guidot_Utils.get_color("gd_bright_yellow")
+
 		self._draw_single_tick_with_label(
-			Vector2(tick_x_pos, tick_y_pos),
+			Vector2(tick_x_pos, int(tick_y)),
 			labels[i],
 			font,
 			self.font_size,
@@ -210,26 +235,39 @@ func _draw_ticks() -> void:
 			tick_label_offset
 		)
 
-	# When a scale exponent is active, draw "x10^N" at the top of the axis so
-	# the user can always see what scale the mantissa values refer to.
+	# Always-visible endpoint labels at the axis edges, showing the live min/max.
+	# These remain at fixed pixel positions so the user always sees the axis limits,
+	# even as the interior ticks slide during a drag.
+	self._draw_single_tick_with_label(
+		Vector2(tick_x_pos, int(top_y)),
+		max_endpoint_label, font, self.font_size, self.line_color, tick_label_offset
+	)
+	self._draw_single_tick_with_label(
+		Vector2(tick_x_pos, int(top_y + pixel_height)),
+		min_endpoint_label, font, self.font_size, self.line_color, tick_label_offset
+	)
+
 	if exponent != 0:
 		var scale_str: String = "x10^%d" % exponent
 		var scale_w: float = font.get_string_size(scale_str, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
-		# Right-align it to the tick line.
-		# scale_y uses top_right().y (which reflects the live axis size) so the
-		# label automatically follows whenever the graph is resized.
 		var scale_x: float = tick_x_pos - scale_w
-		var scale_y: float = self.top_right().y - font_size - 4.0
+		var scale_y: float = top_y - font_size - 4.0
 		draw_string(font, Vector2(scale_x, scale_y), scale_str,
 				HORIZONTAL_ALIGNMENT_LEFT, -1, font_size,
 				Guidot_Utils.get_color("gd_bright_yellow"))
 
+func _on_drag_start() -> void:
+	_drag_tick_increment_cached = _nice_increment(abs(self.max_val - self.min_val) / 5.0)
+
 func _apply_drag_delta(pixel_delta: Vector2) -> void:
 	var pixel_height: float = size.y
-	if pixel_height == 0.0:
+	if pixel_height <= 0.0:
 		return
-	var value_delta: float = -pixel_delta.y / pixel_height * (self.max_val - self.min_val)
+	var value_delta: float = pixel_delta.y * (self.max_val - self.min_val) / pixel_height
 	setup_axis_range(self.min_val + value_delta, self.max_val + value_delta)
+
+func _commit_drag() -> void:
+	_drag_tick_increment_cached = 0.0
 
 func draw_y_axis() -> void:
 	draw_line(self.top_right(), self.bottom_right(), self.line_color, 1.0, true)
