@@ -256,12 +256,56 @@ func _draw_ticks() -> void:
 				HORIZONTAL_ALIGNMENT_LEFT, -1, font_size,
 				Guidot_Utils.get_color("gd_bright_yellow"))
 
-	var chan_on_this_axis = self._display_frame_node.get_y_axis_manager().get_channel_name_on_axis(self._axis_id)
+	if _display_frame_node != null:
+		var chan_on_this_axis: Array = _display_frame_node.get_y_axis_manager().get_channel_name_on_axis(self._axis_id)
+		if not chan_on_this_axis.is_empty():
+			_draw_channel_labels(chan_on_this_axis, font, top_y, pixel_height, label_x)
 
-	# _draw_y_axis_title()
+func _draw_channel_labels(chan_names: Array, font: Font, top_y: float, pixel_height: float, label_x: float) -> void:
+	var gap: float = 8.0
+	var center_y: float = top_y + pixel_height / 2.0
 
-func _draw_y_axis_title() -> void:
-	pass
+	# Measure each label — when rotated 90°, text width becomes the vertical span on screen.
+	var text_widths: Array = []
+	for ch_name: String in chan_names:
+		text_widths.append(font.get_string_size(ch_name, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
+
+	var total_span: float = 0.0
+	for w: float in text_widths:
+		total_span += w
+	total_span += (chan_names.size() - 1) * gap
+
+	# Start y so the whole group is centred on the axis midpoint.
+	var y_cursor: float = center_y - total_span / 2.0
+
+	# With –PI/2 rotation, text appears at screen x = col_x + font_size.
+	# Place the column just to the left of the tick labels.
+	var col_x: float = label_x - 4.0 - font_size
+
+	for i in range(chan_names.size()):
+		var text: String = chan_names[i]
+
+		if (i != (chan_names.size() - 1)):
+			print(text)
+			text += ", "
+
+		var text_width: float = text_widths[i]
+
+		# Skip labels entirely outside the axis bounds.
+		if y_cursor > top_y + pixel_height or y_cursor + text_width < top_y:
+			y_cursor += text_width + gap
+			continue
+
+		# Pivot calculation for –PI/2 rotation:
+		# local (lx, font_size) → screen (col_x + font_size, pivot_y - lx)
+		# so the string centre in screen y lands at y_cursor + text_width / 2.
+		var pivot_y: float = y_cursor + text_width
+		draw_set_transform(Vector2(col_x, pivot_y), -PI / 2.0)
+		draw_string(font, Vector2(0.0, font_size), text,
+				HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, self.line_color)
+		draw_set_transform(Vector2.ZERO, 0.0)
+
+		y_cursor += text_width + gap
 
 func _on_drag_start() -> void:
 	_drag_tick_increment_cached = _nice_increment(abs(self.max_val - self.min_val) / 5.0)
