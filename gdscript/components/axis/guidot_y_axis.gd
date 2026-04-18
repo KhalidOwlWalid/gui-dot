@@ -224,6 +224,13 @@ func _draw_ticks() -> void:
 				HORIZONTAL_ALIGNMENT_LEFT, -1, font_size,
 				Guidot_Utils.get_color("gd_bright_yellow"))
 
+func _apply_drag_delta(pixel_delta: Vector2) -> void:
+	var pixel_height: float = size.y
+	if pixel_height == 0.0:
+		return
+	var value_delta: float = -pixel_delta.y / pixel_height * (self.max_val - self.min_val)
+	setup_axis_range(self.min_val + value_delta, self.max_val + value_delta)
+
 func draw_y_axis() -> void:
 	draw_line(self.top_right(), self.bottom_right(), self.line_color, 1.0, true)
 	_draw_ticks()

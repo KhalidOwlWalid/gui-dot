@@ -61,6 +61,13 @@ func _draw_ticks() -> void:
 	# 	self.draw_string(self.get_theme_default_font(), Vector2(tick_label_x_pos, tick_label_y_pos), tick_label, 0, -1, self.font_size, self.line_color)
 	pass
 
+func _apply_drag_delta(pixel_delta: Vector2) -> void:
+	var pixel_width: float = size.x
+	if pixel_width == 0.0:
+		return
+	var value_delta: float = -pixel_delta.x / pixel_width * (self.max_val - self.min_val)
+	setup_axis_range(self.min_val + value_delta, self.max_val + value_delta)
+
 func draw_x_axis() -> void:
 	# Draw the vertical line of the x-axis 
 	draw_line(self.top_left(), self.top_right(), self.line_color, 1.0, true)

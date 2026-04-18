@@ -36,6 +36,12 @@ var bottom_offset
 var _axis_config_popup: PopupMenu
 var _axis_limit_config: Guidot_Axis_Limit_Config
 
+var _mouse_hold_frame_count: int = 5
+var _mouse_hold_frame_count_max: int = 5
+var _axis_drag_mode_active: bool = false
+var _axis_drag_mouse_pos: Vector2 = get_local_mouse_position()
+var _drag_active: bool = false
+
 # ── Shared inline-edit infrastructure ────────────────────────────────────────
 # Hit-test rects for the two editable limit labels.  Each subclass is
 # responsible for computing these inside its _draw_ticks() call so they always
@@ -91,6 +97,10 @@ func axis_diff() -> float:
 	return (self.max_val - self.min_val)
 
 func draw_axis():
+	pass
+
+# Override in subclass to translate pixel drag delta into axis range shift.
+func _apply_drag_delta(_pixel_delta: Vector2) -> void:
 	pass
 
 func _on_axis_config_menu_index_pressed(index: int) -> void:
@@ -190,13 +200,17 @@ func _draw() -> void:
 func _process(_delta: float) -> void:
 	if _inline_edit == null or _inline_edit.visible:
 		return
-	var local_mouse: Vector2 = get_local_mouse_position()
-	var new_hover_min: bool = _mouse_in and _min_label_rect.has_point(local_mouse)
-	var new_hover_max: bool = _mouse_in and _max_label_rect.has_point(local_mouse)
-	if new_hover_min != _hover_min or new_hover_max != _hover_max:
-		_hover_min = new_hover_min
-		_hover_max = new_hover_max
-		queue_redraw()
+	# var local_mouse: Vector2 = get_local_mouse_position()
+	# var new_hover_min: bool = _mouse_in and _min_label_rect.has_point(local_mouse)
+	# var new_hover_max: bool = _mouse_in and _max_label_rect.has_point(local_mouse)
+	# if new_hover_min != _hover_min or new_hover_max != _hover_max:
+	# 	_hover_min = new_hover_min
+	# 	_hover_max = new_hover_max
+
+	if self._axis_drag_mode_active:
+		var local_mouse: Vector2 = get_local_mouse_position()
+
+	queue_redraw()
 
 func _on_mouse_entered() -> void:
 	self.last_box_color = self.color
@@ -210,6 +224,8 @@ func _on_mouse_exited() -> void:
 	self.color = self.last_box_color
 	self.line_color = self.last_line_color
 	self._mouse_in = false
+	_drag_active = false
+	_axis_drag_mode_active = false
 	queue_redraw()
 
 # Returns the nearest 'nice' increment (1, 2, or 5 × 10^N) at or below raw.
@@ -232,20 +248,48 @@ static func _nice_increment(raw: float) -> float:
 		nice = 10.0
 	return nice * base
 
-
 func _input(event):
 	# While the inline editor is open suppress all other axis interactions.
 	if _inline_edit != null and _inline_edit.visible:
 		return
 
-	if (self._mouse_in):
-		var axis_diff: float = abs(self.max_val - self.min_val)
-		var zoom_factor: float = 1.1
-		var curr_axis_centre: float = (self.min_val + self.max_val) / 2
-		var current_range: float = self.max_val - self.min_val
-		var new_range: float
-		var r1: float = 0.5
-		var r2: float = 0.5
+	# Release drag if Ctrl is lifted anywhere.
+	if event is InputEventKey and not event.pressed and event.keycode == KEY_CTRL:
+		_drag_active = false
+		_axis_drag_mode_active = false
+
+	# Release drag if left button released anywhere.
+	if event is InputEventMouseButton and not event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_drag_active = false
+
+	if not self._mouse_in:
+		return
+
+	var zoom_factor: float = 1.1
+	var curr_axis_centre: float = (self.min_val + self.max_val) / 2
+	var current_range: float = self.max_val - self.min_val
+	var new_range: float
+	var r1: float = 0.5
+	var r2: float = 0.5
+
+	if Input.is_key_pressed(KEY_CTRL):
+		_axis_drag_mode_active = true
+
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			_drag_active = true
+			_axis_drag_mouse_pos = get_local_mouse_position()
+			return
+
+		if event is InputEventMouseMotion and _drag_active:
+			var local_mouse: Vector2 = get_local_mouse_position()
+			var delta: Vector2 = local_mouse - _axis_drag_mouse_pos
+			_apply_drag_delta(delta)
+			_axis_drag_mouse_pos = local_mouse
+			return
+	else:
+		_drag_active = false
+		_axis_drag_mode_active = false
+
 		if event is InputEventMouseButton and event.pressed:
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
 				new_range = current_range / zoom_factor
@@ -276,5 +320,5 @@ func _input(event):
 					elif _min_label_rect.has_point(local_mouse):
 						_start_inline_edit(false)
 						return
+
 				self._emit_focus_requested_signal()
-				self.log(LOG_INFO, ["Left button pressed, scale the axis here"])
