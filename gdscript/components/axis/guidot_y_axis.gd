@@ -256,6 +256,13 @@ func _draw_ticks() -> void:
 				HORIZONTAL_ALIGNMENT_LEFT, -1, font_size,
 				Guidot_Utils.get_color("gd_bright_yellow"))
 
+	var chan_on_this_axis = self._display_frame_node.get_y_axis_manager().get_channel_name_on_axis(self._axis_id)
+
+	# _draw_y_axis_title()
+
+func _draw_y_axis_title() -> void:
+	pass
+
 func _on_drag_start() -> void:
 	_drag_tick_increment_cached = _nice_increment(abs(self.max_val - self.min_val) / 5.0)
 

@@ -125,7 +125,17 @@ class AxisManager:
 			self._data_to_axis_map[gd_data_node] = axis_id_enum_str
 		else:
 			self.add_data_to_axis(gd_data_server, chan_name, "PRIMARY_LEFT")
+
 		return true
+
+	func get_channel_name_on_axis(axis_pos: Guidot_Y_Axis.AxisPosition) -> Array[String]:
+		var chan_on_axis: Array[String]
+
+		for data_node in self._data_to_axis_map.keys():
+			if (self._data_to_axis_map[data_node] == Guidot_Y_Axis.get_axis_id_str_from_value(axis_pos)):
+				chan_on_axis.append(data_node.get_name())
+
+		return chan_on_axis
 
 	func get_data_to_axis_map() -> Dictionary:
 		return self._data_to_axis_map
