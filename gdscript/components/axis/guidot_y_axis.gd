@@ -289,7 +289,6 @@ func _draw_channel_labels(chan_name_and_color: Array[Array], font: Font, top_y: 
 		var color: Color = chan_name_and_color[i][1]
 
 		if (i != (chan_name_and_color.size() - 1)):
-			print(text)
 			text += ", "
 
 		var text_width: float = text_widths[i]
