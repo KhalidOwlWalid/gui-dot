@@ -146,7 +146,8 @@ func set_stylebox_color(color: Color) -> void:
 	_guidot_stylebox.bg_color = color
 
 func set_graph_opacity(alpha: float) -> void:
-	self.modulate.a = clamp(alpha, 0.0, 1.0)
+	var a: float = clamp(alpha, 0.0, 1.0)
+	self.set_self_modulate(Color(1.0, 1.0, 1.0, a))	
 
 func set_margin_size(val: int) -> void:
 	_guidot_stylebox.content_margin_left = val

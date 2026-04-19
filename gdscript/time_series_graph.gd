@@ -66,6 +66,9 @@ class AxisHandler:
 	func set_axis_range(new_range: Vector2) -> void:
 		self._axis_node.setup_axis_range(new_range.x, new_range.y)
 
+	func set_axis_modulation(modulated_color: Color):
+		self._axis_node.set_self_modulate(modulated_color)
+
 	func get_axis_range() -> Vector2:
 		return self._axis_node.get_axis_range()
 
@@ -604,6 +607,8 @@ func _ready() -> void:
 	self._graph_manager.y_axis_changes_applied.connect(self._on_y_axis_changes_applied)
 	self._graph_manager.register_axis_manager(self._y_axis_manager)
 
+	self._graph_manager.opacity_changed.connect(self.set_graph_opacity)
+
 	self._initialized = true
 
 	self.log(LOG_INFO, ["Time series graph initialized"])
@@ -613,6 +618,25 @@ func _ready() -> void:
 # TODO: Implement this with error detection
 func set_window_color(color: Color) -> void:
 	self.color = color
+
+func set_graph_opacity(alpha: float) -> void:
+	
+	# This allows us to finely control the opacity of our graphs and each of its components
+	var a: float = clamp(alpha, 0.0, 1.0)
+	var modulated_color: Color = Color(1.0, 1.0, 1.0, a)
+	self.set_self_modulate(modulated_color)
+	
+	# For the axis, we still want to see the data being plotted, so at minimum, an alpha of 0.3
+	# would still allow you to see the plots nicely
+	a = clamp(alpha, 0.3, 1.0)
+	modulated_color = Color(1.0, 1.0, 1.0, a)
+	self.plot_node.set_self_modulate(modulated_color)
+	self.t_axis_node.set_self_modulate(modulated_color)
+
+	for ax_handler in self._y_axis_manager.get_available_axis_handler():
+		ax_handler.set_axis_modulation(modulated_color)
+
+	queue_redraw()
 
 func _draw():
 	# Data line drawing is handled inside the _draw function of plot_node
