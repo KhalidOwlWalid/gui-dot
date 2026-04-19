@@ -97,6 +97,8 @@ func set_container_size(new_size: Vector2) -> void:
 func _ready() -> void:
 	super._ready()
 
+	_component_tag = "DATA SUB MANAGER"
+
 	self.hide_panel()
 
 	self.custom_minimum_size = Vector2(300, 300)
