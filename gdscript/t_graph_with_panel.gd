@@ -208,14 +208,12 @@ func _input(event: InputEvent) -> void:
 					self._last_edit_mode = self._curr_edit_mode
 					self._is_holding_left_click = false
 					self.log(LOG_DEBUG, ["Left click resizing released"])
-				elif event.is_pressed():
-					# Start dragging - calculate the offset from mouse to panel position
+				elif event.is_pressed() and self._mouse_in:
 					_is_dragging = true
-					self._curr_edit_mode == Edit_Mode.MOVE
-					# This allows the user to grab the panel anywhere within the panel and drag it
-					# anywhere
+					self._curr_edit_mode = Edit_Mode.MOVE
 					_drag_offset = get_global_mouse_position() - self.global_position
 					self._last_position = self.position
+					get_viewport().set_input_as_handled()
 				else:
 					_is_dragging = false
 
