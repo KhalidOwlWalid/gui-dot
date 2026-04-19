@@ -135,6 +135,18 @@ class AxisManager:
 
 		return true
 
+	func set_data_node_to_axis(gd_data_node: Guidot_Data, axis_id_enum_str: String):
+		var axis_exist: bool = self.has_axis_handler(Guidot_Y_Axis.AxisPosition[axis_id_enum_str])
+		var gd_data_exist_in_map: bool = gd_data_node in self._data_to_axis_map.keys()
+		if gd_data_exist_in_map and axis_exist:
+			self._data_to_axis_map[gd_data_node] = axis_id_enum_str
+		elif (not axis_exist):
+			self._data_to_axis_map[gd_data_node] = "PRIMARY_LEFT"
+		else:
+			self._data_to_axis_map[gd_data_node] = "PRIMARY_LEFT"
+
+		return true
+
 	func remove_data_from_axis(new_data_array: Array[Guidot_Data]):
 		for gd_node in self._data_to_axis_map.keys():
 			if (not gd_node in new_data_array):
@@ -503,6 +515,16 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 
 	# If in the case that the number of axis had been resized down, force the data that uses the non-existent axis to revert back to
 	# PRIMARY_LEFT
+	var curr_data_to_axis_map: Dictionary = self._y_axis_manager.get_data_to_axis_map()
+	for data_node in curr_data_to_axis_map.keys():
+		self._y_axis_manager.set_data_node_to_axis(data_node, curr_data_to_axis_map[data_node])
+
+	# This might be redundant as the one above, but fuck it, I am tired. This is an easy fix to make sure I dont fuck up when the number
+	# of axis decreases
+	# Please note that since this function also calls, set_axis_range(), it will inherently trigger axis_limit_changed signal which will
+	# then queue a redraw (this is not optimal, but I will fix this if I see any form of bottleneck due to this implementation). Since
+	# I am assuming the user would rarely trigger any sort of change in the number of axis, this should be fine and would not cost any sort
+	# of performance.
 	for data_node in self._y_axis_manager.get_data_to_axis_map().keys():
 		var curr_ax_id_str: String = self._y_axis_manager.get_data_to_axis_map()[data_node]
 		if (not Guidot_Y_Axis.AxisPosition[curr_ax_id_str] in available_axis):
@@ -604,6 +626,7 @@ func plot_realtime_data() -> void:
 			var channel_data_points: PackedVector2Array = self._guidot_server.query_data_with_channel_name(channel_name)
 			selected_gd_data[gd_data] = channel_data_points
 
+		var test = self._y_axis_manager.get_data_to_axis_map()
 		self.plot_node.plot_multiple_data(selected_gd_data, self._y_axis_manager, Vector2(t_axis_min, t_axis_max))
 
 func _on_display_frame_resized() -> void:
