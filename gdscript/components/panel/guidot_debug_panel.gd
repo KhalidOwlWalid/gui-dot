@@ -24,7 +24,6 @@ func override_guidot_debug_info(new_dict: Dictionary) -> void:
 		
 		if (_debug_panel_vbox_cont.get_child_count() != null):
 			var child_array: Array[Node] = _debug_panel_vbox_cont.get_children()
-			print(child_array)
 			for curr_child in child_array:
 				self.log(LOG_DEBUG, ["Removing node:", curr_child])
 				_debug_panel_vbox_cont.remove_child(curr_child)

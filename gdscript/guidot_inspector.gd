@@ -5,6 +5,9 @@ var debugging_panel: Panel = Panel.new()
 var _mouse_in: bool
 var _dragging_distance: float
 var _dir: Vector2
+
+var _tag: String = "GD Inspector"
+
 @onready var _is_dragging: bool = false
 @onready var _new_position: Vector2 = Vector2()
 
@@ -19,21 +22,20 @@ func _ready() -> void:
 	debugging_panel.mouse_exited.connect(_on_mouse_exited)
 
 func _on_focus_entered() -> void:
-	print("Focus entered")
+	Guidot_Log.gd_log(Guidot_Log.Log_Level.DEBUG, self._tag, ["Focus entered"])
 
 func _on_mouse_entered() -> void:
 	_mouse_in = true
-	print("Mouse entered")
+	Guidot_Log.gd_log(Guidot_Log.Log_Level.DEBUG, self._tag, ["Mouse entered"])
 
 func _on_mouse_exited() -> void:
 	_mouse_in = false
-	print("Mouse exited")
+	Guidot_Log.gd_log(Guidot_Log.Log_Level.DEBUG, self._tag, ["Mouse exited"])
 
 func _input(event: InputEvent) -> void:
 	if (event is InputEventKey):
 		if event.keycode == KEY_SPACE:
 			debugging_panel.visible = true
-			print("Visible now")
 
 	if (event is InputEventMouseButton):
 		
@@ -52,5 +54,4 @@ func _input(event: InputEvent) -> void:
 
 func _process(delta: float) -> void:
 	if _is_dragging:
-		print("Dragging")
 		self.position = _new_position

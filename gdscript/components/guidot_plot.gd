@@ -170,9 +170,6 @@ func plot_multiple_data(datasets: Dictionary, y_axis_manager: RefCounted, time_r
 
 	queue_redraw()
 
-func test_func(data_node: Node):
-	print(data_node.data)
-
 func update_x_ticks_properties(n_ticks: int, ticks_pos: PackedVector2Array) -> void:
 	x_ticks_pos = ticks_pos
 	n_x_ticks = n_ticks
