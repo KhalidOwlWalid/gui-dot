@@ -128,6 +128,7 @@ class AxisManager:
 
 		return true
 
+	# Returning channel name and color to ease the process of drawing the axis title and labelling the title based on the line color
 	func get_chan_name_and_color_on_axis(axis_pos: Guidot_Y_Axis.AxisPosition) -> Array[Array]:
 		var chan_name_and_color: Array[Array]
 
