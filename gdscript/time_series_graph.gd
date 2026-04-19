@@ -278,6 +278,9 @@ class AxisManager:
 @export var t_axis_max: float = 30
 @export var x_number_of_ticks: int = 10
 
+@export_group("Plot")
+@export var plot_update_rate_hz: float = 60.0
+
 @export_group("Y-Axis")
 @export var y_axis_min: float = 0
 @export var y_axis_max: float = 2000
@@ -653,8 +656,12 @@ func _on_data_received() -> void:
 		self.data_received_signal += 1
 		t_axis_min = t_axis_node.min_val
 		t_axis_max = t_axis_node.max_val
-		self.plot_realtime_data()
-		queue_redraw()
+		# REALTIME mode: _process drives redraws at plot_update_rate_hz — don't
+		# redraw here or every incoming sample bypasses the rate cap.
+		# FIXED mode: redraw immediately so a static window reflects new data.
+		if _current_buffer_mode == Graph_Buffer_Mode.FIXED:
+			self.plot_realtime_data()
+			queue_redraw()
 
 func _on_focus_requested() -> void:
 	self._is_in_focus = !self._is_in_focus
@@ -715,7 +722,6 @@ func plot_fixedtime_data():
 func _process(delta: float) -> void:
 	self._move_display_process()
 
-	var frame_update_rate_hz: float = 1.0
 	var curr_ms: int = Time.get_ticks_msec()
 
 	# This may seem to be a duplicate to the switch that comes after, but I'd rather have the graph node itself being the "master"
@@ -744,7 +750,7 @@ func _process(delta: float) -> void:
 		Graph_Buffer_Mode.REALTIME:
 			
 			# BUGFIX: This does not seem to limit the number of times the plot is drawn, fix it
-			if (float(curr_ms - self.fps_last_update_ms) > (1/frame_update_rate_hz)/1000):
+			if (float(curr_ms - self.fps_last_update_ms) >= 1000.0 / plot_update_rate_hz):
 				# If there is no data present at the moment, then we ignore it
 				if (self._guidot_server != null):
 					if true:
@@ -758,6 +764,8 @@ func _process(delta: float) -> void:
 							# simply an increasing integer, or absolute or relative time etc.
 							var curr_s: float = self._guidot_clock_node.get_current_time_s()
 							t_axis_node.update_to_latest(curr_s)
+							self.plot_realtime_data()
+							queue_redraw()
 
 				self.fps_last_update_ms = curr_ms
 
