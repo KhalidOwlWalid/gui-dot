@@ -742,8 +742,9 @@ func _process(delta: float) -> void:
 		# In principle, the min val should stay constant unless the user specifies any desired min axis value,
 		# and the max axis value will keep moving
 		Graph_Buffer_Mode.REALTIME:
-
-			if (float(curr_ms - self.fps_last_update_ms) > 1/frame_update_rate_hz):
+			
+			# BUGFIX: This does not seem to limit the number of times the plot is drawn, fix it
+			if (float(curr_ms - self.fps_last_update_ms) > (1/frame_update_rate_hz)/1000):
 				# If there is no data present at the moment, then we ignore it
 				if (self._guidot_server != null):
 					if true:
