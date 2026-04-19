@@ -331,12 +331,9 @@ func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 			return "Realtime"
 		_:
 			return "Not Implemented"
-	
-func recalculate_component_norm_sizing():
-	# It needs to calculate the y-axis first
-	# Then, it calculates the normalized size of the plot frame
-	pass
 
+# NOTE: This whole thing is a mess, and just me trying to do stupid fix. Not the most optimal solution, but at least
+# no visible bugs for now. I will need to tackle the bug some other time
 func _setup_plot_node() -> void:
 
 	# Number of left and right y-axis components
@@ -362,7 +359,6 @@ func _setup_plot_node() -> void:
 	var top_offset: int = int(header_margin * self.size.y)
 	var bottom_offset: int = int(self.size.y - t_axis_node.norm_comp_size.y * self.size.y)
 
-	self.recalculate_component_norm_sizing()
 	plot_node.init_plot(Guidot_Utils.get_color("gd_black"))
 	plot_node.setup_plot_frame_offset(left_offset, right_offset, top_offset, bottom_offset)
 
