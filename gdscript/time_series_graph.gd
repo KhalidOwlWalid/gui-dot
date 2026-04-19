@@ -350,20 +350,21 @@ func _setup_plot_node() -> void:
 	var plot_size_scaled: Vector2 = plot_node.norm_comp_size * self.size
 	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
 	var y_axis_width: float = clamp(0.075 * self.size.x, 0, 50)
-	self.log(LOG_DEBUG, ["y axis width from guidot plot: ", y_axis_width])
 
 	# Explicit offset calculation for better clarity
 	var left_offset: float = n_left_yax_comp * y_axis_width
-	var right_offset: float = plot_size_scaled.x - n_right_yax_comp * y_axis_width
+	var right_offset: float
+	if (n_right_yax_comp == 0):
+		right_offset = self.size.x - self._setting_button.size.x
+	else:
+		var right_ax_width = n_right_yax_comp * y_axis_width
+		right_offset = self.size.x - right_ax_width - self._setting_button.size.x
 	var top_offset: int = int(header_margin * self.size.y)
 	var bottom_offset: int = int(self.size.y - t_axis_node.norm_comp_size.y * self.size.y)
+
 	self.recalculate_component_norm_sizing()
 	plot_node.init_plot(Guidot_Utils.get_color("gd_black"))
-	# TODO (Khalid): At the moment, the plot frame number of y-axis is hardcoded, just to get a PoC working
-	# plot_node.setup_plot_frame_offset(Vector2(self.size.x, self.size.y), \
-	# 	Vector2(t_axis_node.norm_comp_size.y, 0.075), self._y_axis_manager.get_axis_count())
 	plot_node.setup_plot_frame_offset(left_offset, right_offset, top_offset, bottom_offset)
-	self.log(LOG_DEBUG, ["Inside setup plot node: ", self._y_axis_manager.get_axis_count()])
 
 func _init_plot_node():
 	self._setup_plot_node()
