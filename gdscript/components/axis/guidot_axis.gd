@@ -83,6 +83,9 @@ func setup_axis_range(min: float, max: float) -> void:
 func get_axis_range() -> Vector2:
 	return Vector2(self.min_val, self.max_val)
 
+func get_axis_width() -> int:
+	return self.axis_width
+
 func set_min(min: float) -> void:
 	self.min_val = min
 	axis_limit_changed.emit()
