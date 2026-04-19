@@ -128,14 +128,14 @@ class AxisManager:
 
 		return true
 
-	func get_channel_name_on_axis(axis_pos: Guidot_Y_Axis.AxisPosition) -> Array[String]:
-		var chan_on_axis: Array[String]
+	func get_chan_name_and_color_on_axis(axis_pos: Guidot_Y_Axis.AxisPosition) -> Array[Array]:
+		var chan_name_and_color: Array[Array]
 
 		for data_node in self._data_to_axis_map.keys():
 			if (self._data_to_axis_map[data_node] == Guidot_Y_Axis.get_axis_id_str_from_value(axis_pos)):
-				chan_on_axis.append(data_node.get_name())
+				chan_name_and_color.append([data_node.get_name(), data_node.get_line_color()])
 
-		return chan_on_axis
+		return chan_name_and_color
 
 	func get_data_to_axis_map() -> Dictionary:
 		return self._data_to_axis_map
