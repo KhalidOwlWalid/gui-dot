@@ -338,23 +338,31 @@ func recalculate_component_norm_sizing():
 	pass
 
 func _setup_plot_node() -> void:
-	# if (not self._initialized):
-	# 	# This is originally required due to the fact that the plot node will be initialized first before the axis components
-	# 	# since the axis components requires/
-	# 	plot_node.setup_plot_frame_offset(Vector2(self.size.x, self.size.y), \
-	# 		Vector2(t_axis_node.norm_comp_size.y, 0.075), self._y_axis_manager.get_axis_count())
-	# else:
-	# 	self.recalculate_component_norm_sizing()
 
-	# TODO: Perform recalculations on resizing the plot frame along with any newly added y-axis
+	# Number of left and right y-axis components
+	var n_y_axis: Vector2 = self._y_axis_manager.get_axis_count()
+	var n_left_yax_comp: float = n_y_axis.x
+	var n_right_yax_comp: float = n_y_axis.y
+	# Temporary to handle margin
+	var header_margin: float = 0.075
 
-	# TODO (Khalid): At the moment, the plot frame number of y-axis is hardcoded, just to get a PoC working
-	# var tmp: float = self._y_axis_manager.get_axis_handler(-1).get_axis_width()
-	# self.recalculate_component_norm_sizing()
+	# Find the necessary offset relative to the graph area
+	var plot_size_scaled: Vector2 = plot_node.norm_comp_size * self.size
+	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
+	var y_axis_width: float = clamp(0.075 * self.size.x, 0, 50)
+	self.log(LOG_DEBUG, ["y axis width from guidot plot: ", y_axis_width])
 
+	# Explicit offset calculation for better clarity
+	var left_offset: float = n_left_yax_comp * y_axis_width
+	var right_offset: float = plot_size_scaled.x - n_right_yax_comp * y_axis_width
+	var top_offset: int = int(header_margin * self.size.y)
+	var bottom_offset: int = int(self.size.y - t_axis_node.norm_comp_size.y * self.size.y)
+	self.recalculate_component_norm_sizing()
 	plot_node.init_plot(Guidot_Utils.get_color("gd_black"))
-	plot_node.setup_plot_frame_offset(Vector2(self.size.x, self.size.y), \
-		Vector2(t_axis_node.norm_comp_size.y, 0.075), self._y_axis_manager.get_axis_count())
+	# TODO (Khalid): At the moment, the plot frame number of y-axis is hardcoded, just to get a PoC working
+	# plot_node.setup_plot_frame_offset(Vector2(self.size.x, self.size.y), \
+	# 	Vector2(t_axis_node.norm_comp_size.y, 0.075), self._y_axis_manager.get_axis_count())
+	plot_node.setup_plot_frame_offset(left_offset, right_offset, top_offset, bottom_offset)
 	self.log(LOG_DEBUG, ["Inside setup plot node: ", self._y_axis_manager.get_axis_count()])
 
 func _init_plot_node():
