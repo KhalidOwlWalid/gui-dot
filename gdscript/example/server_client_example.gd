@@ -80,7 +80,7 @@ func _fps_data() -> void:
 
 func _sin_cos() -> void:
 	var curr_ms: int = Time.get_ticks_msec()
-	var update_freq_hz: float = 60.0
+	var update_freq_hz: float = 100.0
 	var update_freq_ms: float = float(1/(update_freq_hz)) * 1000
 
 	if (curr_ms - self._sin._last_update_ms > update_freq_ms):
