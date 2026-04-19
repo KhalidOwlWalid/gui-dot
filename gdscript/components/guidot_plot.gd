@@ -70,6 +70,10 @@ var n_y_ax_cached: Vector2 = Vector2(1,0)
 var test_popup: PopupMenu
 
 func _ready() -> void:
+	self.name = "plot_frame"
+	self.clip_contents = true
+	self.color = Guidot_Utils.get_color("gd_black")
+
 	test_popup = PopupMenu.new()
 	add_child(test_popup)
 	test_popup.add_check_item("test")
@@ -89,12 +93,13 @@ func _ready() -> void:
 func setup_plot_anchor() -> void:
 	pass
 
-func init_plot(color: Color = Guidot_Utils.get_color("gd_black")) -> void:
-	self.name = "plot_frame"
+func init_plot(color: Color = Guidot_Utils.get_color("gd_grey")) -> void:
+	# self.name = "plot_frame"
  
-	# This helps ensuring that we do not draw anything beyond the plot frame
-	self.clip_contents = true
-	self.color = color
+	# # This helps ensuring that we do not draw anything beyond the plot frame
+	# self.clip_contents = true
+	# self.color = color
+	pass
 
 func setup_plot_frame_offset(left: float, right: float, top: float, bottom: float) -> void:
 
