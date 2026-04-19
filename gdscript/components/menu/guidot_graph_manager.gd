@@ -3,6 +3,7 @@ extends Guidot_Panel2
 
 signal changes_applied
 signal y_axis_changes_applied
+signal opacity_changed(alpha: float)
 
 var selected_server: String
 
@@ -133,6 +134,45 @@ func _ready() -> void:
 	_graph_config_tab_cont.add_child(_server_config_tab)
 
 	var graph_buffer_mode_label = Guidot_Utils.create_label_row("Current mode", "Realtime", Vector2(200, 20))
+
+	var opacity_margin: MarginContainer = MarginContainer.new()
+	opacity_margin.add_theme_constant_override("margin_left", 4)
+	opacity_margin.add_theme_constant_override("margin_right", 4)
+	opacity_margin.add_theme_constant_override("margin_top", 2)
+	opacity_margin.add_theme_constant_override("margin_bottom", 2)
+
+	var opacity_hbox: HBoxContainer = HBoxContainer.new()
+	opacity_hbox.add_theme_constant_override("separation", 8)
+
+	var opacity_text: Label = Label.new()
+	opacity_text.text = "Opacity"
+	opacity_text.custom_minimum_size = Vector2(60, 0)
+	opacity_text.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+	var opacity_slider: HSlider = HSlider.new()
+	opacity_slider.min_value = 0.0
+	opacity_slider.max_value = 1.0
+	opacity_slider.step = 0.01
+	opacity_slider.value = 1.0
+	opacity_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	opacity_slider.custom_minimum_size = Vector2(0, 20)
+
+	var opacity_value_label: Label = Label.new()
+	opacity_value_label.text = "100%"
+	opacity_value_label.custom_minimum_size = Vector2(36, 0)
+	opacity_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	opacity_value_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+	opacity_slider.value_changed.connect(func(v: float) -> void:
+		opacity_value_label.text = "%d%%" % int(v * 100)
+		opacity_changed.emit(v)
+	)
+
+	opacity_hbox.add_child(opacity_text)
+	opacity_hbox.add_child(opacity_slider)
+	opacity_hbox.add_child(opacity_value_label)
+	opacity_margin.add_child(opacity_hbox)
+
 	var add_server_btn: Button = Button.new()
 	add_server_btn.text = "+ Add Server"
 	add_server_btn.pressed.connect(self._on_add_server_pressed)
@@ -140,7 +180,7 @@ func _ready() -> void:
 	_apply_changes_btn.text = "Apply changes"
 	self._apply_changes_btn.pressed.connect(self._on_apply_changes_to_graph)
 	
-	var server_config_rows: Array[Node] = [graph_buffer_mode_label, add_server_btn, self._apply_changes_btn]
+	var server_config_rows: Array[Node] = [graph_buffer_mode_label, opacity_margin, add_server_btn, self._apply_changes_btn]
 	self.add_config_rows(self._server_config_tab, server_config_rows)
 
 	# Setup y-axis configurator

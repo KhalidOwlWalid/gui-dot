@@ -13,7 +13,6 @@ const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 @onready var _guidot_stylebox: StyleBoxFlat = StyleBoxFlat.new()
 @onready var margin_val: int = 1
 
-
 @onready var _last_mouse_position: Vector2 = Vector2()
 @onready var _mouse_in: bool = false
 
@@ -28,6 +27,10 @@ var _drag_offset: Vector2
 
 @onready var _is_in_focus: bool = false
 @onready var _is_holding_left_click: bool = false
+
+var i: float = 0
+var rate: float = 0.05
+var sign: float = 1.0
 
 enum UI_Mode {
 	SELECTED,
@@ -121,11 +124,13 @@ func _ready() -> void:
 
 	# Signals connection
 	guidot_graph.parent_focus_requested.connect(_on_parent_focused)
+	guidot_graph._graph_manager.opacity_changed.connect(self.set_graph_opacity)
 	self.mouse_entered.connect(_on_mouse_entered)
 	self.mouse_exited.connect(_on_mouse_exited)
 
 	# Hotkeys
 	self._register_hotkeys()
+
 
 func _on_mouse_entered() -> void:
 	self._mouse_in = true
@@ -139,6 +144,9 @@ func _on_parent_focused() -> void:
 
 func set_stylebox_color(color: Color) -> void:
 	_guidot_stylebox.bg_color = color
+
+func set_graph_opacity(alpha: float) -> void:
+	self.modulate.a = clamp(alpha, 0.0, 1.0)
 
 func set_margin_size(val: int) -> void:
 	_guidot_stylebox.content_margin_left = val
