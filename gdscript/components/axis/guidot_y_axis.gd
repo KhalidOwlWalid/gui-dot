@@ -131,7 +131,6 @@ func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node:
 	var required_width: int = int(_get_max_label_width()) + label_padding
 	var base_width: int = int(self.norm_comp_size.x * display_frame_node.size.x)
 	self.axis_width = max(clamp(base_width, self.min_width, self.max_width), required_width)
-	self.log(LOG_DEBUG, ["Base width: ", base_width, ", Max width: ", self.max_width, ", Required width: ", required_width])
 
 	# If less than zero, then the graph is placed on the left side
 	if (self._axis_id < 0):
