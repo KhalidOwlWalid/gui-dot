@@ -261,6 +261,8 @@ func _draw_ticks() -> void:
 		var chan_on_this_axis: Array[Array] = _display_frame_node.get_y_axis_manager().get_chan_name_and_color_on_axis(self._axis_id)
 		if not chan_on_this_axis.is_empty():
 			_draw_channel_labels(chan_on_this_axis, font, top_y, pixel_height, label_x)
+		else:
+			_draw_channel_labels([], font, top_y, pixel_height, label_x)
 
 func _draw_channel_labels(chan_name_and_color: Array[Array], font: Font, top_y: float, pixel_height: float, label_x: float) -> void:
 	var gap: float = 8.0
