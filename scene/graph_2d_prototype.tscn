@@ -38,17 +38,3 @@ script = ExtResource("5_ax30q")
 
 [node name="Node" type="Node" parent="."]
 script = ExtResource("4_hqxys")
-
-[node name="ColorRect" type="ColorRect" parent="."]
-layout_mode = 0
-offset_left = 155.0
-offset_top = 119.0
-offset_right = 478.0
-offset_bottom = 307.0
-
-[node name="HSlider" type="HSlider" parent="."]
-layout_mode = 0
-offset_right = 235.0
-offset_bottom = 70.0
-editable = false
-tick_count = 10
