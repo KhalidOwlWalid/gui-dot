@@ -65,6 +65,7 @@ var n_x_ticks: int
 var x_ticks_pos: PackedVector2Array
 var n_y_ticks: int
 var y_ticks_pos: PackedVector2Array
+var n_y_ax_cached: Vector2 = Vector2(1,0)
 
 var test_popup: PopupMenu
 
@@ -77,7 +78,7 @@ func _ready() -> void:
 	test_popup.hide_on_item_selection = false
 	test_popup.hide_on_state_item_selection = false
 
-	self.norm_comp_size = Vector2(0.95, 0.95)
+	self.norm_comp_size = Vector2(0.9, 0.9)
 
 	self.set_component_tag_name("PLOT")
 
@@ -103,23 +104,33 @@ func init_plot(color: Color = Guidot_Utils.get_color("gd_black")) -> void:
 #											Example: Vector2(2, 2) means that there are 2 y-axis on the left and right side
 func setup_plot_frame_offset(frame_size: Vector2, axis_norm_comp_size: Vector2, n_y_axis: Vector2 = Vector2(1, 0)) -> void:
 
-	# n_y_axis = Vector2(1, 0)
-	var n_left_comp: float = n_y_axis.x
-	var n_right_comp: float = n_y_axis.y
+	# Number of left and right y-axis components
+	var n_left_yax_comp: float = n_y_axis.x
+	var n_right_yax_comp: float = n_y_axis.y
 	# Temporary to handle margin
 	var header_margin: float = 0.075
 
+	# Recalculate the scaling of the normalized component size of the plot frame relative to newly added axis	
+	if (n_y_ax_cached != n_y_axis):
+		n_y_ax_cached = n_y_axis
+
 	# Find the necessary offset relative to the graph area
 	var plot_size_scaled: Vector2 = self.norm_comp_size * frame_size
-	# self.setup_center_anchor(plot_x_size_scaled, plot_y_size_scaled)
 	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
 	var y_axis_width: float = clamp(axis_norm_comp_size.y * frame_size.x, 0, 50)
-	var left_offset: float = n_left_comp * y_axis_width
+	self.log(LOG_DEBUG, ["y axis width from guidot plot: ", y_axis_width])
+
+	# Explicit offset calculation for better clarity
+	var left_offset: float = n_left_yax_comp * y_axis_width
+	var right_offset: float = plot_size_scaled.x - n_right_yax_comp * y_axis_width
 	var top_offset: int = int(header_margin * frame_size.y)
+	var bottom_offset: int = int(frame_size.y - axis_norm_comp_size.x * frame_size.y)
+
+	# Set the offsets of the plot frame
 	self.set_offset(SIDE_LEFT, left_offset)
-	self.set_offset(SIDE_RIGHT, plot_size_scaled.x - n_right_comp * y_axis_width)
+	self.set_offset(SIDE_RIGHT, right_offset)
 	self.set_offset(SIDE_TOP, top_offset)
-	self.set_offset(SIDE_BOTTOM, frame_size.y - axis_norm_comp_size.x * frame_size.y)
+	self.set_offset(SIDE_BOTTOM, bottom_offset)
 	
 func _map_data_to_pixel(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2) -> void:
 	pixel_data_points = PackedVector2Array()
@@ -148,11 +159,6 @@ func _map_data_points_to_pixel_pos(data_points: PackedVector2Array, t_axis_range
 	var mx: float = (self.get_component_size().x - 0)/(t_axis_max - t_axis_min)
 	var my: float = (self.get_component_size().y - 0)/(y_axis_min - y_axis_max)
 	var comp_size: Vector2 = self.get_component_size()
-	
-	# First method of performing pixel remapping
-	# TODO (Khalid): Leaving this implementation here for now, as I am not sure if the first or second method is better
-	# var pix_data_pos: Array = Array(data_points).map(pixel_remap.bind(t_axis_range, y_axis_range, self.get_component_size()))
-	# pix_data_pos = PackedVector2Array(pix_data_pos)
 
 	# Using binary search to find the nth element where t_min and t_max starts, so we don't have to remap and draw
 	# every single data points

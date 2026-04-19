@@ -29,6 +29,8 @@ var _selected_channels_name: Array
 @onready var t_axis_node: Guidot_T_Axis = Guidot_T_Axis.new()
 @onready var _setting_button: Button = Button.new()
 
+var _initialized: bool = false
+
 class AxisHandler:
 
 	signal id_reassigned
@@ -73,6 +75,9 @@ class AxisHandler:
 
 	func get_axis_id() -> Guidot_Y_Axis.AxisPosition:
 		return self._axis_pos
+
+	func get_axis_width() -> int:
+		return self._axis_node.get_axis_width()
 
 	func _on_axis_changed() -> void:
 		pass
@@ -326,12 +331,30 @@ func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 			return "Realtime"
 		_:
 			return "Not Implemented"
+	
+func recalculate_component_norm_sizing():
+	# It needs to calculate the y-axis first
+	# Then, it calculates the normalized size of the plot frame
+	pass
 
 func _setup_plot_node() -> void:
-	plot_node.init_plot(Guidot_Utils.get_color("gd_black"))
+	# if (not self._initialized):
+	# 	# This is originally required due to the fact that the plot node will be initialized first before the axis components
+	# 	# since the axis components requires/
+	# 	plot_node.setup_plot_frame_offset(Vector2(self.size.x, self.size.y), \
+	# 		Vector2(t_axis_node.norm_comp_size.y, 0.075), self._y_axis_manager.get_axis_count())
+	# else:
+	# 	self.recalculate_component_norm_sizing()
+
+	# TODO: Perform recalculations on resizing the plot frame along with any newly added y-axis
+
 	# TODO (Khalid): At the moment, the plot frame number of y-axis is hardcoded, just to get a PoC working
+	# var tmp: float = self._y_axis_manager.get_axis_handler(-1).get_axis_width()
+	# self.recalculate_component_norm_sizing()
+
+	plot_node.init_plot(Guidot_Utils.get_color("gd_black"))
 	plot_node.setup_plot_frame_offset(Vector2(self.size.x, self.size.y), \
-		Vector2(t_axis_node.norm_comp_size.y, Guidot_Y_Axis.comp_size_norm_fixed), self._y_axis_manager.get_axis_count())
+		Vector2(t_axis_node.norm_comp_size.y, 0.075), self._y_axis_manager.get_axis_count())
 	self.log(LOG_DEBUG, ["Inside setup plot node: ", self._y_axis_manager.get_axis_count()])
 
 func _init_plot_node():
@@ -479,17 +502,18 @@ func _ready() -> void:
 
 	self._setup_graph_client()
 	self._register_graph_client()
-	
-	# Add child node for the graph
-	self._init_plot_node()
-	# X/Y axis rectangle anchor offset calculation depends on the plot node anchor offset maths
-	# Hence, plot node needs to be ran first before we run the axis node init
-	self._init_t_axis_node()
 
 	self._y_axis_manager.init_axis_manager(self)
 	var paxis_handler: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
 	var primary_axis: Guidot_Y_Axis = paxis_handler.get_axis_node()
 	primary_axis.axis_limit_changed.connect(_on_y_axis_changed.bind(primary_axis))
+
+	# X/Y axis rectangle anchor offset calculation depends on the plot node anchor offset maths
+	# Hence, plot node needs to be ran first before we run the axis node init
+	self._init_t_axis_node()
+	
+	# Add child node for the graph
+	self._init_plot_node()
 	
 	self._init_font()
 
@@ -533,6 +557,8 @@ func _ready() -> void:
 	self._graph_manager.changes_applied.connect(self._on_changes_applied)
 	self._graph_manager.y_axis_changes_applied.connect(self._on_y_axis_changes_applied)
 	self._graph_manager.register_axis_manager(self._y_axis_manager)
+
+	self._initialized = true
 
 	self.log(LOG_INFO, ["Time series graph initialized"])
 
