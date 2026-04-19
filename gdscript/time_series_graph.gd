@@ -135,6 +135,11 @@ class AxisManager:
 
 		return true
 
+	func remove_data_from_axis(new_data_array: Array[Guidot_Data]):
+		for gd_node in self._data_to_axis_map.keys():
+			if (not gd_node in new_data_array):
+				self._data_to_axis_map.erase(gd_node)
+
 	# Returning channel name and color to ease the process of drawing the axis title and labelling the title based on the line color
 	func get_chan_name_and_color_on_axis(axis_pos: Guidot_Y_Axis.AxisPosition) -> Array[Array]:
 		var chan_name_and_color: Array[Array]
@@ -449,8 +454,16 @@ func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 			if (server_config_array[0].get_selected_data().is_empty()):
 				self.log(LOG_WARNING, ["Please select data that you wish to subscribe to: ", server_config_array[0].get_all_data_options()])
 				self._selected_channels_name = []
+				# Pass an empty array to remove all of the channels from the axis
+				self._y_axis_manager.remove_data_from_axis([])
 			else:
 				self._selected_channels_name = server_config_array[0].get_selected_data()
+
+				var gd_node_array: Array[Guidot_Data] = []
+				for chan_name in self._selected_channels_name:
+					gd_node_array.append(self._guidot_server.get_node_id_with_channel_name(chan_name))
+
+				self._y_axis_manager.remove_data_from_axis(gd_node_array)
 
 	self.resized.emit()
 
