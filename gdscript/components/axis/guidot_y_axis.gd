@@ -257,23 +257,24 @@ func _draw_ticks() -> void:
 				Guidot_Utils.get_color("gd_bright_yellow"))
 
 	if _display_frame_node != null:
-		var chan_on_this_axis: Array = _display_frame_node.get_y_axis_manager().get_channel_name_on_axis(self._axis_id)
+		var chan_on_this_axis: Array[Array] = _display_frame_node.get_y_axis_manager().get_chan_name_and_color_on_axis(self._axis_id)
 		if not chan_on_this_axis.is_empty():
 			_draw_channel_labels(chan_on_this_axis, font, top_y, pixel_height, label_x)
 
-func _draw_channel_labels(chan_names: Array, font: Font, top_y: float, pixel_height: float, label_x: float) -> void:
+func _draw_channel_labels(chan_name_and_color: Array[Array], font: Font, top_y: float, pixel_height: float, label_x: float) -> void:
 	var gap: float = 8.0
 	var center_y: float = top_y + pixel_height / 2.0
 
 	# Measure each label — when rotated 90°, text width becomes the vertical span on screen.
 	var text_widths: Array = []
-	for ch_name: String in chan_names:
+	for ch_properties: Array in chan_name_and_color:
+		var ch_name: String = ch_properties[0]
 		text_widths.append(font.get_string_size(ch_name, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
 
 	var total_span: float = 0.0
 	for w: float in text_widths:
 		total_span += w
-	total_span += (chan_names.size() - 1) * gap
+	total_span += (chan_name_and_color.size() - 1) * gap
 
 	# Start y so the whole group is centred on the axis midpoint.
 	var y_cursor: float = center_y - total_span / 2.0
@@ -282,10 +283,11 @@ func _draw_channel_labels(chan_names: Array, font: Font, top_y: float, pixel_hei
 	# Place the column just to the left of the tick labels.
 	var col_x: float = label_x - 4.0 - font_size
 
-	for i in range(chan_names.size()):
-		var text: String = chan_names[i]
+	for i in range(chan_name_and_color.size()):
+		var text: String = chan_name_and_color[i][0]
+		var color: Color = chan_name_and_color[i][1]
 
-		if (i != (chan_names.size() - 1)):
+		if (i != (chan_name_and_color.size() - 1)):
 			print(text)
 			text += ", "
 
@@ -302,7 +304,7 @@ func _draw_channel_labels(chan_names: Array, font: Font, top_y: float, pixel_hei
 		var pivot_y: float = y_cursor + text_width
 		draw_set_transform(Vector2(col_x, pivot_y), -PI / 2.0)
 		draw_string(font, Vector2(0.0, font_size), text,
-				HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, self.line_color)
+				HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 		draw_set_transform(Vector2.ZERO, 0.0)
 
 		y_cursor += text_width + gap
