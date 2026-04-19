@@ -609,6 +609,9 @@ func _ready() -> void:
 
 	self._graph_manager.opacity_changed.connect(self.set_graph_opacity)
 
+	# Ensure that the graph manager is always on top of the display graph
+	self._graph_manager.z_index = self.z_index + 1
+
 	self._initialized = true
 
 	self.log(LOG_INFO, ["Time series graph initialized"])
