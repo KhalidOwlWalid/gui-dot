@@ -281,10 +281,9 @@ func _input(event: InputEvent) -> void:
 				self.size = new_size
 				self._last_mouse_position = curr_mouse_pos_global
 
-			if self._is_dragging and self._mouse_in:
+			if self._is_dragging:
 				self.set_default_cursor_shape(Control.CURSOR_DRAG)
-		
-				# Move panel while maintaining the original mouse offset
+				get_viewport().set_input_as_handled()
 				new_pos = curr_mouse_pos_global - _drag_offset
 				self.global_position = new_pos
 				self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging panel from", self._last_position, "to", self.global_position])
