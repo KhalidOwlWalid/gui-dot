@@ -121,19 +121,20 @@ func _on_data_selected(sel_data_array: Dictionary) -> void:
 	# This will be used by the time series graph to query for the data of each respective channel name
 	self.selected_data = sel_data_array
 
-	# Populate selected labels
-	var ax_id_str: String
-	var curr_axis_to_data_map: Dictionary = self._y_axis_manager_ref.get_data_to_axis_map()
-	for chan_name in sel_data_array.keys():
-		if (sel_data_array[chan_name] in curr_axis_to_data_map.keys()): 
-			ax_id_str = curr_axis_to_data_map[sel_data_array[chan_name]]	
-		else:
-			self.log(LOG_DEBUG, [chan_name, " is not in the axis-data map. Defaulting to PRIMARY_LEFT"])
-			ax_id_str = "PRIMARY_LEFT"
-		var hbox: HBoxContainer = self._create_channel_config_name(chan_name, sel_data_array[chan_name], ax_id_str)
-		sub_data_vbox.add_child(hbox)
-
-	self.log(LOG_INFO, [self._y_axis_manager_ref.get_data_to_axis_map()])
+	if (not self.selected_data.is_empty()):
+		# Populate selected labels
+		var ax_id_str: String
+		var curr_axis_to_data_map: Dictionary = self._y_axis_manager_ref.get_data_to_axis_map()
+		for chan_name in sel_data_array.keys():
+			if (sel_data_array[chan_name] in curr_axis_to_data_map.keys()): 
+				ax_id_str = curr_axis_to_data_map[sel_data_array[chan_name]]	
+			else:
+				self.log(LOG_DEBUG, [chan_name, " is not in the axis-data map. Defaulting to PRIMARY_LEFT"])
+				ax_id_str = "PRIMARY_LEFT"
+			var hbox: HBoxContainer = self._create_channel_config_name(chan_name, sel_data_array[chan_name], ax_id_str)
+			sub_data_vbox.add_child(hbox)
+	else:
+		self.log(LOG_DEBUG, ["No data has been selected"])
 
 func get_available_gd_server() -> Array[String]:
 	var gd_servers: Array[Node] = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)
