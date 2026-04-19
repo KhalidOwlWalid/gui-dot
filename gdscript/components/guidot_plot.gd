@@ -132,11 +132,13 @@ func _map_data_points_to_pixel_pos(data_points: PackedVector2Array, t_axis_range
 	var my: float = (self.get_component_size().y - 0)/(y_axis_min - y_axis_max)
 	var comp_size: Vector2 = self.get_component_size()
 
-	# Using binary search to find the nth element where t_min and t_max starts, so we don't have to remap and draw
-	# every single data points
+	# Binary search for the visible window, then expand by one point on each side so
+	# the polyline segment extends just past both edges.  clip_contents=true on the
+	# plot frame clips the overdraw — this makes the line look continuous even when
+	# only a single segment is visible inside the window.
 	var processed_data_points: PackedVector2Array
-	var t_min_pos: int = data_points.bsearch(Vector2(t_axis_range.x, 0))
-	var t_max_pos: int = data_points.bsearch(Vector2(t_axis_range.y, 0))
+	var t_min_pos: int = maxi(0, data_points.bsearch(Vector2(t_axis_range.x, 0)) - 1)
+	var t_max_pos: int = mini(data_points.size(), data_points.bsearch(Vector2(t_axis_range.y, 0)) + 1)
 	processed_data_points = data_points.slice(t_min_pos, t_max_pos)
 
 	# Second method of performing pixel remapping
