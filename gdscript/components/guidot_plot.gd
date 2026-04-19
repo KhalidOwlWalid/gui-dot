@@ -96,12 +96,6 @@ func init_plot(color: Color = Guidot_Utils.get_color("gd_black")) -> void:
 	self.clip_contents = true
 	self.color = color
 
-# Setup the plot relative to the size of the graph display frame and the existing axis
-# @param	frame_size 			(Vector2):	Frame size of the graph display
-# @param	axis_comp_norm_size (Vector2):	Axis component normalized size (the summation in the x and y should be 1.0)
-# @param	n_y_axis 			(Vector2):	Number of y-axis in the left(x) and right(y). Again, the summation of all
-#											axis components including offset should be 1.0.
-#											Example: Vector2(2, 2) means that there are 2 y-axis on the left and right side
 func setup_plot_frame_offset(left: float, right: float, top: float, bottom: float) -> void:
 
 	# Set the offsets of the plot frame

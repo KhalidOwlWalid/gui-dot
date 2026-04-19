@@ -45,6 +45,7 @@ class AxisHandler:
 	var _axis_node: Guidot_Y_Axis
 	var _in_use: bool
 	var _use_count: int = 0
+	var _master_graph_node: Guidot_T_Series_Graph
 
 	func init_axis(parent: Node, axis_id: Guidot_Y_Axis.AxisPosition, axis_range: Vector2, in_use: bool = false):
 		self._axis_node = Guidot_Y_Axis.new()
@@ -52,6 +53,7 @@ class AxisHandler:
 		self._axis_pos = axis_id
 		self._in_use = in_use
 		self._axis_node.axis_limit_changed.connect(self._on_axis_changed)
+		self._master_graph_node = parent
 		parent.add_child(self._axis_node)
 
 	func use_axis(flag: bool) -> void:
@@ -80,7 +82,7 @@ class AxisHandler:
 		return self._axis_node.get_axis_width()
 
 	func _on_axis_changed() -> void:
-		pass
+		self._master_graph_node.plot_realtime_data()
 
 	func clear_use_count() -> void:
 		self._use_count = 0
@@ -665,6 +667,9 @@ func _input(event: InputEvent) -> void:
 		self.log(LOG_DEBUG, ["Pause button pressed: ", self._is_pause])
 		self.log(LOG_INFO, ["Graph paused"])
 
+func plot_fixedtime_data():
+	pass
+
 # Please note that if physics_process is used here, this will caused a lot of lag as the physics process
 # will be consistent at the 60 Hz frame rate (or loop rate configured through the physics setting)
 # If the physics_process is used here, the setup_axis_range() function in the realtime mode
@@ -676,9 +681,18 @@ func _process(delta: float) -> void:
 	var frame_update_rate_hz: float = 1.0
 	var curr_ms: int = Time.get_ticks_msec()
 
+	# This may seem to be a duplicate to the switch that comes after, but I'd rather have the graph node itself being the "master"
+	# to pass what current state it is rather than using the output directly from the time axis node (Just my preference)
+	match (self.t_axis_node.get_current_t_axis_mode()):
+		self.t_axis_node.TAxisMode.FIXED:
+			self._current_buffer_mode = Graph_Buffer_Mode.FIXED
+		self.t_axis_node.TAxisMode.SLIDING_WINDOW:
+			self._current_buffer_mode = Graph_Buffer_Mode.REALTIME
+
 	# If the current buffer mode is fixed, then only update when the user changes the axis limits
 	match (self._current_buffer_mode):
 
+		# TODO: This should only plot if there is any input from the user, eg user zooming or scaling the axis
 		Graph_Buffer_Mode.FIXED:
 			pass
 	

@@ -30,6 +30,25 @@ func _ready() -> void:
 	_axis_config_popup.add_item("Sliding Window Settings")
 	_setup_window_config_popup()
 
+# Override so that any user-initiated range change (inline edit, Axis Limit
+# Settings apply) switches the axis to FIXED mode.  The internal sliding-
+# window update bypasses this by calling _advance_window() instead.
+func setup_axis_range(min_v: float, max_v: float) -> void:
+	super.setup_axis_range(min_v, max_v)
+
+# Called by the graph every frame with the latest x value.
+# Only advances the window when in SLIDING_WINDOW mode.
+func update_to_latest(x_last: float) -> void:
+	if _mode == TAxisMode.SLIDING_WINDOW:
+		# Update range directly — does NOT switch mode to FIXED.
+		self.min_val = x_last - window_size_s
+		self.max_val = x_last
+		axis_limit_changed.emit()
+		queue_redraw()
+
+func get_current_t_axis_mode() -> TAxisMode:
+	return self._mode
+
 func _setup_window_config_popup() -> void:
 	_window_config_popup = PopupPanel.new()
 	add_child(_window_config_popup)
@@ -81,23 +100,7 @@ func _on_axis_config_menu_index_pressed(index: int) -> void:
 		# "Sliding Window Settings" — configure the window size.
 		_window_size_input.text = "%g" % window_size_s
 		_window_config_popup.popup(Rect2i(Vector2i(pos), Vector2i(220, 80)))
-
-# Override so that any user-initiated range change (inline edit, Axis Limit
-# Settings apply) switches the axis to FIXED mode.  The internal sliding-
-# window update bypasses this by calling _advance_window() instead.
-func setup_axis_range(min_v: float, max_v: float) -> void:
-	_mode = TAxisMode.FIXED
-	super.setup_axis_range(min_v, max_v)
-
-# Called by the graph every frame with the latest x value.
-# Only advances the window when in SLIDING_WINDOW mode.
-func update_to_latest(x_last: float) -> void:
-	if _mode == TAxisMode.SLIDING_WINDOW:
-		# Update range directly — does NOT switch mode to FIXED.
-		self.min_val = x_last - window_size_s
-		self.max_val = x_last
-		axis_limit_changed.emit()
-		queue_redraw()
+		_mode = TAxisMode.SLIDING_WINDOW
 
 func _draw_ticks() -> void:
 	self.ticks_pos.clear()
