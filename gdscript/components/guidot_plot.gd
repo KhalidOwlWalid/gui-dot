@@ -102,35 +102,13 @@ func init_plot(color: Color = Guidot_Utils.get_color("gd_black")) -> void:
 # @param	n_y_axis 			(Vector2):	Number of y-axis in the left(x) and right(y). Again, the summation of all
 #											axis components including offset should be 1.0.
 #											Example: Vector2(2, 2) means that there are 2 y-axis on the left and right side
-func setup_plot_frame_offset(frame_size: Vector2, axis_norm_comp_size: Vector2, n_y_axis: Vector2 = Vector2(1, 0)) -> void:
-
-	# Number of left and right y-axis components
-	var n_left_yax_comp: float = n_y_axis.x
-	var n_right_yax_comp: float = n_y_axis.y
-	# Temporary to handle margin
-	var header_margin: float = 0.075
-
-	# Recalculate the scaling of the normalized component size of the plot frame relative to newly added axis	
-	if (n_y_ax_cached != n_y_axis):
-		n_y_ax_cached = n_y_axis
-
-	# Find the necessary offset relative to the graph area
-	var plot_size_scaled: Vector2 = self.norm_comp_size * frame_size
-	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
-	var y_axis_width: float = clamp(axis_norm_comp_size.y * frame_size.x, 0, 50)
-	self.log(LOG_DEBUG, ["y axis width from guidot plot: ", y_axis_width])
-
-	# Explicit offset calculation for better clarity
-	var left_offset: float = n_left_yax_comp * y_axis_width
-	var right_offset: float = plot_size_scaled.x - n_right_yax_comp * y_axis_width
-	var top_offset: int = int(header_margin * frame_size.y)
-	var bottom_offset: int = int(frame_size.y - axis_norm_comp_size.x * frame_size.y)
+func setup_plot_frame_offset(left: float, right: float, top: float, bottom: float) -> void:
 
 	# Set the offsets of the plot frame
-	self.set_offset(SIDE_LEFT, left_offset)
-	self.set_offset(SIDE_RIGHT, right_offset)
-	self.set_offset(SIDE_TOP, top_offset)
-	self.set_offset(SIDE_BOTTOM, bottom_offset)
+	self.set_offset(SIDE_LEFT, left)
+	self.set_offset(SIDE_RIGHT, right)
+	self.set_offset(SIDE_TOP, top)
+	self.set_offset(SIDE_BOTTOM, bottom)
 	
 func _map_data_to_pixel(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2) -> void:
 	pixel_data_points = PackedVector2Array()
