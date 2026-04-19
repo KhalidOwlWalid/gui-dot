@@ -692,7 +692,10 @@ func _process(delta: float) -> void:
 	# If the current buffer mode is fixed, then only update when the user changes the axis limits
 	match (self._current_buffer_mode):
 
-		# TODO: This should only plot if there is any input from the user, eg user zooming or scaling the axis
+		# Fixed mode would still work despite no logic being in here is due to the power of callback in Godot.
+		# It is rather annoying that everything is abstracted inside the callback, however, to trace how the graphs updates correctly
+		# as per user input. See _axis_limit_changed() function. Everytime we update the axis limit, it will simply emit a signal that will
+		# call plot_realtime_data() which basically plots data that is within the vicinity of the axis range
 		Graph_Buffer_Mode.FIXED:
 			pass
 	
