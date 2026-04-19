@@ -62,7 +62,6 @@ func _create_server_selection_row() -> void:
 	pass
 
 func _on_data_selected(data_str_array: Array[String]) -> void:
-	print(data_str_array)
 	pass
 
 func _on_close_button_submenu_pressed(panel: Node) -> void:

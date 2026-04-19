@@ -139,11 +139,11 @@ func _move_display(event: InputEvent, in_moving_mode: bool) -> void:
 				_drag_direction = (self.get_viewport().get_mouse_position() - self.position).normalized()
 				_is_dragging = true
 				_new_position = self.get_viewport().get_mouse_position() - self._dragging_distance * _drag_direction
-				print("Mouse pressed and inside the window")
+				self.log(LOG_DEBUG, ["Mouse pressed and inside the window"])
 
 			elif !(event.is_pressed()) and _mouse_in:
 				_is_dragging = false
-				print("Mouse stopped pressing")
+				self.log(LOG_DEBUG, ["Mouse stopped pressing"])
 
 		elif (event is InputEventMouseMotion):
 			if _is_dragging:

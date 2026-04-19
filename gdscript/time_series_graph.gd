@@ -29,6 +29,8 @@ var _selected_channels_name: Array
 @onready var t_axis_node: Guidot_T_Axis = Guidot_T_Axis.new()
 @onready var _setting_button: Button = Button.new()
 
+var _initialized: bool = false
+
 class AxisHandler:
 
 	signal id_reassigned
@@ -73,6 +75,9 @@ class AxisHandler:
 
 	func get_axis_id() -> Guidot_Y_Axis.AxisPosition:
 		return self._axis_pos
+
+	func get_axis_width() -> int:
+		return self._axis_node.get_axis_width()
 
 	func _on_axis_changed() -> void:
 		pass
@@ -125,7 +130,18 @@ class AxisManager:
 			self._data_to_axis_map[gd_data_node] = axis_id_enum_str
 		else:
 			self.add_data_to_axis(gd_data_server, chan_name, "PRIMARY_LEFT")
+
 		return true
+
+	# Returning channel name and color to ease the process of drawing the axis title and labelling the title based on the line color
+	func get_chan_name_and_color_on_axis(axis_pos: Guidot_Y_Axis.AxisPosition) -> Array[Array]:
+		var chan_name_and_color: Array[Array]
+
+		for data_node in self._data_to_axis_map.keys():
+			if (self._data_to_axis_map[data_node] == Guidot_Y_Axis.get_axis_id_str_from_value(axis_pos)):
+				chan_name_and_color.append([data_node.get_name(), data_node.get_line_color()])
+
+		return chan_name_and_color
 
 	func get_data_to_axis_map() -> Dictionary:
 		return self._data_to_axis_map
@@ -316,12 +332,35 @@ func get_buffer_mode_str(buf_mode: Graph_Buffer_Mode) -> String:
 		_:
 			return "Not Implemented"
 
+# NOTE: This whole thing is a mess, and just me trying to do stupid fix. Not the most optimal solution, but at least
+# no visible bugs for now. I will need to tackle the bug some other time
 func _setup_plot_node() -> void:
+
+	# Number of left and right y-axis components
+	var n_y_axis: Vector2 = self._y_axis_manager.get_axis_count()
+	var n_left_yax_comp: float = n_y_axis.x
+	var n_right_yax_comp: float = n_y_axis.y
+	# Temporary to handle margin
+	var header_margin: float = 0.075
+
+	# Find the necessary offset relative to the graph area
+	var plot_size_scaled: Vector2 = plot_node.norm_comp_size * self.size
+	self.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
+	var y_axis_width: float = clamp(0.075 * self.size.x, 0, 50)
+
+	# Explicit offset calculation for better clarity
+	var left_offset: float = n_left_yax_comp * y_axis_width
+	var right_offset: float
+	if (n_right_yax_comp == 0):
+		right_offset = self.size.x - self._setting_button.size.x
+	else:
+		var right_ax_width = n_right_yax_comp * y_axis_width
+		right_offset = self.size.x - right_ax_width - self._setting_button.size.x
+	var top_offset: int = int(header_margin * self.size.y)
+	var bottom_offset: int = int(self.size.y - t_axis_node.norm_comp_size.y * self.size.y)
+
 	plot_node.init_plot(Guidot_Utils.get_color("gd_black"))
-	# TODO (Khalid): At the moment, the plot frame number of y-axis is hardcoded, just to get a PoC working
-	plot_node.setup_plot_frame_offset(Vector2(self.size.x, self.size.y), \
-		Vector2(t_axis_node.norm_comp_size.y, Guidot_Y_Axis.comp_size_norm_fixed), self._y_axis_manager.get_axis_count())
-	self.log(LOG_DEBUG, ["Inside setup plot node: ", self._y_axis_manager.get_axis_count()])
+	plot_node.setup_plot_frame_offset(left_offset, right_offset, top_offset, bottom_offset)
 
 func _init_plot_node():
 	self._setup_plot_node()
@@ -468,17 +507,18 @@ func _ready() -> void:
 
 	self._setup_graph_client()
 	self._register_graph_client()
-	
-	# Add child node for the graph
-	self._init_plot_node()
-	# X/Y axis rectangle anchor offset calculation depends on the plot node anchor offset maths
-	# Hence, plot node needs to be ran first before we run the axis node init
-	self._init_t_axis_node()
 
 	self._y_axis_manager.init_axis_manager(self)
 	var paxis_handler: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
 	var primary_axis: Guidot_Y_Axis = paxis_handler.get_axis_node()
 	primary_axis.axis_limit_changed.connect(_on_y_axis_changed.bind(primary_axis))
+
+	# X/Y axis rectangle anchor offset calculation depends on the plot node anchor offset maths
+	# Hence, plot node needs to be ran first before we run the axis node init
+	self._init_t_axis_node()
+	
+	# Add child node for the graph
+	self._init_plot_node()
 	
 	self._init_font()
 
@@ -522,6 +562,8 @@ func _ready() -> void:
 	self._graph_manager.changes_applied.connect(self._on_changes_applied)
 	self._graph_manager.y_axis_changes_applied.connect(self._on_y_axis_changes_applied)
 	self._graph_manager.register_axis_manager(self._y_axis_manager)
+
+	self._initialized = true
 
 	self.log(LOG_INFO, ["Time series graph initialized"])
 
