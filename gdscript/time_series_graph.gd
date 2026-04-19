@@ -444,11 +444,12 @@ func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 		for i in len(server_config_array):
 			self._guidot_server = server_config_array[0].get_selected_server()
 			self._request_buffer_mode()
-			
+
+	
 			if (server_config_array[0].get_selected_data().is_empty()):
 				self.log(LOG_WARNING, ["Please select data that you wish to subscribe to: ", server_config_array[0].get_all_data_options()])
+				self._selected_channels_name = []
 			else:
-				var test = server_config_array[0].get_selected_data()
 				self._selected_channels_name = server_config_array[0].get_selected_data()
 
 	self.resized.emit()
