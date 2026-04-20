@@ -1,8 +1,15 @@
-[gd_scene load_steps=4 format=3 uid="uid://bdyylxjrf4idj"]
+[gd_scene load_steps=5 format=3 uid="uid://bdyylxjrf4idj"]
 
 [ext_resource type="Script" path="res://addons/guidot/components/data/guidot_data_server.gd" id="1_wv5td"]
 [ext_resource type="Script" path="res://addons/guidot/t_graph_with_panel.gd" id="2_m1jx7"]
 [ext_resource type="Script" path="res://gdscript/example/server_client_example.gd" id="3_7hgwk"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a08y6"]
+content_margin_left = 1.0
+content_margin_top = 1.0
+content_margin_right = 1.0
+content_margin_bottom = 1.0
+bg_color = Color(0, 0, 0, 1)
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -19,8 +26,9 @@ script = ExtResource("1_wv5td")
 layout_mode = 0
 offset_left = 226.0
 offset_top = 66.0
-offset_right = 680.0
-offset_bottom = 278.0
+offset_right = 846.0
+offset_bottom = 426.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_a08y6")
 script = ExtResource("2_m1jx7")
 
 [node name="Node" type="Node" parent="."]
