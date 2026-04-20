@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://cq33510rmp2rv"]
 
 [ext_resource type="Script" path="res://gdscript/guidot_inspector.gd" id="1_2t821"]
-[ext_resource type="Script" path="res://gdscript/components/panel/guidot_debug_panel.gd" id="2_f58xd"]
+[ext_resource type="Script" path="res://addons/guidot/components/panel/guidot_debug_panel.gd" id="2_f58xd"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2o0a1"]
 content_margin_left = 3.0

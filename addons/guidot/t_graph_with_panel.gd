@@ -2,7 +2,7 @@
 class_name Guidot_Graph
 extends PanelContainer
 
-const Guidot_T_Series_Graph := preload("res://gdscript/time_series_graph.gd")
+const Guidot_T_Series_Graph := preload("res://addons/guidot/time_series_graph.gd")
 
 const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG
 const LOG_WARNING = Guidot_Log.Log_Level.WARNING

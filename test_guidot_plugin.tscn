@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://bdyylxjrf4idj"]
+
+[ext_resource type="Script" path="res://addons/guidot/components/data/guidot_data_server.gd" id="1_wv5td"]
+[ext_resource type="Script" path="res://addons/guidot/t_graph_with_panel.gd" id="2_m1jx7"]
+[ext_resource type="Script" path="res://gdscript/example/server_client_example.gd" id="3_7hgwk"]
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Guidot_Data_Server" type="Node" parent="."]
+script = ExtResource("1_wv5td")
+
+[node name="Guidot_Graph" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_left = 226.0
+offset_top = 66.0
+offset_right = 680.0
+offset_bottom = 278.0
+script = ExtResource("2_m1jx7")
+
+[node name="Node" type="Node" parent="."]
+script = ExtResource("3_7hgwk")

@@ -1,7 +1,7 @@
 # @tool
 extends Node
 
-const Guidot_Data := preload("res://gdscript/components/guidot_data.gd")
+const Guidot_Data := preload("res://addons/guidot/components/guidot_data.gd")
 
 # @onready var guidot_utils = Guidot_Utils.new()
 @onready var data: PackedVector2Array = PackedVector2Array()
