@@ -7,6 +7,8 @@ bin/*.so
 .sconsign.dblite
 .vscode/*
 .godot-backup/
-addons/
+addons/debug_menu
+addons/gut
+addons/zylann.editor_debugger
 lazygit
 *.tar.gz

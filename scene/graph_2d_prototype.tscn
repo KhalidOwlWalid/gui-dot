@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://b7e2pd3t4pbfn"]
+[gd_scene load_steps=7 format=3 uid="uid://b7e2pd3t4pbfn"]
 
-[ext_resource type="Script" path="res://gdscript/components/data/guidot_clock.gd" id="1_bb5dl"]
-[ext_resource type="Script" path="res://gdscript/components/data/guidot_data_server.gd" id="2_ct1jo"]
+[ext_resource type="Script" path="res://addons/guidot/components/data/guidot_clock.gd" id="1_bb5dl"]
+[ext_resource type="Script" path="res://addons/guidot/components/data/guidot_data_server.gd" id="2_ct1jo"]
 [ext_resource type="Script" path="res://gdscript/example/server_client_example.gd" id="4_hqxys"]
-[ext_resource type="Script" path="res://gdscript/t_graph_with_panel.gd" id="5_ax30q"]
+[ext_resource type="Script" path="res://addons/guidot/t_graph_with_panel.gd" id="5_ax30q"]
+[ext_resource type="Script" path="res://gdscript/t_graph_with_panel.gd" id="5_stfhj"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0lbeu"]
 content_margin_left = 10.0
@@ -12,7 +13,7 @@ content_margin_right = 10.0
 content_margin_bottom = 10.0
 bg_color = Color(0.1, 0.12, 0.15, 1)
 
-[node name="Control" type="Control"]
+[node name="Control2" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -38,3 +39,12 @@ script = ExtResource("5_ax30q")
 
 [node name="Node" type="Node" parent="."]
 script = ExtResource("4_hqxys")
+
+[node name="Guidot_Graph2" type="PanelContainer" parent="."]
+z_index = 1
+offset_left = 175.0
+offset_top = 90.0
+offset_right = 1145.0
+offset_bottom = 605.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_0lbeu")
+script = ExtResource("5_stfhj")
