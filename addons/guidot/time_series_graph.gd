@@ -289,7 +289,7 @@ class AxisManager:
 @export var y_axis_max: float = 2000
 @export var y_number_of_ticks: int = 10
 
-var _current_buffer_mode: Graph_Buffer_Mode
+var _current_graph_mode: Graph_Buffer_Mode
 
 # Axis count is limited up to Guidot_Y_Axis._max_axis_num
 @onready var _curr_y_axis_count: int = 1
@@ -421,8 +421,8 @@ func _request_buffer_mode() -> void:
 	if (self._guidot_server == null):
 		self.log(LOG_WARNING, ["No server has been selected. Please"])
 	else:
-		self._current_buffer_mode = self._guidot_server.get_graph_buffer_mode()
-		self.log(LOG_INFO, ["Current buffer mode: ", self.get_buffer_mode_str(self._current_buffer_mode)])
+		self._current_graph_mode = self._guidot_server.get_graph_buffer_mode()
+		self.log(LOG_INFO, ["Current buffer mode: ", self.get_buffer_mode_str(self._current_graph_mode)])
 
 # TODO (Khalid): Make this more fool proof, add checks, or even potentially allow the user to be able to user their own server
 # Check if any server actually exist
@@ -563,6 +563,7 @@ func _ready() -> void:
 	
 	# Add child node for the graph
 	self._init_plot_node()
+	self.plot_node.register_parent_node(self)
 	
 	self._init_font()
 
@@ -686,7 +687,7 @@ func _on_data_received() -> void:
 		# REALTIME mode: _process drives redraws at plot_update_rate_hz — don't
 		# redraw here or every incoming sample bypasses the rate cap.
 		# FIXED mode: redraw immediately so a static window reflects new data.
-		if _current_buffer_mode == Graph_Buffer_Mode.FIXED:
+		if _current_graph_mode == Graph_Buffer_Mode.FIXED:
 			self.plot_realtime_data()
 			queue_redraw()
 
@@ -719,7 +720,7 @@ func _input(event: InputEvent) -> void:
 				if (self._is_in_focus):
 					plot_node._is_in_focus = false
 				pass
-	
+
 	# For hotkeys
 	if (Input.is_action_just_pressed("nerd_stats")):
 		self._toggle_nerd_stats = !self._toggle_nerd_stats
@@ -741,6 +742,10 @@ func _input(event: InputEvent) -> void:
 func plot_fixedtime_data():
 	pass
 
+func _update_buffer_mode(new_buff_mode: Graph_Buffer_Mode):
+	self._current_graph_mode = new_buff_mode
+	self.plot_node._current_graph_mode = new_buff_mode
+
 # Please note that if physics_process is used here, this will caused a lot of lag as the physics process
 # will be consistent at the 60 Hz frame rate (or loop rate configured through the physics setting)
 # If the physics_process is used here, the setup_axis_range() function in the realtime mode
@@ -755,12 +760,12 @@ func _process(delta: float) -> void:
 	# to pass what current state it is rather than using the output directly from the time axis node (Just my preference)
 	match (self.t_axis_node.get_current_t_axis_mode()):
 		self.t_axis_node.TAxisMode.FIXED:
-			self._current_buffer_mode = Graph_Buffer_Mode.FIXED
+			self._update_buffer_mode(Graph_Buffer_Mode.FIXED)
 		self.t_axis_node.TAxisMode.SLIDING_WINDOW:
-			self._current_buffer_mode = Graph_Buffer_Mode.REALTIME
+			self._update_buffer_mode(Graph_Buffer_Mode.REALTIME)
 
 	# If the current buffer mode is fixed, then only update when the user changes the axis limits
-	match (self._current_buffer_mode):
+	match (self._current_graph_mode):
 
 		# Fixed mode would still work despite no logic being in here is due to the power of callback in Godot.
 		# It is rather annoying that everything is abstracted inside the callback, however, to trace how the graphs updates correctly
