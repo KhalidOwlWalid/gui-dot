@@ -9,56 +9,10 @@ extends Guidot_Common
 
 @onready var _data_channel_pixel_pos: Dictionary = {}
 
-# Data specific properties
-# Visualize the data as if it is a snake
-enum DataFetchMode {
-	BOTH_INSIDE,   		# Starting data and end of data is within the boundary of the plot
-	BOTH_OUTSIDE,   	# Both starting and end of data is outside the boundary of the plot (can be either left or right)
-	HEAD_OUT_TAIL_IN, 	# Starting data is outside the boundary, but the end of data is still within the boundary of the time frame
-	HEAD_IN_TAIL_OUT,	# Starting data is inside the boundary, but the end of data is outside the boundary (will need to truncate any excess data)
-	OVERFLOW_BOTH_ENDS, # Starting and end of data is outside the boundary, hence there are data within the boundaries, truncation needed
-	NOT_IMPLEMENTED,
-}
-
-var approx_sample_t: float
-@onready var n_sampling: int = 100
-@onready var data_fetching_mode: DataFetchMode = DataFetchMode.BOTH_INSIDE
-
-@onready var data_fetching_mode_str: Dictionary = {
-	DataFetchMode.BOTH_INSIDE: "Both Inside",
-	DataFetchMode.BOTH_OUTSIDE: "Both Outside",
-	DataFetchMode.HEAD_OUT_TAIL_IN: "Head Out, Tail In",
-	DataFetchMode.HEAD_IN_TAIL_OUT: "Head In, Tail Out",
-	DataFetchMode.OVERFLOW_BOTH_ENDS: "Overflow Both Ends",
-	DataFetchMode.NOT_IMPLEMENTED: "Not Implemented",
-}
-
-##### HELPER FUNCTION FOR DEBUG SIGNALS ######
-@onready var ds_k = 0
-@onready var ds_cmp_t_diff = 0
-@onready var ds_approx_sample_t = 0
-@onready var ds_cmp_t = 0
-@onready var ds_offset = 0
-
-# Used for debugging signals
-@onready var n_preprocessed_data: int = 0
-@onready var n_postprocessed_data: int = 0
-@onready var head_vec2: Vector2 = Vector2()
-@onready var tail_vec2: Vector2 = Vector2()
-@onready var t_draw: float = float()
-
-func update_debug_info() -> void:
-	self.debug_signals_to_trace = {
-		"t_draw": str(self.t_draw, 3)
-		# "ds_offset": str(ds_offset),
-		# "plot: mouse_in": self._mouse_in,
-		# "Plot: in focus": self._is_in_focus,
-		# "Pre-processed data size": self.n_preprocessed_data,
-		# "Post-processed data size": self.n_postprocessed_data,
-		# "Approximated sample time": self.approx_sample_t,
-	}
-
-##############################################
+var _curr_cursor_pos: Vector2 = Vector2(0, 0)
+var _draw_cursor_flag: bool = false
+var _mouse_inside: bool = false
+var _current_graph_mode: Graph_Buffer_Mode
 
 # Axis properties
 var n_x_ticks: int
@@ -68,6 +22,8 @@ var y_ticks_pos: PackedVector2Array
 var n_y_ax_cached: Vector2 = Vector2(1,0)
 
 var test_popup: PopupMenu
+
+var _parent_node: Guidot_T_Series_Graph
 
 func _ready() -> void:
 	self.name = "plot_frame"
@@ -90,15 +46,13 @@ func _ready() -> void:
 	self.mouse_entered.connect(self._on_mouse_entered)
 	self.mouse_exited.connect(self._on_mouse_exited)
 
+func register_parent_node(parent_node: Guidot_T_Series_Graph):
+	self._parent_node = parent_node
+
 func setup_plot_anchor() -> void:
 	pass
 
 func init_plot(color: Color = Guidot_Utils.get_color("gd_grey")) -> void:
-	# self.name = "plot_frame"
- 
-	# # This helps ensuring that we do not draw anything beyond the plot frame
-	# self.clip_contents = true
-	# self.color = color
 	pass
 
 func setup_plot_frame_offset(left: float, right: float, top: float, bottom: float) -> void:
@@ -203,13 +157,20 @@ func _draw_plots() -> void:
 			for i in range(1, data_points.size()):
 				draw_line(data_points[i - 1], data_points[i], gd_data.get_line_color(), 0.5, true)
 				draw_circle(data_points[i], 2.0, gd_data.get_line_color(), -1, true)
+
+func set_draw_cursor_flag(flag: bool):
+	self._draw_cursor_flag = flag
 	
 # Handle data line drawing here
 func _draw() -> void:
 	_draw_vertical_grids(n_x_ticks, x_ticks_pos, Guidot_Utils.get_color("gd_grey"))
 	_draw_horizontal_grids(n_y_ticks, y_ticks_pos, Guidot_Utils.get_color("gd_grey"))
-	t_draw = Guidot_Utils.profiler(self._draw_plots) * 1e3
-
+	self._draw_plots()
+	
+	if (self._current_graph_mode == Graph_Buffer_Mode.FIXED):
+		var cursor_pos: Vector2 = get_local_mouse_position()
+		draw_line(Vector2(cursor_pos.x, self.top_left().y), Vector2(cursor_pos.x, self.bottom_left().y), Guidot_Utils.get_color("red"), -1, true)
+	
 func _input(event: InputEvent) -> void:
 
 	if event is InputEventMouseButton and event.pressed:
@@ -223,3 +184,15 @@ func _input(event: InputEvent) -> void:
 				if (not self._is_in_focus):
 					self._emit_focus_requested_signal()
 					self.log(LOG_INFO, ["Emit focus requested signal"])
+
+	if event is InputEventMouseMotion:
+		
+		if (self._current_graph_mode == Graph_Buffer_Mode.FIXED):
+
+			# TODO (WARNING): This is not optimal as I am requesting that every single time the cursor position changed, we redraw the
+			# plots. THIS IS INEFFICIENT. Best way is to cached the plot pixel data and check if there has been any changes on either the y-axis or the x-axis
+			# if it hasn't changed, then keep using the cached pixel pos
+			if (self._curr_cursor_pos != get_local_mouse_position()):
+				self._curr_cursor_pos = get_local_mouse_position()
+				queue_redraw()
+			
