@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://addons/guidot/components/data/guidot_data_server.gd" id="1_683k6"]
 [ext_resource type="Script" path="res://addons/guidot/t_graph_with_panel.gd" id="2_nctrg"]
-[ext_resource type="Script" path="res://gdscript/example/server_client_example.gd" id="3_s578c"]
+[ext_resource type="Script" path="res://demo/simple_server_client_example/server_client_example.gd" id="3_s578c"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a08y6"]
 content_margin_left = 1.0
