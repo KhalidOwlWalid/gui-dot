@@ -8,6 +8,9 @@ extends Guidot_Common
 @onready var _line_color: Color = Color.RED
 
 @onready var _data_channel_pixel_pos: Dictionary = {}
+@onready var _cached_data_channel: Dictionary = {}
+@onready var _cached_x_range: Vector2 = Vector2(0, 0)
+@onready var _cached_y_range: Vector2 = Vector2(0, 0)
 
 var _curr_cursor_pos: Vector2 = Vector2(0, 0)
 var _draw_cursor_flag: bool = false
@@ -81,7 +84,7 @@ func pixel_remap(data_pts: Vector2, t_axis_lim: Vector2, y_axis_lim: Vector2, co
 	data_pts.y = remap(data_pts.y, y_axis_lim.x, y_axis_lim.y, comp_size.y, 0)	 
 	return data_pts
 
-func _map_data_points_to_pixel_pos(data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2) -> PackedVector2Array:
+func _map_data_points_to_pixel_pos(gd_data: Guidot_Data, data_points: PackedVector2Array, t_axis_range: Vector2, y_axis_range: Vector2) -> PackedVector2Array:
 	var t_axis_min: float = t_axis_range.x
 	var t_axis_max: float = t_axis_range.y
 	var y_axis_min: float = y_axis_range.x
@@ -99,6 +102,11 @@ func _map_data_points_to_pixel_pos(data_points: PackedVector2Array, t_axis_range
 	var t_min_pos: int = maxi(0, data_points.bsearch(Vector2(t_axis_range.x, 0)) - 1)
 	var t_max_pos: int = mini(data_points.size(), data_points.bsearch(Vector2(t_axis_range.y, 0)) + 1)
 	processed_data_points = data_points.slice(t_min_pos, t_max_pos)
+	
+	# Stores the cached processed data in order to be post-processed later when used with cursor(s)
+	self._cached_data_channel[gd_data] = processed_data_points
+	self._cached_x_range = t_axis_range
+	self._cached_y_range = y_axis_range
 
 	# Second method of performing pixel remapping
 	var pix_data_pos = PackedVector2Array()
@@ -117,10 +125,11 @@ func plot_multiple_data(datasets: Dictionary, y_axis_manager: RefCounted, time_r
 	var data_axis_map: Dictionary = y_axis_manager.get_data_to_axis_map()
 	
 	for gd_data in datasets.keys():
+		# Update the cached data channel which will be useful for cursor(s)
 		var ax_id: Guidot_Y_Axis.AxisPosition =  Guidot_Y_Axis.AxisPosition[data_axis_map[gd_data]]
 		var axis_handler: RefCounted = y_axis_manager.get_axis_handler(ax_id)
 		var y_axis_limit: Vector2 = axis_handler.get_axis_range()
-		var data_channel_pixel_pos: PackedVector2Array = self._map_data_points_to_pixel_pos(datasets[gd_data], time_range, y_axis_limit)
+		var data_channel_pixel_pos: PackedVector2Array = self._map_data_points_to_pixel_pos(gd_data, datasets[gd_data], time_range, y_axis_limit)
 		self._data_channel_pixel_pos[gd_data] = data_channel_pixel_pos
 
 	queue_redraw()
@@ -157,19 +166,36 @@ func _draw_plots() -> void:
 			for i in range(1, data_points.size()):
 				draw_line(data_points[i - 1], data_points[i], gd_data.get_line_color(), 0.5, true)
 				draw_circle(data_points[i], 2.0, gd_data.get_line_color(), -1, true)
-
-func set_draw_cursor_flag(flag: bool):
-	self._draw_cursor_flag = flag
 	
+func _draw_cursor(cursor_pos: Vector2, color: Color):
+	draw_line(Vector2(cursor_pos.x, self.top_left().y), Vector2(cursor_pos.x, self.bottom_left().y), color, -1, true)
+
+func _draw_cursor_values(cursor_pos: Vector2):
+	# Since the pixel data points and cached data points are just mapping of each other, technically in theory, I can simply just use the pixel mapping
+	# exact index of the mouse location, to get its mapping of the actual values in the cached data points
+	var x_pixel_cursor_pos: float = cursor_pos.x
+
+	for gd_data_node in self._cached_data_channel.keys():
+		var cached_data_size: int = self._cached_data_channel[gd_data_node].size()
+		var pixel_data_size: int = self._data_channel_pixel_pos[gd_data_node].size()
+
+		var x_data_index: int = clamp(self._data_channel_pixel_pos[gd_data_node].bsearch(Vector2(x_pixel_cursor_pos, 0)) - 1, 0, pixel_data_size - 1)
+		var data_value: Vector2 = self._cached_data_channel[gd_data_node][x_data_index]
+		self.log(LOG_DEBUG, ["x data index: ", x_data_index, ", data at this point: ", data_value])
+		# self.log(LOG_DEBUG, ["GD Data: ", gd_data_node, " cached size: ", cached_data_size, ", pixel data size: ", pixel_data_size])
+
+
 # Handle data line drawing here
 func _draw() -> void:
-	_draw_vertical_grids(n_x_ticks, x_ticks_pos, Guidot_Utils.get_color("gd_grey"))
-	_draw_horizontal_grids(n_y_ticks, y_ticks_pos, Guidot_Utils.get_color("gd_grey"))
+	self._draw_vertical_grids(n_x_ticks, x_ticks_pos, Guidot_Utils.get_color("gd_grey"))
+	self._draw_horizontal_grids(n_y_ticks, y_ticks_pos, Guidot_Utils.get_color("gd_grey"))
 	self._draw_plots()
 	
 	if (self._current_graph_mode == Graph_Buffer_Mode.FIXED):
 		var cursor_pos: Vector2 = get_local_mouse_position()
-		draw_line(Vector2(cursor_pos.x, self.top_left().y), Vector2(cursor_pos.x, self.bottom_left().y), Guidot_Utils.get_color("red"), -1, true)
+		var color: Color = Guidot_Utils.get_color("red")
+		self._draw_cursor(cursor_pos, color)
+		self._draw_cursor_values(cursor_pos)
 	
 func _input(event: InputEvent) -> void:
 
@@ -187,12 +213,16 @@ func _input(event: InputEvent) -> void:
 
 	if event is InputEventMouseMotion:
 		
-		if (self._current_graph_mode == Graph_Buffer_Mode.FIXED):
+		var global_mouse_pos: Vector2 = get_global_mouse_position()
 
-			# TODO (WARNING): This is not optimal as I am requesting that every single time the cursor position changed, we redraw the
-			# plots. THIS IS INEFFICIENT. Best way is to cached the plot pixel data and check if there has been any changes on either the y-axis or the x-axis
-			# if it hasn't changed, then keep using the cached pixel pos
-			if (self._curr_cursor_pos != get_local_mouse_position()):
-				self._curr_cursor_pos = get_local_mouse_position()
-				queue_redraw()
+		# Only pursue to update anything for the plot if the mouse position is within the box itself
+		if (get_global_rect().has_point(global_mouse_pos)):
+			if (self._current_graph_mode == Graph_Buffer_Mode.FIXED):
+
+				# TODO (WARNING): This is not optimal as I am requesting that every single time the cursor position changed, we redraw the
+				# plots. THIS IS INEFFICIENT. Best way is to cached the plot pixel data and check if there has been any changes on either the y-axis or the x-axis
+				# if it hasn't changed, then keep using the cached pixel pos
+				if (self._curr_cursor_pos != get_local_mouse_position()):
+					self._curr_cursor_pos = get_local_mouse_position()
+					queue_redraw()
 			
