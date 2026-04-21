@@ -11,6 +11,8 @@ extends Guidot_Common
 @onready var _cached_data_channel: Dictionary = {}
 @onready var _cached_x_range: Vector2 = Vector2(0, 0)
 @onready var _cached_y_range: Vector2 = Vector2(0, 0)
+# Per-channel y axis range, needed to map interpolated value back to pixel y for label drawing
+var _y_axis_ranges: Dictionary = {}
 
 var _curr_cursor_pos: Vector2 = Vector2(0, 0)
 var _draw_cursor_flag: bool = false
@@ -171,21 +173,36 @@ func _draw_cursor(cursor_pos: Vector2, color: Color):
 	draw_line(Vector2(cursor_pos.x, self.top_left().y), Vector2(cursor_pos.x, self.bottom_left().y), color, -1, true)
 
 func _draw_cursor_values(cursor_pos: Vector2):
-	# Since the pixel data points and cached data points are just mapping of each other, technically in theory, I can simply just use the pixel mapping
-	# exact index of the mouse location, to get its mapping of the actual values in the cached data points
-	var x_pixel_cursor_pos: float = cursor_pos.x
+	var mouse_x: float = cursor_pos.x
+	var font: Font = get_theme_default_font()
 
-	for gd_data_node in self._cached_data_channel.keys():
-		var cached_data_size: int = self._cached_data_channel[gd_data_node].size()
-		var pixel_data_size: int = self._data_channel_pixel_pos[gd_data_node].size()
+	for gd_data in self._cached_data_channel.keys():
+		var pixel_pts: PackedVector2Array = self._data_channel_pixel_pos[gd_data]
+		var data_pts: PackedVector2Array = self._cached_data_channel[gd_data]
 
-		var x_data_index: int = clamp(self._data_channel_pixel_pos[gd_data_node].bsearch(Vector2(x_pixel_cursor_pos, 0)) - 1, 0, pixel_data_size - 1)
-		var data_value: Vector2 = self._cached_data_channel[gd_data_node][x_data_index]
-		self.log(LOG_DEBUG, ["x data index: ", x_data_index, ", data at this point: ", data_value])
+		if pixel_pts.size() < 2:
+			continue
 
-		var font: Font = get_theme_default_font()
-		var label: String = "%.3f" %data_value.x + ", " + "%.3f" %data_value.y
-		self.draw_string(font, self._data_channel_pixel_pos[gd_data_node][x_data_index], label, 0, -1, 10, Guidot_Utils.get_color("white"))
+		var idx: int = clamp(pixel_pts.bsearch(Vector2(mouse_x, 0)) - 1, 0, pixel_pts.size() - 2)
+		var px1: Vector2 = pixel_pts[idx]
+		var px2: Vector2 = pixel_pts[idx + 1]
+
+		var interp_pixel: Vector2
+		var interp_data: Vector2
+		if is_equal_approx(px1.x, px2.x):
+			interp_pixel = px1
+			interp_data = data_pts[idx]
+		else:
+			var t: float = inverse_lerp(px1.x, px2.x, mouse_x)
+			interp_pixel = lerp(px1, px2, t)
+			interp_data = lerp(data_pts[idx], data_pts[idx + 1], t)
+
+		# Draw a dot exactly on the line at the cursor x
+		draw_circle(interp_pixel, 3.0, gd_data.get_line_color())
+
+		# Draw the interpolated data value label next to the dot
+		var label: String = "%.3f, %.3f" % [interp_data.x, interp_data.y]
+		draw_string(font, interp_pixel + Vector2(6, 4), label, 0, -1, 10, Guidot_Utils.get_color("white"))
 
 # Handle data line drawing here
 func _draw() -> void:
