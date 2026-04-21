@@ -182,6 +182,10 @@ func _draw_cursor_values(cursor_pos: Vector2):
 		var x_data_index: int = clamp(self._data_channel_pixel_pos[gd_data_node].bsearch(Vector2(x_pixel_cursor_pos, 0)) - 1, 0, pixel_data_size - 1)
 		var data_value: Vector2 = self._cached_data_channel[gd_data_node][x_data_index]
 		self.log(LOG_DEBUG, ["x data index: ", x_data_index, ", data at this point: ", data_value])
+
+		var font: Font = get_theme_default_font()
+		var label: String = str(data_value.x) + ", " + str(data_value.y)
+		self.draw_string(font, self._data_channel_pixel_pos[gd_data_node][x_data_index], label, 0, -1, 10, Guidot_Utils.get_color("white"))
 		# self.log(LOG_DEBUG, ["GD Data: ", gd_data_node, " cached size: ", cached_data_size, ", pixel data size: ", pixel_data_size])
 
 
