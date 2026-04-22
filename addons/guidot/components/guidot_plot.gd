@@ -183,6 +183,10 @@ func _draw_cursor_values(cursor_pos: Vector2):
 		if pixel_pts.size() < 2:
 			continue
 
+		# Find the closest index to the cursor point, we are actually performing a reverse look up
+		# where we use the pixel location (in this case the mouse position), and then based on this,
+		# with the cached data points calculated in 'plot_multiple_data()', the index is then used to find the
+		# exact value. Then, we perform linear interpolations to get the interpolated data for the position of the cursor
 		var idx: int = clamp(pixel_pts.bsearch(Vector2(mouse_x, 0)) - 1, 0, pixel_pts.size() - 2)
 		var px1: Vector2 = pixel_pts[idx]
 		var px2: Vector2 = pixel_pts[idx + 1]
@@ -202,7 +206,14 @@ func _draw_cursor_values(cursor_pos: Vector2):
 
 		# Draw the interpolated data value label next to the dot
 		var label: String = "%.3f, %.3f" % [interp_data.x, interp_data.y]
-		draw_string(font, interp_pixel + Vector2(6, 4), label, 0, -1, 10, Guidot_Utils.get_color("white"))
+		var label_font_size: int = 14
+		var label_size: Vector2 = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_font_size)
+		var str_draw_pix_pos: Vector2 = interp_pixel + Vector2(15, label_font_size/2)
+		var box_pos: Vector2 = interp_pixel + Vector2(10, -label_font_size)
+		var str_box: Rect2 = Rect2(box_pos, Vector2(label_size.x + 12, label_size.y + 5))
+		# TODO: Leaving the box drawing here, just in case I need it
+		# draw_rect(str_box, Color.WHITE, true)
+		draw_string(font, str_draw_pix_pos, label, 0, -1, label_font_size, gd_data.get_line_color())
 
 # Handle data line drawing here
 func _draw() -> void:
