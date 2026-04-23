@@ -633,7 +633,8 @@ func set_graph_opacity(alpha: float) -> void:
 	
 	# For the axis, we still want to see the data being plotted, so at minimum, an alpha of 0.3
 	# would still allow you to see the plots nicely
-	a = clamp(alpha, 0.3, 1.0)
+	if (self._curr_ui_mode == Guidot_Graph.UI_Mode.DATA_DISPLAY):
+		a = clamp(alpha, 0.3, 1.0)
 	modulated_color = Color(1.0, 1.0, 1.0, a)
 	self.plot_node.set_self_modulate(modulated_color)
 	self.t_axis_node.set_self_modulate(modulated_color)
@@ -783,6 +784,17 @@ func _process(delta: float) -> void:
 		self.t_axis_node.TAxisMode.SLIDING_WINDOW:
 			self._update_buffer_mode(Graph_Buffer_Mode.REALTIME)
 
+	match (self._curr_ui_mode):
+
+		Guidot_Graph.UI_Mode.DATA_DISPLAY:
+			self.set_graph_opacity(1.0)
+
+		Guidot_Graph.UI_Mode.EDIT:
+			self.set_graph_opacity(0.4)
+		
+		Guidot_Graph.UI_Mode.SELECTED:
+			self.set_graph_opacity(0.4)
+
 	# If the current buffer mode is fixed, then only update when the user changes the axis limits
 	match (self._current_graph_mode):
 
@@ -794,7 +806,6 @@ func _process(delta: float) -> void:
 			pass
 
 		Graph_Buffer_Mode.PAUSE:
-			self.log(LOG_DEBUG, ["In pause mode"])
 			return
 	
 		# When handling real-time data, we want to be able to update the last tick to always be incrementing
