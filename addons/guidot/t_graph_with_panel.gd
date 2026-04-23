@@ -28,6 +28,8 @@ var _drag_offset: Vector2
 @onready var _is_in_focus: bool = false
 @onready var _is_in_edit_mode: bool = false
 @onready var _is_holding_left_click: bool = false
+@onready var _exit_edit_mode_ms: float = 1000 # ms, if no second escape is pressed within a second, then the user just wants to exit select mode
+@onready var _exit_mode_timer_ms: float = 0
 
 var i: float = 0
 var rate: float = 0.05
@@ -194,14 +196,6 @@ func _get_hovered_resize_corner(hover_margin: int) -> Resize_Corner:
 
 func _input(event: InputEvent) -> void:
 
-	if (Input.is_action_just_pressed("escape")):
-		self.log(LOG_INFO, ["Escape key just pressed"])
-		self._is_in_focus = false
-		guidot_graph.set_focus_flag(self._is_in_focus)
-		self._prev_ui_mode = UI_Mode.EDIT
-		self._curr_ui_mode = UI_Mode.DATA_DISPLAY
-		self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
-
 	if (event is InputEventKey and event.pressed):
 
 		if (event.keycode == KEY_E):
@@ -211,6 +205,12 @@ func _input(event: InputEvent) -> void:
 			self._curr_ui_mode = tmp
 			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
 			self.log(LOG_DEBUG, ["Button E just pressed, going into edit mode"])
+
+		if (event.keycode == KEY_ESCAPE):
+			self.log(LOG_INFO, ["Escape key just pressed"])
+			self._prev_ui_mode = UI_Mode.EDIT
+			self._curr_ui_mode = UI_Mode.DATA_DISPLAY
+			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
 
 	match (self._curr_ui_mode):
 
