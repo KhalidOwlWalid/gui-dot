@@ -15,6 +15,7 @@ enum Graph_Buffer_Mode {
 	SNAPSHOT,   # Alias of fixed (thats the plan for now)
 	REALTIME,  # Usually use for real-time DAQ. (aka sliding window). Will use a lot of memory since new data will be pushed back.
 	MOVING_PAGE, # Opens up a new "page" everytime the data passes the max axis limit
+	PAUSE,
 }
 
 const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG
@@ -43,6 +44,7 @@ enum Origin {
 @onready var _dragging_distance: float = 0
 @onready var _component_tag: String = "COMP_TAG"
 @onready var _is_in_focus: bool = false
+@onready var _curr_ui_mode: Guidot_Graph.UI_Mode = Guidot_Graph.UI_Mode.DATA_DISPLAY
 
 @onready var debug_signals_to_trace = {}
 
@@ -58,6 +60,9 @@ func _on_mouse_exited() -> void:
 
 func get_component_size() -> Vector2:
 	return self.size
+
+func set_ui_mode(ui_mode: Guidot_Graph.UI_Mode):
+	self._curr_ui_mode = ui_mode
 
 # TODO: Recheck this, since if this gets inherited, then it will use its local position
 func top_left(from: Origin = Origin.SELF) -> Vector2:

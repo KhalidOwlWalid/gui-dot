@@ -26,6 +26,7 @@ var _drag_offset: Vector2
 @onready var _is_resizing: bool = false
 
 @onready var _is_in_focus: bool = false
+@onready var _is_in_edit_mode: bool = false
 @onready var _is_holding_left_click: bool = false
 
 var i: float = 0
@@ -33,10 +34,11 @@ var rate: float = 0.05
 var sign: float = 1.0
 
 enum UI_Mode {
-	SELECTED,
+	EDIT,
 	DATA_DISPLAY,
 	PREVIEW,
 	SETTINGS,
+	SELECTED,
 }
 
 enum Resize_Corner {
@@ -63,7 +65,8 @@ enum Edit_Mode {
 	Edit_Mode.MOVE: "MOVE",
 }
 
-@onready var _current_ui_mode: UI_Mode = UI_Mode.DATA_DISPLAY 
+@onready var _curr_ui_mode: UI_Mode = UI_Mode.DATA_DISPLAY 
+@onready var _prev_ui_mode: UI_Mode = UI_Mode.EDIT
 
 @onready var _curr_edit_mode: Edit_Mode = Edit_Mode.NONE
 @onready var _last_edit_mode: Edit_Mode = self._curr_edit_mode
@@ -190,105 +193,146 @@ func _input(event: InputEvent) -> void:
 		self.log(LOG_INFO, ["Escape key just pressed"])
 		self._is_in_focus = false
 		guidot_graph.set_focus_flag(self._is_in_focus)
+		self._prev_ui_mode = UI_Mode.EDIT
+		self._curr_ui_mode = UI_Mode.DATA_DISPLAY
 
-	if (self._curr_edit_mode == UI_Mode.DATA_DISPLAY):
-		pass
+	if (event is InputEventKey and event.pressed):
 
-	if (self._current_ui_mode == UI_Mode.SELECTED):	
-		if event is InputEventMouseButton:
-			if event.button_index == MOUSE_BUTTON_LEFT:	
-				# Allow the user to be able to start resizing the graph
-				if event.is_pressed() and self._active_resize_corner != Resize_Corner.NONE and self._curr_edit_mode == Edit_Mode.POSSIBLE_RESIZING:
-					self.log(LOG_DEBUG, ["Graph panel ready to be resize"])
-					self._last_edit_mode = self._curr_edit_mode
-					self._is_holding_left_click = true
-				# Go back to possible resizing if the user releases the left mouse
-				elif not event.is_pressed() \
-					and (self._last_edit_mode == Edit_Mode.POSSIBLE_RESIZING and self._curr_edit_mode == Edit_Mode.RESIZE):
-					self._last_edit_mode = self._curr_edit_mode
-					self._is_holding_left_click = false
-					self.log(LOG_DEBUG, ["Left click resizing released"])
-				elif event.is_pressed() and self._mouse_in:
-					_is_dragging = true
-					self._curr_edit_mode = Edit_Mode.MOVE
-					_drag_offset = get_global_mouse_position() - self.global_position
-					self._last_position = self.position
+		if (event.keycode == KEY_E):
+			# Toggle between edit mode and previous mode
+			var tmp: UI_Mode = self._prev_ui_mode
+			self._prev_ui_mode = self._curr_ui_mode
+			self._curr_ui_mode = tmp
+			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
+			self.log(LOG_DEBUG, ["Button E just pressed, going into edit mode"])
+
+	match (self._curr_ui_mode):
+
+		UI_Mode.DATA_DISPLAY:
+			self.set_stylebox_color(Guidot_Utils.get_color("gd_black"))
+			self.log(LOG_DEBUG, ["Data display mode"])
+		
+		UI_Mode.EDIT:
+			self.set_stylebox_color(Guidot_Utils.get_color("gd_black"))
+			self.log(LOG_DEBUG, ["Edit mode"])	
+			if (event is InputEventMouseButton):
+				
+				if (self._mouse_in and event.is_pressed() and event.button_index == MOUSE_BUTTON_LEFT):
+					self._curr_ui_mode = UI_Mode.SELECTED
+
+		UI_Mode.SELECTED:
+			self.set_stylebox_color(Guidot_Utils.get_color("red"))
+			self._active_resize_corner = self._get_hovered_resize_corner(10)
+
+			# Possible resizing when user is hovering above the resizing corners but have yet click the left button
+			if (self._active_resize_corner != Resize_Corner.NONE and not self._is_holding_left_click):
+				self._last_edit_mode = self._curr_edit_mode
+				self._curr_edit_mode = Edit_Mode.POSSIBLE_RESIZING
+			# User is currently holding the left click to resize the graph display
+			elif (self._active_resize_corner != Resize_Corner.NONE and self._is_holding_left_click):
+				self._last_edit_mode = self._curr_edit_mode
+				self._curr_edit_mode = Edit_Mode.RESIZE
+			elif (self._last_edit_mode == Edit_Mode.RESIZE and self._is_holding_left_click):
+				self._curr_edit_mode = Edit_Mode.RESIZE
+			else:
+				self._last_edit_mode = self._curr_edit_mode
+				self._curr_edit_mode = Edit_Mode.NONE
+			self.queue_redraw()
+
+			if event is InputEventMouseButton:
+				if event.button_index == MOUSE_BUTTON_LEFT:	
+					# Allow the user to be able to start resizing the graph
+					if event.is_pressed() and self._active_resize_corner != Resize_Corner.NONE and self._curr_edit_mode == Edit_Mode.POSSIBLE_RESIZING:
+						self.log(LOG_DEBUG, ["Graph panel ready to be resize"])
+						self._last_edit_mode = self._curr_edit_mode
+						self._is_holding_left_click = true
+					# Go back to possible resizing if the user releases the left mouse
+					elif not event.is_pressed() \
+						and (self._last_edit_mode == Edit_Mode.POSSIBLE_RESIZING and self._curr_edit_mode == Edit_Mode.RESIZE):
+						self._last_edit_mode = self._curr_edit_mode
+						self._is_holding_left_click = false
+						self.log(LOG_DEBUG, ["Left click resizing released"])
+					elif event.is_pressed() and self._mouse_in:
+						_is_dragging = true
+						self._curr_edit_mode = Edit_Mode.MOVE
+						_drag_offset = get_global_mouse_position() - self.global_position
+						self._last_position = self.position
+						get_viewport().set_input_as_handled()
+					else:
+						_is_dragging = false
+
+					if event.is_pressed():
+						self.log(LOG_DEBUG, ["I am pressing my left button"])
+						self._is_holding_left_click = true
+					else:
+						self.log(LOG_DEBUG, ["I am releasing my left button"])
+						self._is_holding_left_click = false
+
+			if event is InputEventMouseMotion:
+
+				var curr_mouse_pos_global: Vector2 = get_global_mouse_position()
+				var curr_mouse_pos_local: Vector2 = get_local_mouse_position()
+				# var mouse_delta = self._last_mouse_position - curr_mouse_pos_global
+				var new_size: Vector2
+				var new_pos: Vector2
+				var mouse_offset: Vector2
+				# Only allow the user to drag when the mouse is inside the panel
+				if self._curr_edit_mode == Edit_Mode.RESIZE and self._is_holding_left_click:
+					self._last_position = self.global_position
+		
+					match (self._active_resize_corner):
+						Resize_Corner.TOP_LEFT:
+							new_pos = self._last_position + curr_mouse_pos_local
+							# new_size = self.size - (new_pos - self._last_position)
+							new_size = self.size - curr_mouse_pos_local
+						Resize_Corner.TOP_RIGHT:
+							mouse_offset = Vector2(curr_mouse_pos_local.x - self.size.x, curr_mouse_pos_local.y)
+							new_pos = Vector2(self._last_position.x, self._last_position.y + mouse_offset.y)
+							
+							# This helps handle the negative offset when the user is trying to scale down the graph with the top right corner
+							if (mouse_offset.y < 0):
+								new_size = Vector2(self.size.x + mouse_offset.x, self.size.y + abs(mouse_offset.y))
+							else:
+								new_size = Vector2(self.size.x + mouse_offset.x, self.size.y - abs(mouse_offset.y))
+
+						Resize_Corner.BOTTOM_LEFT:
+							mouse_offset = Vector2(curr_mouse_pos_local.x, curr_mouse_pos_local.y - self.size.y)
+							new_pos = Vector2(self._last_position.x + mouse_offset.x, self._last_position.y)
+
+							if (mouse_offset.x < 0):
+								new_size.x = self.size.x + abs(mouse_offset.x)
+							else:
+								new_size.x = self.size.x - abs(mouse_offset.x)
+
+							if (mouse_offset.y < 0):
+								new_size.y = self.size.y - abs(mouse_offset.y)
+							else:
+								new_size.y = self.size.y + abs(mouse_offset.y)
+
+						Resize_Corner.BOTTOM_RIGHT:
+							mouse_offset = curr_mouse_pos_local - self.size
+							new_size = self.size + mouse_offset
+							new_pos = self.global_position
+						Resize_Corner.NONE:
+							new_size = self.size
+							new_pos = self.global_position
+
+					self.log(LOG_DEBUG, ["Corner: ", self._active_resize_corner])
+					self.log(LOG_DEBUG, ["Current size: ", self.size, "| New size: ", new_size, "| Current pos: ", self.global_position, "| New pos: ", new_pos, " | Mouse delta: ", curr_mouse_pos_global])
+					self.global_position = new_pos
+					self.size = new_size
+					self._last_mouse_position = curr_mouse_pos_global
+
+				if self._is_dragging:
+					self.set_default_cursor_shape(Control.CURSOR_DRAG)
 					get_viewport().set_input_as_handled()
-				else:
-					_is_dragging = false
-
-				if event.is_pressed():
-					self.log(LOG_DEBUG, ["I am pressing my left button"])
-					self._is_holding_left_click = true
-				else:
-					self.log(LOG_DEBUG, ["I am releasing my left button"])
-					self._is_holding_left_click = false
-
-		if event is InputEventMouseMotion:
-
-			var curr_mouse_pos_global: Vector2 = get_global_mouse_position()
-			var curr_mouse_pos_local: Vector2 = get_local_mouse_position()
-			# var mouse_delta = self._last_mouse_position - curr_mouse_pos_global
-			var new_size: Vector2
-			var new_pos: Vector2
-			var mouse_offset: Vector2
-			# Only allow the user to drag when the mouse is inside the panel
-			if self._curr_edit_mode == Edit_Mode.RESIZE and self._is_holding_left_click:
-				self._last_position = self.global_position
-	
-				match (self._active_resize_corner):
-					Resize_Corner.TOP_LEFT:
-						new_pos = self._last_position + curr_mouse_pos_local
-						# new_size = self.size - (new_pos - self._last_position)
-						new_size = self.size - curr_mouse_pos_local
-					Resize_Corner.TOP_RIGHT:
-						mouse_offset = Vector2(curr_mouse_pos_local.x - self.size.x, curr_mouse_pos_local.y)
-						new_pos = Vector2(self._last_position.x, self._last_position.y + mouse_offset.y)
-						
-						# This helps handle the negative offset when the user is trying to scale down the graph with the top right corner
-						if (mouse_offset.y < 0):
-							new_size = Vector2(self.size.x + mouse_offset.x, self.size.y + abs(mouse_offset.y))
-						else:
-							new_size = Vector2(self.size.x + mouse_offset.x, self.size.y - abs(mouse_offset.y))
-
-					Resize_Corner.BOTTOM_LEFT:
-						mouse_offset = Vector2(curr_mouse_pos_local.x, curr_mouse_pos_local.y - self.size.y)
-						new_pos = Vector2(self._last_position.x + mouse_offset.x, self._last_position.y)
-
-						if (mouse_offset.x < 0):
-							new_size.x = self.size.x + abs(mouse_offset.x)
-						else:
-							new_size.x = self.size.x - abs(mouse_offset.x)
-
-						if (mouse_offset.y < 0):
-							new_size.y = self.size.y - abs(mouse_offset.y)
-						else:
-							new_size.y = self.size.y + abs(mouse_offset.y)
-
-					Resize_Corner.BOTTOM_RIGHT:
-						mouse_offset = curr_mouse_pos_local - self.size
-						new_size = self.size + mouse_offset
-						new_pos = self.global_position
-					Resize_Corner.NONE:
-						new_size = self.size
-						new_pos = self.global_position
-
-				self.log(LOG_DEBUG, ["Corner: ", self._active_resize_corner])
-				self.log(LOG_DEBUG, ["Current size: ", self.size, "| New size: ", new_size, "| Current pos: ", self.global_position, "| New pos: ", new_pos, " | Mouse delta: ", curr_mouse_pos_global])
-				self.global_position = new_pos
-				self.size = new_size
-				self._last_mouse_position = curr_mouse_pos_global
-
-			if self._is_dragging:
-				self.set_default_cursor_shape(Control.CURSOR_DRAG)
-				get_viewport().set_input_as_handled()
-				new_pos = curr_mouse_pos_global - _drag_offset
-				self.global_position = new_pos
-				self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging panel from", self._last_position, "to", self.global_position])
-				self._last_mouse_position = curr_mouse_pos_global
-				self._last_position = self.position
-			elif not self._is_dragging:
-				self.set_default_cursor_shape(Control.CURSOR_ARROW)
+					new_pos = curr_mouse_pos_global - _drag_offset
+					self.global_position = new_pos
+					self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging panel from", self._last_position, "to", self.global_position])
+					self._last_mouse_position = curr_mouse_pos_global
+					self._last_position = self.position
+				elif not self._is_dragging:
+					self.set_default_cursor_shape(Control.CURSOR_ARROW)
 
 
 func _draw_resizing_hover_circle(circle_size: int) -> void:
@@ -318,7 +362,7 @@ func _draw_resizing_hover_circle(circle_size: int) -> void:
 func _draw() -> void:
 	var resizing_circle_size: int  = 4
 	var resizing_hover_circle_size: int = 10
-	if (self._current_ui_mode == UI_Mode.SELECTED):
+	if (self._curr_ui_mode == UI_Mode.SELECTED):
 		
 		# Draw 4 circle points for user reference where to resize
 		self.draw_circle(self.top_left(), resizing_circle_size, Color.RED)
@@ -330,56 +374,7 @@ func _draw() -> void:
 		self._draw_resizing_hover_circle(resizing_hover_circle_size)
 	
 func _process(delta: float) -> void:
-
-	if (self._is_in_focus):
-		self.set_stylebox_color(Guidot_Utils.get_color("red"))
-	else:
-		# TODO (Khalid): This needs to be able to change back to previous color, not hardcoded color
-		self.set_stylebox_color(Guidot_Utils.get_color("gd_black"))
-	
-	if (self._is_in_focus):
-		self._current_ui_mode = UI_Mode.SELECTED
-		self._active_resize_corner = self._get_hovered_resize_corner(10)
-
-		# Possible resizing when user is hovering above the resizing corners but have yet click the left button
-		if (self._active_resize_corner != Resize_Corner.NONE and not self._is_holding_left_click):
-			self._last_edit_mode = self._curr_edit_mode
-			self._curr_edit_mode = Edit_Mode.POSSIBLE_RESIZING
-		# User is currently holding the left click to resize the graph display
-		elif (self._active_resize_corner != Resize_Corner.NONE and self._is_holding_left_click):
-			self._last_edit_mode = self._curr_edit_mode
-			self._curr_edit_mode = Edit_Mode.RESIZE
-		elif (self._last_edit_mode == Edit_Mode.RESIZE and self._is_holding_left_click):
-			self._curr_edit_mode = Edit_Mode.RESIZE
-		else:
-			self._last_edit_mode = self._curr_edit_mode
-			self._curr_edit_mode = Edit_Mode.NONE
-
-		self.queue_redraw()
-
-		match (self._curr_edit_mode):
-			Edit_Mode.POSSIBLE_RESIZING:
-				self.set_default_cursor_shape(Control.CURSOR_HSIZE)
-
-			Edit_Mode.RESIZE:
-				self.set_default_cursor_shape(Control.CURSOR_HSIZE)
-
-			Edit_Mode.MOVE:
-				self.set_default_cursor_shape(Control.CURSOR_DRAG)
-			
-			Edit_Mode.NONE:
-				self.set_default_cursor_shape(Control.CURSOR_ARROW)
-	else:
-		self._current_ui_mode = UI_Mode.DATA_DISPLAY
-
-	if (self._is_holding_left_click):
-		# self.log(LOG_DEBUG, ["I am holding my left click still"])
-		pass
-	else:
-		# self.log(LOG_DEBUG, ["I have released my left click"])
-		pass
-
-	# self.log(LOG_DEBUG, ["Mouse pos local: ", self.get_local_mouse_position()])
+	pass
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
 	Guidot_Log.gd_log(log_level, "MASTER_PANEL", msg)

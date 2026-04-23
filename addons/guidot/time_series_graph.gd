@@ -289,7 +289,8 @@ class AxisManager:
 @export var y_axis_max: float = 2000
 @export var y_number_of_ticks: int = 10
 
-var _current_graph_mode: Graph_Buffer_Mode
+@onready var _current_graph_mode: Graph_Buffer_Mode = Graph_Buffer_Mode.REALTIME
+@onready var _prev_graph_mode: Graph_Buffer_Mode = self._current_graph_mode
 
 # Axis count is limited up to Guidot_Y_Axis._max_axis_num
 @onready var _curr_y_axis_count: int = 1
@@ -702,11 +703,22 @@ func _on_t_axis_changed() -> void:
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
 	self.plot_realtime_data()
 
+func update_ui_mode_state(ui_mode: Guidot_Graph.UI_Mode):
+	self.set_ui_mode(ui_mode)
+	self.plot_node.set_ui_mode(ui_mode)
+
 # This needs to be tied to the primary axis to draw the horizontal grids
 func _on_y_axis_changed(primary_axis: Guidot_Y_Axis) -> void:
 	self.y_axis_lim_signal += 1
 	plot_node.update_y_ticks_properties(primary_axis.n_steps, primary_axis.ticks_pos)
 	# plot_node.update_y_ticks_properties(n_steps, ticks_pos)
+
+func plot_fixedtime_data():
+	pass
+
+func _update_buffer_mode(new_buff_mode: Graph_Buffer_Mode):
+	self._current_graph_mode = new_buff_mode
+	self.plot_node._current_graph_mode = new_buff_mode
 
 func _input(event: InputEvent) -> void:
 
@@ -739,12 +751,17 @@ func _input(event: InputEvent) -> void:
 		self.log(LOG_DEBUG, ["Pause button pressed: ", self._is_pause])
 		self.log(LOG_INFO, ["Graph paused"])
 
-func plot_fixedtime_data():
-	pass
-
-func _update_buffer_mode(new_buff_mode: Graph_Buffer_Mode):
-	self._current_graph_mode = new_buff_mode
-	self.plot_node._current_graph_mode = new_buff_mode
+func _set_mouse_filter_action():
+	if (self._curr_ui_mode == Guidot_Graph.UI_Mode.EDIT):
+		self.set_mouse_filter(MOUSE_FILTER_IGNORE)
+		self.plot_node.set_mouse_filter(MOUSE_FILTER_IGNORE)
+		
+		self._prev_graph_mode = self._current_graph_mode
+		self._current_graph_mode = Graph_Buffer_Mode.PAUSE
+	else:
+		self.set_mouse_filter(MOUSE_FILTER_STOP)
+		self.plot_node.set_mouse_filter(MOUSE_FILTER_STOP)
+		self._current_graph_mode = self._prev_graph_mode
 
 # Please note that if physics_process is used here, this will caused a lot of lag as the physics process
 # will be consistent at the 60 Hz frame rate (or loop rate configured through the physics setting)
@@ -752,6 +769,8 @@ func _update_buffer_mode(new_buff_mode: Graph_Buffer_Mode):
 # gets called consistently even when the fps is dropping. This causes the process function to get
 # overloaded as it could not keep up with the constant update
 func _process(delta: float) -> void:
+
+	self._set_mouse_filter_action()
 	self._move_display_process()
 
 	var curr_ms: int = Time.get_ticks_msec()
@@ -773,6 +792,10 @@ func _process(delta: float) -> void:
 		# call plot_realtime_data() which basically plots data that is within the vicinity of the axis range
 		Graph_Buffer_Mode.FIXED:
 			pass
+
+		Graph_Buffer_Mode.PAUSE:
+			self.log(LOG_DEBUG, ["In pause mode"])
+			return
 	
 		# When handling real-time data, we want to be able to update the last tick to always be incrementing
 		# based on the last value data it receives, but to make a smooth sliding window, we will have to
@@ -804,11 +827,3 @@ func _process(delta: float) -> void:
 	if (not self._is_pause):
 		self._update_final_debug_trace()
 		self.debug_panel._guidot_debug_info = self.final_debug_trace_signals	
-
-	if (self._is_in_focus):
-		# Allow the master panel to be able to see the entire mouse movement within the whole node
-		self.set_mouse_filter(MOUSE_FILTER_IGNORE)
-		plot_node.set_mouse_filter(MOUSE_FILTER_IGNORE)
-	else:
-		self.set_mouse_filter(MOUSE_FILTER_STOP)
-		plot_node.set_mouse_filter(MOUSE_FILTER_STOP)
