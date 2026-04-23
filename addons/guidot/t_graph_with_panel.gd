@@ -119,7 +119,12 @@ func _ready() -> void:
 	self.size = Vector2(620*factor, 360*factor)
 	self.add_child(guidot_graph)
 
-	_guidot_stylebox.bg_color = Guidot_Utils.get_color("gd_black")
+	_guidot_stylebox.bg_color = Color(0, 0, 0, 0)
+	_guidot_stylebox.border_color = Color(0, 0, 0, 0)
+	_guidot_stylebox.border_width_left   = 2
+	_guidot_stylebox.border_width_right  = 2
+	_guidot_stylebox.border_width_top    = 2
+	_guidot_stylebox.border_width_bottom = 2
 	set_margin_size(margin_val)
 	add_theme_stylebox_override("panel", _guidot_stylebox)
 	self._last_position = self.position
@@ -146,7 +151,7 @@ func _on_parent_focused() -> void:
 	self.log(LOG_INFO, ["On parent focused", self._is_in_focus])
 
 func set_stylebox_color(color: Color) -> void:
-	_guidot_stylebox.bg_color = color
+	_guidot_stylebox.border_color = color
 
 func set_graph_opacity(alpha: float) -> void:
 	var a: float = clamp(alpha, 0.0, 1.0)
@@ -195,6 +200,7 @@ func _input(event: InputEvent) -> void:
 		guidot_graph.set_focus_flag(self._is_in_focus)
 		self._prev_ui_mode = UI_Mode.EDIT
 		self._curr_ui_mode = UI_Mode.DATA_DISPLAY
+		self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
 
 	if (event is InputEventKey and event.pressed):
 
@@ -209,14 +215,14 @@ func _input(event: InputEvent) -> void:
 	match (self._curr_ui_mode):
 
 		UI_Mode.DATA_DISPLAY:
-			self.set_stylebox_color(Guidot_Utils.get_color("gd_black"))
+			self.set_stylebox_color(Color(0, 0, 0, 0))
 			self.log(LOG_DEBUG, ["Data display mode"])
-		
+
 		UI_Mode.EDIT:
-			self.set_stylebox_color(Guidot_Utils.get_color("gd_black"))
-			self.log(LOG_DEBUG, ["Edit mode"])	
+			self.set_stylebox_color(Guidot_Utils.get_color("gd_bright_yellow"))
+			self.log(LOG_DEBUG, ["Edit mode"])
 			if (event is InputEventMouseButton):
-				
+
 				if (self._mouse_in and event.is_pressed() and event.button_index == MOUSE_BUTTON_LEFT):
 					self._curr_ui_mode = UI_Mode.SELECTED
 
