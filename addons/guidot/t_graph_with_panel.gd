@@ -198,7 +198,14 @@ func _input(event: InputEvent) -> void:
 
 	if (event is InputEventKey and event.pressed):
 
-		if (event.keycode == KEY_E):
+
+		if (event.shift_pressed and event.keycode == KEY_E):
+			self._prev_ui_mode = self._curr_ui_mode
+			self._curr_ui_mode = UI_Mode.EDIT
+			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
+			self.log(LOG_DEBUG, ["Shift + E just pressed, going back into edit mode from select mode"])
+
+		elif (event.keycode == KEY_E):
 			# Toggle between edit mode and previous mode
 			var tmp: UI_Mode = self._prev_ui_mode
 			self._prev_ui_mode = self._curr_ui_mode
@@ -206,11 +213,14 @@ func _input(event: InputEvent) -> void:
 			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
 			self.log(LOG_DEBUG, ["Button E just pressed, going into edit mode"])
 
-		if (event.keycode == KEY_ESCAPE):
+		elif (event.keycode == KEY_ESCAPE):
 			self.log(LOG_INFO, ["Escape key just pressed"])
 			self._prev_ui_mode = UI_Mode.EDIT
 			self._curr_ui_mode = UI_Mode.DATA_DISPLAY
 			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
+		
+		else:
+			pass
 
 	match (self._curr_ui_mode):
 
@@ -227,6 +237,7 @@ func _input(event: InputEvent) -> void:
 					self._curr_ui_mode = UI_Mode.SELECTED
 
 		UI_Mode.SELECTED:
+
 			self.set_stylebox_color(Guidot_Utils.get_color("red"))
 			self._active_resize_corner = self._get_hovered_resize_corner(10)
 

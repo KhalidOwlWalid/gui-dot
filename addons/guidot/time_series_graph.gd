@@ -786,14 +786,14 @@ func _process(delta: float) -> void:
 
 	match (self._curr_ui_mode):
 
-		Guidot_Graph.UI_Mode.DATA_DISPLAY:
-			self.set_graph_opacity(1.0)
-
 		Guidot_Graph.UI_Mode.EDIT:
 			self.set_graph_opacity(0.4)
 		
 		Guidot_Graph.UI_Mode.SELECTED:
 			self.set_graph_opacity(0.4)
+
+		Guidot_Graph.UI_Mode.DATA_DISPLAY:
+			pass
 
 	# If the current buffer mode is fixed, then only update when the user changes the axis limits
 	match (self._current_graph_mode):
