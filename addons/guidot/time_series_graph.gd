@@ -612,12 +612,13 @@ func _ready() -> void:
 	self._graph_manager.y_axis_changes_applied.connect(self._on_y_axis_changes_applied)
 	self._graph_manager.register_axis_manager(self._y_axis_manager)
 
-	self._graph_manager.opacity_changed.connect(self.set_graph_opacity)
+	self._graph_manager.opacity_changed.connect(self._on_graph_opacity_changed)
 
 	# Ensure that the graph manager is always on top of the display graph
 	self._graph_manager.z_index = self.z_index + 1
 
 	self._initialized = true
+	self._on_graph_opacity_changed(1.0)
 
 	self.log(LOG_INFO, ["Time series graph initialized"])
 
@@ -627,11 +628,7 @@ func _ready() -> void:
 func set_window_color(color: Color) -> void:
 	self.color = color
 
-func set_graph_opacity(alpha: float) -> void:
-	
-	if (self._curr_ui_mode == Guidot_Graph.UI_Mode.DATA_DISPLAY):
-		var color: Color = self.get_modulate()
-		self._prev_opacity_setting = color.a
+func _on_graph_opacity_changed(alpha: float) -> void:
 
 	# This allows us to finely control the opacity of our graphs and each of its components
 	var a: float = clamp(alpha, 0.0, 1.0)
@@ -729,8 +726,20 @@ func _on_t_axis_changed() -> void:
 	self.plot_realtime_data()
 
 func update_ui_mode_state(ui_mode: Guidot_Graph.UI_Mode):
+
 	self.set_ui_mode(ui_mode)
 	self.plot_node.set_ui_mode(ui_mode)
+
+	self.log(LOG_DEBUG, ["Current UI mode: ", self._curr_ui_mode, ", Previous UI mode: ", self._prev_ui_mode])
+	
+	if (self._curr_ui_mode == Guidot_Graph.UI_Mode.EDIT):
+		self._prev_opacity_setting = self.get_self_modulate().a
+	elif (self._prev_ui_mode == Guidot_Graph.UI_Mode.EDIT and self._curr_ui_mode == Guidot_Graph.UI_Mode.DATA_DISPLAY):
+		self.log(LOG_DEBUG, ["Previous opacity is ", self._prev_opacity_setting])
+		self._on_graph_opacity_changed(self._prev_opacity_setting)
+	else:
+		pass
+
 
 # This needs to be tied to the primary axis to draw the horizontal grids
 func _on_y_axis_changed(primary_axis: Guidot_Y_Axis) -> void:
@@ -808,17 +817,19 @@ func _process(delta: float) -> void:
 		self.t_axis_node.TAxisMode.SLIDING_WINDOW:
 			self._update_buffer_mode(Graph_Buffer_Mode.REALTIME)
 
+	# self.log(LOG_DEBUG, ["Current UI mode: ", self._curr_ui_mode, ", Previous UI Mode: ", self._prev_ui_mode])
+
 	match (self._curr_ui_mode):
 
+
 		Guidot_Graph.UI_Mode.EDIT:
-			self.set_graph_opacity(0.4)
+			self._on_graph_opacity_changed(0.4)
 		
 		Guidot_Graph.UI_Mode.SELECTED:
-			self.set_graph_opacity(0.4)
+			self._on_graph_opacity_changed(0.4)
 
 		# BUGFIX: Fix graph opacity issue when we went into edit mode
 		Guidot_Graph.UI_Mode.DATA_DISPLAY:
-			# self.set_graph_opacity(self._prev_opacity_setting)
 			pass
 
 	# If the current buffer mode is fixed, then only update when the user changes the axis limits

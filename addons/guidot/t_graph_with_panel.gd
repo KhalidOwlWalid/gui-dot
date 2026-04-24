@@ -226,11 +226,9 @@ func _input(event: InputEvent) -> void:
 
 		UI_Mode.DATA_DISPLAY:
 			self.set_stylebox_color(Color(0, 0, 0, 0))
-			self.log(LOG_DEBUG, ["Data display mode"])
 
 		UI_Mode.EDIT:
 			self.set_stylebox_color(Guidot_Utils.get_color("gd_bright_yellow"))
-			self.log(LOG_DEBUG, ["Edit mode"])
 			if (event is InputEventMouseButton):
 
 				if (self._mouse_in and event.is_pressed() and event.button_index == MOUSE_BUTTON_LEFT):
