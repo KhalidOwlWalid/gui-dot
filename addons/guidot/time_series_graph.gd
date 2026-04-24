@@ -29,6 +29,8 @@ var _selected_channels_name: Array
 @onready var t_axis_node: Guidot_T_Axis = Guidot_T_Axis.new()
 @onready var _setting_button: Button = Button.new()
 
+var _prev_opacity_setting: float
+
 var _initialized: bool = false
 
 class AxisHandler:
@@ -565,6 +567,7 @@ func _ready() -> void:
 	# Add child node for the graph
 	self._init_plot_node()
 	self.plot_node.register_parent_node(self)
+	self.plot_node.zoom_requested.connect(self._on_zoom_requested)
 	
 	self._init_font()
 
@@ -626,6 +629,10 @@ func set_window_color(color: Color) -> void:
 
 func set_graph_opacity(alpha: float) -> void:
 	
+	if (self._curr_ui_mode == Guidot_Graph.UI_Mode.DATA_DISPLAY):
+		var color: Color = self.get_modulate()
+		self._prev_opacity_setting = color.a
+
 	# This allows us to finely control the opacity of our graphs and each of its components
 	var a: float = clamp(alpha, 0.0, 1.0)
 	var modulated_color: Color = Color(1.0, 1.0, 1.0, a)
@@ -696,6 +703,23 @@ func _on_data_received() -> void:
 func _on_focus_requested() -> void:
 	self._is_in_focus = !self._is_in_focus
 	self.parent_focus_requested.emit()
+
+func _on_zoom_requested(pixel_rect: Rect2) -> void:
+	var comp_size: Vector2 = plot_node.get_component_size()
+
+	var old_t_min := t_axis_min
+	var old_t_max := t_axis_max
+	var new_t_min := remap(pixel_rect.position.x, 0, comp_size.x, old_t_min, old_t_max)
+	var new_t_max := remap(pixel_rect.end.x, 0, comp_size.x, old_t_min, old_t_max)
+	# Drive through setup_axis_range so axis_limit_changed fires and ticks recalculate
+	t_axis_node.setup_axis_range(new_t_min, new_t_max)
+
+	for axis_handler in self._y_axis_manager.get_available_axis_handler():
+		var curr_range: Vector2 = axis_handler.get_axis_range()
+		# y pixel is inverted: 0=top=data max, comp_size.y=bottom=data min
+		var new_y_min := remap(pixel_rect.end.y, comp_size.y, 0, curr_range.x, curr_range.y)
+		var new_y_max := remap(pixel_rect.position.y, comp_size.y, 0, curr_range.x, curr_range.y)
+		axis_handler.set_axis_range(Vector2(new_y_min, new_y_max))
 
 func _on_t_axis_changed() -> void:
 	self.t_axis_lim_signal += 1
@@ -792,7 +816,9 @@ func _process(delta: float) -> void:
 		Guidot_Graph.UI_Mode.SELECTED:
 			self.set_graph_opacity(0.4)
 
+		# BUGFIX: Fix graph opacity issue when we went into edit mode
 		Guidot_Graph.UI_Mode.DATA_DISPLAY:
+			# self.set_graph_opacity(self._prev_opacity_setting)
 			pass
 
 	# If the current buffer mode is fixed, then only update when the user changes the axis limits
