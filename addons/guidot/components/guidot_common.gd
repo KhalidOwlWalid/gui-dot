@@ -45,6 +45,7 @@ enum Origin {
 @onready var _component_tag: String = "COMP_TAG"
 @onready var _is_in_focus: bool = false
 @onready var _curr_ui_mode: Guidot_Graph.UI_Mode = Guidot_Graph.UI_Mode.DATA_DISPLAY
+@onready var _prev_ui_mode: Guidot_Graph.UI_Mode = self._curr_ui_mode
 
 @onready var debug_signals_to_trace = {}
 
@@ -62,6 +63,7 @@ func get_component_size() -> Vector2:
 	return self.size
 
 func set_ui_mode(ui_mode: Guidot_Graph.UI_Mode):
+	self._prev_ui_mode = self._curr_ui_mode
 	self._curr_ui_mode = ui_mode
 
 # TODO: Recheck this, since if this gets inherited, then it will use its local position
