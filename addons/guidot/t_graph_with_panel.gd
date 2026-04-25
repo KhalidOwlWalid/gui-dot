@@ -332,8 +332,6 @@ func _input(event: InputEvent) -> void:
 							new_size = self.size
 							new_pos = self.global_position
 
-					self.log(LOG_DEBUG, ["Corner: ", self._active_resize_corner])
-					self.log(LOG_DEBUG, ["Current size: ", self.size, "| New size: ", new_size, "| Current pos: ", self.global_position, "| New pos: ", new_pos, " | Mouse delta: ", curr_mouse_pos_global])
 					self.global_position = new_pos
 					self.size = new_size
 					self._last_mouse_position = curr_mouse_pos_global
@@ -343,7 +341,6 @@ func _input(event: InputEvent) -> void:
 					get_viewport().set_input_as_handled()
 					new_pos = curr_mouse_pos_global - _drag_offset
 					self.global_position = new_pos
-					self.log(Guidot_Log.Log_Level.DEBUG, ["Dragging panel from", self._last_position, "to", self.global_position])
 					self._last_mouse_position = curr_mouse_pos_global
 					self._last_position = self.position
 				elif not self._is_dragging:
