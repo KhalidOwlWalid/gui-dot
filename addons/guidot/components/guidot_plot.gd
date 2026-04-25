@@ -26,11 +26,11 @@ var _zoom_current_pos: Vector2 = Vector2.ZERO
 var _is_zooming: bool = false
 
 # Axis properties
-var n_x_ticks: int
-var x_ticks_pos: PackedVector2Array
-var n_y_ticks: int
-var y_ticks_pos: PackedVector2Array
-var n_y_ax_cached: Vector2 = Vector2(1,0)
+var _n_x_ticks: int
+var _x_ticks_pos: PackedVector2Array
+var _n_y_ticks: int
+var _y_ticks_pos: PackedVector2Array
+var _n_y_ax_cached: Vector2 = Vector2(1,0)
 
 var test_popup: PopupMenu
 
@@ -143,12 +143,12 @@ func plot_multiple_data(datasets: Dictionary, y_axis_manager: RefCounted, time_r
 	queue_redraw()
 
 func update_x_ticks_properties(n_ticks: int, ticks_pos: PackedVector2Array) -> void:
-	x_ticks_pos = ticks_pos
-	n_x_ticks = n_ticks
+	_x_ticks_pos = ticks_pos
+	_n_x_ticks = n_ticks
 
 func update_y_ticks_properties(n_ticks: int, ticks_pos: PackedVector2Array) -> void:
-	y_ticks_pos = ticks_pos
-	n_y_ticks = n_ticks
+	_y_ticks_pos = ticks_pos
+	_n_y_ticks = n_ticks
 
 func _draw_vertical_grids(n_ticks: int, ticks_pos: PackedVector2Array, grid_color: Color) -> void:
 	for i in range(ticks_pos.size()):
@@ -222,18 +222,18 @@ func _draw_cursor_values(cursor_pos: Vector2):
 		draw_string(font, str_draw_pix_pos, label, 0, -1, label_font_size, gd_data.get_line_color())
 
 func _draw_zoom_box() -> void:
-	var rect: Rect2 = Rect2(_zoom_start_pos, _zoom_current_pos - _zoom_start_pos).abs()
+	var rect: Rect2 = Rect2(self._zoom_start_pos, self._zoom_current_pos - self._zoom_start_pos).abs()
 	draw_rect(rect, Color(1, 1, 0, 0.08), true)
 	draw_rect(rect, Color(1, 1, 0, 0.9), false, 2.0)
 
 # Handle data line drawing here
 func _draw() -> void:
-	self._draw_vertical_grids(n_x_ticks, x_ticks_pos, Guidot_Utils.get_color("gd_grey"))
-	self._draw_horizontal_grids(n_y_ticks, y_ticks_pos, Guidot_Utils.get_color("gd_grey"))
+	self._draw_vertical_grids(_n_x_ticks, _x_ticks_pos, Guidot_Utils.get_color("gd_grey"))
+	self._draw_horizontal_grids(_n_y_ticks, _y_ticks_pos, Guidot_Utils.get_color("gd_grey"))
 	self._draw_plots()
 
 	if (self._current_graph_mode == Graph_Buffer_Mode.FIXED):
-		if _is_zooming:
+		if self._is_zooming:
 			_draw_zoom_box()
 		else:
 			var cursor_pos: Vector2 = get_local_mouse_position()
@@ -249,13 +249,13 @@ func _input(event: InputEvent) -> void:
 
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed and self._mouse_in and _current_graph_mode == Graph_Buffer_Mode.FIXED:
-				_zoom_start_pos = get_local_mouse_position()
-				_zoom_current_pos = _zoom_start_pos
-				_is_zooming = true
+				self._zoom_start_pos = get_local_mouse_position()
+				self._zoom_current_pos = _zoom_start_pos
+				self._is_zooming = true
 				queue_redraw()
 			elif not event.pressed and _is_zooming:
-				_is_zooming = false
-				var rect: Rect2 = Rect2(_zoom_start_pos, _zoom_current_pos - _zoom_start_pos).abs()
+				self._is_zooming = false
+				var rect: Rect2 = Rect2(self._zoom_start_pos, self._zoom_current_pos - self._zoom_start_pos).abs()
 				if rect.size.x > 5 and rect.size.y > 5:
 					zoom_requested.emit(rect)
 				queue_redraw()

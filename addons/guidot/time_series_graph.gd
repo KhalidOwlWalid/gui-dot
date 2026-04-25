@@ -729,8 +729,6 @@ func update_ui_mode_state(ui_mode: Guidot_Graph.UI_Mode):
 
 	self.set_ui_mode(ui_mode)
 	self.plot_node.set_ui_mode(ui_mode)
-
-	self.log(LOG_DEBUG, ["Current UI mode: ", self._curr_ui_mode, ", Previous UI mode: ", self._prev_ui_mode])
 	
 	if (self._curr_ui_mode == Guidot_Graph.UI_Mode.EDIT):
 		self._prev_opacity_setting = self.get_self_modulate().a
@@ -817,10 +815,7 @@ func _process(delta: float) -> void:
 		self.t_axis_node.TAxisMode.SLIDING_WINDOW:
 			self._update_buffer_mode(Graph_Buffer_Mode.REALTIME)
 
-	# self.log(LOG_DEBUG, ["Current UI mode: ", self._curr_ui_mode, ", Previous UI Mode: ", self._prev_ui_mode])
-
 	match (self._curr_ui_mode):
-
 
 		Guidot_Graph.UI_Mode.EDIT:
 			self._on_graph_opacity_changed(0.4)
@@ -828,49 +823,88 @@ func _process(delta: float) -> void:
 		Guidot_Graph.UI_Mode.SELECTED:
 			self._on_graph_opacity_changed(0.4)
 
-		# BUGFIX: Fix graph opacity issue when we went into edit mode
+		# BUGFIX: When the user sets opacity during edit mode, the previous opacity setting is still held in place, which means that the opacity slider
+		# does not have any effect until the user goes back to data display mode
 		Guidot_Graph.UI_Mode.DATA_DISPLAY:
-			pass
 
-	# If the current buffer mode is fixed, then only update when the user changes the axis limits
-	match (self._current_graph_mode):
+			match (self._current_graph_mode):
 
-		# Fixed mode would still work despite no logic being in here is due to the power of callback in Godot.
-		# It is rather annoying that everything is abstracted inside the callback, however, to trace how the graphs updates correctly
-		# as per user input. See _axis_limit_changed() function. Everytime we update the axis limit, it will simply emit a signal that will
-		# call plot_realtime_data() which basically plots data that is within the vicinity of the axis range
-		Graph_Buffer_Mode.FIXED:
-			pass
+				# Fixed mode would still work despite no logic being in here is due to the power of callback in Godot.
+				# It is rather annoying that everything is abstracted inside the callback, however, to trace how the graphs updates correctly
+				# as per user input. See _axis_limit_changed() function. Everytime we update the axis limit, it will simply emit a signal that will
+				# call plot_realtime_data() which basically plots data that is within the vicinity of the axis range
+				Graph_Buffer_Mode.FIXED:
+					pass
 
-		Graph_Buffer_Mode.PAUSE:
-			return
-	
-		# When handling real-time data, we want to be able to update the last tick to always be incrementing
-		# based on the last value data it receives, but to make a smooth sliding window, we will have to
-		# smoothly shift the ticks in between the min and max value
-		# In principle, the min val should stay constant unless the user specifies any desired min axis value,
-		# and the max axis value will keep moving
-		Graph_Buffer_Mode.REALTIME:
+				Graph_Buffer_Mode.PAUSE:
+					return
 			
-			# BUGFIX: This does not seem to limit the number of times the plot is drawn, fix it
-			if (float(curr_ms - self.fps_last_update_ms) >= 1000.0 / plot_update_rate_hz):
-				# If there is no data present at the moment, then we ignore it
-				if (self._guidot_server != null):
-					if true:
-						if (not self._is_pause):
-							# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
-							# even number
-							# TODO (Khalid): Allow the user to use external clock source, the way that this is currently implemented
-							# is that the time series graph itself generates the clock, so if the user wish to plot and visualize
-							# their data in realtime, they will have to use Time.get_ticks_msec() function to have the correct
-							# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
-							# simply an increasing integer, or absolute or relative time etc.
-							var curr_s: float = self._guidot_clock_node.get_current_time_s()
-							t_axis_node.update_to_latest(curr_s)
-							self.plot_realtime_data()
-							queue_redraw()
+				# When handling real-time data, we want to be able to update the last tick to always be incrementing
+				# based on the last value data it receives, but to make a smooth sliding window, we will have to
+				# smoothly shift the ticks in between the min and max value
+				# In principle, the min val should stay constant unless the user specifies any desired min axis value,
+				# and the max axis value will keep moving
+				Graph_Buffer_Mode.REALTIME:
+					
+					if (float(curr_ms - self.fps_last_update_ms) >= 1000.0 / plot_update_rate_hz):
+						# If there is no data present at the moment, then we ignore it
+						if (self._guidot_server != null):
+							if true:
+								if (not self._is_pause):
+									# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
+									# even number
+									# TODO (Khalid): Allow the user to use external clock source, the way that this is currently implemented
+									# is that the time series graph itself generates the clock, so if the user wish to plot and visualize
+									# their data in realtime, they will have to use Time.get_ticks_msec() function to have the correct
+									# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
+									# simply an increasing integer, or absolute or relative time etc.
+									var curr_s: float = self._guidot_clock_node.get_current_time_s()
+									t_axis_node.update_to_latest(curr_s)
+									self.plot_realtime_data()
+									queue_redraw()
 
-				self.fps_last_update_ms = curr_ms
+						self.fps_last_update_ms = curr_ms
+
+
+	# # If the current buffer mode is fixed, then only update when the user changes the axis limits
+	# match (self._current_graph_mode):
+
+	# 	# Fixed mode would still work despite no logic being in here is due to the power of callback in Godot.
+	# 	# It is rather annoying that everything is abstracted inside the callback, however, to trace how the graphs updates correctly
+	# 	# as per user input. See _axis_limit_changed() function. Everytime we update the axis limit, it will simply emit a signal that will
+	# 	# call plot_realtime_data() which basically plots data that is within the vicinity of the axis range
+	# 	Graph_Buffer_Mode.FIXED:
+	# 		pass
+
+	# 	Graph_Buffer_Mode.PAUSE:
+	# 		return
+	
+	# 	# When handling real-time data, we want to be able to update the last tick to always be incrementing
+	# 	# based on the last value data it receives, but to make a smooth sliding window, we will have to
+	# 	# smoothly shift the ticks in between the min and max value
+	# 	# In principle, the min val should stay constant unless the user specifies any desired min axis value,
+	# 	# and the max axis value will keep moving
+	# 	Graph_Buffer_Mode.REALTIME:
+			
+	# 		# BUGFIX: This does not seem to limit the number of times the plot is drawn, fix it
+	# 		if (float(curr_ms - self.fps_last_update_ms) >= 1000.0 / plot_update_rate_hz):
+	# 			# If there is no data present at the moment, then we ignore it
+	# 			if (self._guidot_server != null):
+	# 				if true:
+	# 					if (not self._is_pause):
+	# 						# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
+	# 						# even number
+	# 						# TODO (Khalid): Allow the user to use external clock source, the way that this is currently implemented
+	# 						# is that the time series graph itself generates the clock, so if the user wish to plot and visualize
+	# 						# their data in realtime, they will have to use Time.get_ticks_msec() function to have the correct
+	# 						# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
+	# 						# simply an increasing integer, or absolute or relative time etc.
+	# 						var curr_s: float = self._guidot_clock_node.get_current_time_s()
+	# 						t_axis_node.update_to_latest(curr_s)
+	# 						self.plot_realtime_data()
+	# 						queue_redraw()
+
+	# 			self.fps_last_update_ms = curr_ms
 
 	if (not self._is_pause):
 		self._update_final_debug_trace()
