@@ -226,10 +226,20 @@ func _draw_zoom_box() -> void:
 	draw_rect(rect, Color(1, 1, 0, 0.08), true)
 	draw_rect(rect, Color(1, 1, 0, 0.9), false, 2.0)
 
+func _draw_current_mode_txt():
+	var font: Font = get_theme_default_font()
+	var label: String = Guidot_Graph.ui_mode_str[self._curr_ui_mode]
+	var label_font_size: int = 30
+	var label_size: Vector2 = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_font_size)
+	var str_draw_pix_pos: Vector2 = self.size / 2.0 - Vector2(label_size.x / 2.0, -label_size.y / 2.0)
+	draw_string(font, str_draw_pix_pos, label, 0, -1, label_font_size, Guidot_Utils.get_color("white"))
+	
+
 # Handle data line drawing here
 func _draw() -> void:
 	self._draw_vertical_grids(_n_x_ticks, _x_ticks_pos, Guidot_Utils.get_color("gd_grey"))
 	self._draw_horizontal_grids(_n_y_ticks, _y_ticks_pos, Guidot_Utils.get_color("gd_grey"))
+	self.log(LOG_DEBUG, ["Current mode for plot node: ", Guidot_Graph.ui_mode_str[self._curr_ui_mode]])
 
 	match (self._curr_ui_mode):
 		Guidot_Graph.UI_Mode.DATA_DISPLAY:
@@ -244,10 +254,10 @@ func _draw() -> void:
 					self._draw_cursor_values(cursor_pos)
 
 		Guidot_Graph.UI_Mode.EDIT:
-			pass
+			self._draw_current_mode_txt()
 
 		Guidot_Graph.UI_Mode.SELECTED:
-			pass
+			self._draw_current_mode_txt()
 			
 func _input(event: InputEvent) -> void:
 

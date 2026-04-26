@@ -67,6 +67,12 @@ enum Edit_Mode {
 	Edit_Mode.MOVE: "MOVE",
 }
 
+static var ui_mode_str: Dictionary = {
+	UI_Mode.EDIT: "EDIT",
+	UI_Mode.DATA_DISPLAY: "DATA_DISPLAY",
+	UI_Mode.SELECTED: "SELECTED",
+}
+
 @onready var _curr_ui_mode: UI_Mode = UI_Mode.DATA_DISPLAY 
 @onready var _prev_ui_mode: UI_Mode = UI_Mode.EDIT
 
@@ -201,23 +207,20 @@ func _input(event: InputEvent) -> void:
 		if (event.shift_pressed and event.keycode == KEY_E):
 			self._prev_ui_mode = self._curr_ui_mode
 			self._curr_ui_mode = UI_Mode.EDIT
-			self.log(LOG_DEBUG, ["Current UI mode: ", self._curr_ui_mode])
 			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
 			self.log(LOG_DEBUG, ["Shift + E just pressed, going back into edit mode from select mode"])
 
 		elif (event.keycode == KEY_E):
-			# Toggle between edit mode and previous mode
-			var tmp: UI_Mode = self._prev_ui_mode
-			self._prev_ui_mode = self._curr_ui_mode
-			self._curr_ui_mode = tmp
+			self._prev_ui_mode = UI_Mode.DATA_DISPLAY
+			self._curr_ui_mode = UI_Mode.EDIT
 			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
 			self.log(LOG_DEBUG, ["Button E just pressed, going into edit mode"])
 
 		elif (event.keycode == KEY_ESCAPE):
-			self.log(LOG_INFO, ["Escape key just pressed"])
 			self._prev_ui_mode = UI_Mode.EDIT
 			self._curr_ui_mode = UI_Mode.DATA_DISPLAY
 			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
+			self.log(LOG_DEBUG, ["Escape key just pressed"])
 		
 		else:
 			pass
@@ -232,7 +235,9 @@ func _input(event: InputEvent) -> void:
 			if (event is InputEventMouseButton):
 
 				if (self._mouse_in and event.is_pressed() and event.button_index == MOUSE_BUTTON_LEFT):
+					self._prev_ui_mode = self._curr_ui_mode
 					self._curr_ui_mode = UI_Mode.SELECTED
+					self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
 
 		UI_Mode.SELECTED:
 
@@ -385,6 +390,7 @@ func _draw() -> void:
 		self._draw_resizing_hover_circle(resizing_hover_circle_size)
 	
 func _process(delta: float) -> void:
+	# self.log(LOG_DEBUG, ["Current UI mode: ", self.ui_mode_str[self._curr_ui_mode], ", Previous UI Mode: ", self.ui_mode_str[self._prev_ui_mode]])
 	pass
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
