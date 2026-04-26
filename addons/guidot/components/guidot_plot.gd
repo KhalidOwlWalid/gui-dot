@@ -36,6 +36,11 @@ var test_popup: PopupMenu
 
 var _parent_node: Guidot_T_Series_Graph
 
+# This is an internal flag to check if there is any changed in mode for every process frame
+# meant to queue a redraw to remove previous UI text / plot
+var _curr_ui_mode_internal: Guidot_Graph.UI_Mode = self._curr_ui_mode
+var _prev_ui_mode_internal: Guidot_Graph.UI_Mode = self._curr_ui_mode
+
 func _ready() -> void:
 	self.name = "plot_frame"
 	self.clip_contents = true
@@ -233,13 +238,12 @@ func _draw_current_mode_txt():
 	var label_size: Vector2 = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_font_size)
 	var str_draw_pix_pos: Vector2 = self.size / 2.0 - Vector2(label_size.x / 2.0, -label_size.y / 2.0)
 	draw_string(font, str_draw_pix_pos, label, 0, -1, label_font_size, Guidot_Utils.get_color("white"))
-	
 
 # Handle data line drawing here
 func _draw() -> void:
 	self._draw_vertical_grids(_n_x_ticks, _x_ticks_pos, Guidot_Utils.get_color("gd_grey"))
 	self._draw_horizontal_grids(_n_y_ticks, _y_ticks_pos, Guidot_Utils.get_color("gd_grey"))
-	self.log(LOG_DEBUG, ["Current mode for plot node: ", Guidot_Graph.ui_mode_str[self._curr_ui_mode]])
+	# self.log(LOG_DEBUG, ["Current mode for plot node: ", Guidot_Graph.ui_mode_str[self._curr_ui_mode]])
 
 	match (self._curr_ui_mode):
 		Guidot_Graph.UI_Mode.DATA_DISPLAY:
@@ -292,3 +296,11 @@ func _input(event: InputEvent) -> void:
 					_curr_cursor_pos = get_local_mouse_position()
 					queue_redraw()
 			
+func _process(delta: float) -> void:
+
+	# If the mode has changed, queue a redraw to ensure that any leftover texts from the previous mode are cleared
+	self._curr_ui_mode_internal = self._curr_ui_mode
+	if (self._curr_ui_mode_internal != self._prev_ui_mode_internal):
+		queue_redraw()
+	self._prev_ui_mode_internal = self._curr_ui_mode_internal
+	

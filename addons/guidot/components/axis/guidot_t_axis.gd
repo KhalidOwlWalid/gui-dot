@@ -15,7 +15,7 @@ enum TAxisMode {
 	SLIDING_WINDOW,
 }
 
-var _mode: TAxisMode = TAxisMode.SLIDING_WINDOW
+var _mode: TAxisMode = TAxisMode.FIXED
 
 # Width of the sliding window in the same units as the x-axis.  Only used
 # when _mode == SLIDING_WINDOW.  Configurable via the right-click menu.
