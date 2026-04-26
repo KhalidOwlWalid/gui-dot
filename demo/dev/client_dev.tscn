@@ -33,12 +33,3 @@ script = ExtResource("2_nctrg")
 
 [node name="Node" type="Node" parent="."]
 script = ExtResource("2_juu06")
-
-[node name="Guidot_Graph2" type="PanelContainer" parent="."]
-layout_mode = 2
-offset_left = 247.0
-offset_top = 491.0
-offset_right = 865.0
-offset_bottom = 849.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_a08y6")
-script = ExtResource("2_nctrg")
