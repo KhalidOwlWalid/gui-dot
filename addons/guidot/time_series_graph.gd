@@ -784,7 +784,7 @@ func _input(event: InputEvent) -> void:
 		self.log(LOG_INFO, ["Graph paused"])
 
 func _set_mouse_filter_action():
-	if (self._curr_ui_mode == Guidot_Graph.UI_Mode.EDIT):
+	if (self._curr_ui_mode == Guidot_Graph.UI_Mode.EDIT or self._curr_ui_mode == Guidot_Graph.UI_Mode.SELECTED):
 		self.set_mouse_filter(MOUSE_FILTER_IGNORE)
 		self.plot_node.set_mouse_filter(MOUSE_FILTER_IGNORE)
 		
@@ -818,10 +818,12 @@ func _process(delta: float) -> void:
 	match (self._curr_ui_mode):
 
 		Guidot_Graph.UI_Mode.EDIT:
-			self._on_graph_opacity_changed(0.4)
+			# self._on_graph_opacity_changed(1.0)
+			self.plot_node.queue_redraw()
 		
 		Guidot_Graph.UI_Mode.SELECTED:
-			self._on_graph_opacity_changed(0.4)
+			# self._on_graph_opacity_changed(1.0)
+			self.plot_node.queue_redraw()
 
 		# BUGFIX: When the user sets opacity during edit mode, the previous opacity setting is still held in place, which means that the opacity slider
 		# does not have any effect until the user goes back to data display mode
