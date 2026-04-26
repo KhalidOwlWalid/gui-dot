@@ -865,47 +865,6 @@ func _process(delta: float) -> void:
 
 						self.fps_last_update_ms = curr_ms
 
-
-	# # If the current buffer mode is fixed, then only update when the user changes the axis limits
-	# match (self._current_graph_mode):
-
-	# 	# Fixed mode would still work despite no logic being in here is due to the power of callback in Godot.
-	# 	# It is rather annoying that everything is abstracted inside the callback, however, to trace how the graphs updates correctly
-	# 	# as per user input. See _axis_limit_changed() function. Everytime we update the axis limit, it will simply emit a signal that will
-	# 	# call plot_realtime_data() which basically plots data that is within the vicinity of the axis range
-	# 	Graph_Buffer_Mode.FIXED:
-	# 		pass
-
-	# 	Graph_Buffer_Mode.PAUSE:
-	# 		return
-	
-	# 	# When handling real-time data, we want to be able to update the last tick to always be incrementing
-	# 	# based on the last value data it receives, but to make a smooth sliding window, we will have to
-	# 	# smoothly shift the ticks in between the min and max value
-	# 	# In principle, the min val should stay constant unless the user specifies any desired min axis value,
-	# 	# and the max axis value will keep moving
-	# 	Graph_Buffer_Mode.REALTIME:
-			
-	# 		# BUGFIX: This does not seem to limit the number of times the plot is drawn, fix it
-	# 		if (float(curr_ms - self.fps_last_update_ms) >= 1000.0 / plot_update_rate_hz):
-	# 			# If there is no data present at the moment, then we ignore it
-	# 			if (self._guidot_server != null):
-	# 				if true:
-	# 					if (not self._is_pause):
-	# 						# The way that I wish to implement this is by having the minimum and maximum t-axis to be always an
-	# 						# even number
-	# 						# TODO (Khalid): Allow the user to use external clock source, the way that this is currently implemented
-	# 						# is that the time series graph itself generates the clock, so if the user wish to plot and visualize
-	# 						# their data in realtime, they will have to use Time.get_ticks_msec() function to have the correct
-	# 						# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
-	# 						# simply an increasing integer, or absolute or relative time etc.
-	# 						var curr_s: float = self._guidot_clock_node.get_current_time_s()
-	# 						t_axis_node.update_to_latest(curr_s)
-	# 						self.plot_realtime_data()
-	# 						queue_redraw()
-
-	# 			self.fps_last_update_ms = curr_ms
-
 	if (not self._is_pause):
 		self._update_final_debug_trace()
 		self.debug_panel._guidot_debug_info = self.final_debug_trace_signals	

@@ -230,16 +230,25 @@ func _draw_zoom_box() -> void:
 func _draw() -> void:
 	self._draw_vertical_grids(_n_x_ticks, _x_ticks_pos, Guidot_Utils.get_color("gd_grey"))
 	self._draw_horizontal_grids(_n_y_ticks, _y_ticks_pos, Guidot_Utils.get_color("gd_grey"))
-	self._draw_plots()
 
-	if (self._current_graph_mode == Graph_Buffer_Mode.FIXED):
-		if self._is_zooming:
-			_draw_zoom_box()
-		else:
-			var cursor_pos: Vector2 = get_local_mouse_position()
-			self._draw_cursor(cursor_pos, Guidot_Utils.get_color("red"))
-			self._draw_cursor_values(cursor_pos)
-	
+	match (self._curr_ui_mode):
+		Guidot_Graph.UI_Mode.DATA_DISPLAY:
+
+			self._draw_plots()
+			if (self._current_graph_mode == Graph_Buffer_Mode.FIXED):
+				if self._is_zooming:
+					_draw_zoom_box()
+				else:
+					var cursor_pos: Vector2 = get_local_mouse_position()
+					self._draw_cursor(cursor_pos, Guidot_Utils.get_color("red"))
+					self._draw_cursor_values(cursor_pos)
+
+		Guidot_Graph.UI_Mode.EDIT:
+			pass
+
+		Guidot_Graph.UI_Mode.SELECTED:
+			pass
+			
 func _input(event: InputEvent) -> void:
 
 	if event is InputEventMouseButton:

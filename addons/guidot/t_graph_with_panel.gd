@@ -198,10 +198,10 @@ func _input(event: InputEvent) -> void:
 
 	if (event is InputEventKey and event.pressed):
 
-
 		if (event.shift_pressed and event.keycode == KEY_E):
 			self._prev_ui_mode = self._curr_ui_mode
 			self._curr_ui_mode = UI_Mode.EDIT
+			self.log(LOG_DEBUG, ["Current UI mode: ", self._curr_ui_mode])
 			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
 			self.log(LOG_DEBUG, ["Shift + E just pressed, going back into edit mode from select mode"])
 
@@ -369,7 +369,6 @@ func _draw_resizing_hover_circle(circle_size: int) -> void:
 		self.draw_circle(circle_pos_to_draw, circle_size, Color.RED, false)
 	else:
 		pass
-
 
 func _draw() -> void:
 	var resizing_circle_size: int  = 4
