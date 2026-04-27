@@ -279,24 +279,25 @@ func _draw() -> void:
 			
 func _input(event: InputEvent) -> void:
 
-	if (not Input.is_key_pressed(KEY_CTRL)):
-		self._drag_plot_mode_active = false
-	elif (Input.is_key_pressed(KEY_CTRL)):
-		self._drag_plot_mode_active = true
+	if (self._curr_graph_mode == Graph_Buffer_Mode.FIXED):
+		if (not Input.is_key_pressed(KEY_CTRL)):
+			self._drag_plot_mode_active = false
+		elif (Input.is_key_pressed(KEY_CTRL)):
+			self._drag_plot_mode_active = true
 
-		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-			self._is_dragging_plot = true
-			self._mouse_drag_curr_pos = get_local_mouse_position()
-			return
+			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+				self._is_dragging_plot = true
+				self._mouse_drag_curr_pos = get_local_mouse_position()
+				return
 
-		if event is InputEventMouseMotion and self._is_dragging_plot:
-			var local_mouse: Vector2 = get_local_mouse_position()
-			var delta: Vector2 = local_mouse - self._mouse_drag_curr_pos
-			self._tmp_debug = delta
-			self.plot_drag_requested.emit(delta)
-			self._mouse_drag_curr_pos = local_mouse
+			if event is InputEventMouseMotion and self._is_dragging_plot:
+				var local_mouse: Vector2 = get_local_mouse_position()
+				var delta: Vector2 = local_mouse - self._mouse_drag_curr_pos
+				self._tmp_debug = delta
+				self.plot_drag_requested.emit(delta)
+				self._mouse_drag_curr_pos = local_mouse
+				return
 			return
-		return
 
 	if event is InputEventMouseButton:
 

@@ -33,8 +33,8 @@ func _ready() -> void:
 # Override so that any user-initiated range change (inline edit, Axis Limit
 # Settings apply) switches the axis to FIXED mode.  The internal sliding-
 # window update bypasses this by calling _advance_window() instead.
-func setup_axis_range(min_v: float, max_v: float) -> void:
-	super.setup_axis_range(min_v, max_v)
+func setup_axis_range(min_v: float, max_v: float, trigger_redraw: bool = true) -> void:
+	super.setup_axis_range(min_v, max_v, trigger_redraw)
 
 # Called by the graph every frame with the latest x value.
 # Only advances the window when in SLIDING_WINDOW mode.
