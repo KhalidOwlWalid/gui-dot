@@ -578,6 +578,22 @@ func _on_mouse_wheel_zoom_requested(mouse_button: MouseButton):
 	var zoom_factor: float = 1.1
 	var r1: float = 0.5
 	var r2: float = 0.5
+
+	for ax_handler in self._y_axis_manager.get_axis_manager_dict().values():
+		var y_axis_range: Vector2 = ax_handler.get_axis_range()
+		var y_axis_centre: float = abs(y_axis_range.x + y_axis_range.y) / 2.0
+		var new_y_range: float
+		var calc_zoom_range: Vector2
+
+		if (mouse_button == MouseButton.MOUSE_BUTTON_WHEEL_UP):
+			new_y_range = abs(y_axis_range.y - y_axis_range.x) / zoom_factor
+			calc_zoom_range = Vector2(y_axis_centre - new_y_range * r1, y_axis_centre + new_y_range * r2)
+			ax_handler.set_axis_range(calc_zoom_range, false)
+		if (mouse_button == MouseButton.MOUSE_BUTTON_WHEEL_DOWN):
+			new_y_range = abs(y_axis_range.y - y_axis_range.x) * zoom_factor
+			calc_zoom_range = Vector2(y_axis_centre - new_y_range * r1, y_axis_centre + new_y_range * r2)
+			ax_handler.set_axis_range(calc_zoom_range, false)
+
 	var t_axis_range: Vector2 = self.t_axis_node.get_axis_range()
 	var t_axis_centre: float = abs(t_axis_range.x + t_axis_range.y) / 2.0
 
@@ -587,7 +603,6 @@ func _on_mouse_wheel_zoom_requested(mouse_button: MouseButton):
 	elif (mouse_button == MouseButton.MOUSE_BUTTON_WHEEL_DOWN):
 		var new_range: float = abs(t_axis_range.y - t_axis_range.x) * zoom_factor
 		t_axis_node.setup_axis_range(t_axis_centre - new_range * r1, t_axis_centre + new_range * r2)
-	
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:

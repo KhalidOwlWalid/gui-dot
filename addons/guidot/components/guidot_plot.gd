@@ -322,7 +322,8 @@ func _input(event: InputEvent) -> void:
 						zoom_requested.emit(rect)
 					queue_redraw()
 
-			if (event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+			# Ensure that only when the mouse is in the plotting area, should we emit the zoom signal
+			if (event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN) and self._mouse_in:
 				self.mouse_wheel_zoom_requested.emit(event.button_index)
 
 		if event is InputEventMouseMotion:
