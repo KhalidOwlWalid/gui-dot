@@ -299,54 +299,38 @@ func _input(event: InputEvent) -> void:
 				return
 			return
 
-	if event is InputEventMouseButton:
+		if event is InputEventMouseButton:
 
-		self._is_dragging_plot = false
+			self._is_dragging_plot = false
 
-		if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-			self.log(LOG_INFO, ["Right button pressed"])
+			if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+				self.log(LOG_INFO, ["Right button pressed"])
 
-		if event.button_index == MOUSE_BUTTON_LEFT:
-			
-			if event.pressed and self._mouse_in and _curr_graph_mode == Graph_Buffer_Mode.FIXED:
-				self._zoom_start_pos = get_local_mouse_position()
-				self._zoom_curr_pos = _zoom_start_pos
-				self._is_zooming = true
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				
+				if event.pressed and self._mouse_in:
+					self._zoom_start_pos = get_local_mouse_position()
+					self._zoom_curr_pos = _zoom_start_pos
+					self._is_zooming = true
+					queue_redraw()
+				elif not event.pressed and _is_zooming:
+					self._is_zooming = false
+					var rect: Rect2 = Rect2(self._zoom_start_pos, self._zoom_curr_pos - self._zoom_start_pos).abs()
+					if rect.size.x > 5 and rect.size.y > 5:
+						zoom_requested.emit(rect)
+					queue_redraw()
+
+		if event is InputEventMouseMotion:
+
+			var global_mouse_pos: Vector2 = get_global_mouse_position()
+
+			if _is_zooming:
+				_zoom_curr_pos = get_local_mouse_position()
 				queue_redraw()
-			elif not event.pressed and _is_zooming:
-				self._is_zooming = false
-				var rect: Rect2 = Rect2(self._zoom_start_pos, self._zoom_curr_pos - self._zoom_start_pos).abs()
-				if rect.size.x > 5 and rect.size.y > 5:
-					zoom_requested.emit(rect)
-				queue_redraw()
-
-	if event is InputEventMouseMotion:
-
-		var global_mouse_pos: Vector2 = get_global_mouse_position()
-
-		if _is_zooming:
-			_zoom_curr_pos = get_local_mouse_position()
-			queue_redraw()
-		elif get_global_rect().has_point(global_mouse_pos):
-			if _curr_graph_mode == Graph_Buffer_Mode.FIXED:
+			elif get_global_rect().has_point(global_mouse_pos):
 				if _curr_cursor_pos != get_local_mouse_position():
 					_curr_cursor_pos = get_local_mouse_position()
 					queue_redraw()
-
-
-	# if (event is InputEventKey and event.pressed):
-		
-	# 	if (event.keycode == KEY_CTRL and self._curr_graph_mode == Graph_Buffer_Mode.FIXED):
-	# 		self._drag_plot_mode_active = true
-
-	# 		self.log(LOG_DEBUG, ["Dragging plot mode active now!"])
-
-
-
-	# 		self.log(LOG_DEBUG, ["Hellloooo wtf"])
-
-	# else:
-	# 	self._is_dragging_plot = false
 			
 func _process(delta: float) -> void:
 
