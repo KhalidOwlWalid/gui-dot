@@ -19,6 +19,8 @@ var _draw_cursor_flag: bool = false
 var _mouse_inside: bool = false
 var _curr_graph_mode: Graph_Buffer_Mode
 
+signal mouse_wheel_zoom_requested(mouse_button: MouseButton)
+
 # Zoom-by-drag state
 signal zoom_requested(pixel_rect: Rect2)
 var _zoom_start_pos: Vector2 = Vector2.ZERO
@@ -319,6 +321,9 @@ func _input(event: InputEvent) -> void:
 					if rect.size.x > 5 and rect.size.y > 5:
 						zoom_requested.emit(rect)
 					queue_redraw()
+
+			if (event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
+				self.mouse_wheel_zoom_requested.emit(event.button_index)
 
 		if event is InputEventMouseMotion:
 

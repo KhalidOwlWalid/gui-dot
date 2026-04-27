@@ -573,6 +573,22 @@ func _on_plot_drag_requested(delta_pos: Vector2):
 	# user wants to drag right, the time axis would move backwards
 	self.t_axis_node.setup_axis_range(self.t_axis_node.min_val - t_increment, self.t_axis_node.max_val - t_increment, true)
 
+func _on_mouse_wheel_zoom_requested(mouse_button: MouseButton):
+	
+	var zoom_factor: float = 1.1
+	var r1: float = 0.5
+	var r2: float = 0.5
+	var t_axis_range: Vector2 = self.t_axis_node.get_axis_range()
+	var t_axis_centre: float = abs(t_axis_range.x + t_axis_range.y) / 2.0
+
+	if (mouse_button == MouseButton.MOUSE_BUTTON_WHEEL_UP):
+		var new_range: float = abs(t_axis_range.y - t_axis_range.x) / zoom_factor
+		t_axis_node.setup_axis_range(t_axis_centre - new_range * r1, t_axis_centre + new_range * r2)
+	elif (mouse_button == MouseButton.MOUSE_BUTTON_WHEEL_DOWN):
+		var new_range: float = abs(t_axis_range.y - t_axis_range.x) * zoom_factor
+		t_axis_node.setup_axis_range(t_axis_centre - new_range * r1, t_axis_centre + new_range * r2)
+	
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 
@@ -593,6 +609,7 @@ func _ready() -> void:
 	self.plot_node.register_parent_node(self)
 	self.plot_node.zoom_requested.connect(self._on_zoom_requested)
 	self.plot_node.plot_drag_requested.connect(self._on_plot_drag_requested)
+	self.plot_node.mouse_wheel_zoom_requested.connect(self._on_mouse_wheel_zoom_requested)
 	
 	self._init_font()
 
