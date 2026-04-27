@@ -573,11 +573,19 @@ func _on_plot_drag_requested(delta_pos: Vector2):
 	# user wants to drag right, the time axis would move backwards
 	self.t_axis_node.setup_axis_range(self.t_axis_node.min_val - t_increment, self.t_axis_node.max_val - t_increment, true)
 
-func _on_mouse_wheel_zoom_requested(mouse_button: MouseButton):
+func _on_mouse_wheel_zoom_requested(mouse_button: MouseButton, mouse_ratio_pos: Vector2):
 	
-	var zoom_factor: float = 1.1
+	var zoom_factor: float = 1.0001
 	var r1: float = 0.5
 	var r2: float = 0.5
+
+	var tuned_ratio: float = 0.1
+
+	var left_weight: float = mouse_ratio_pos.x
+	var right_weight: float = (1 - left_weight)
+
+	var top_weight: float = mouse_ratio_pos.y
+	var bottom_weight: float = (1 - top_weight)
 
 	for ax_handler in self._y_axis_manager.get_axis_manager_dict().values():
 		var y_axis_range: Vector2 = ax_handler.get_axis_range()
@@ -587,11 +595,11 @@ func _on_mouse_wheel_zoom_requested(mouse_button: MouseButton):
 
 		if (mouse_button == MouseButton.MOUSE_BUTTON_WHEEL_UP):
 			new_y_range = abs(y_axis_range.y - y_axis_range.x) / zoom_factor
-			calc_zoom_range = Vector2(y_axis_centre - new_y_range * r1, y_axis_centre + new_y_range * r2)
+			calc_zoom_range = Vector2(y_axis_range.x + new_y_range * bottom_weight * tuned_ratio, y_axis_range.y - new_y_range * top_weight * tuned_ratio)
 			ax_handler.set_axis_range(calc_zoom_range, false)
 		if (mouse_button == MouseButton.MOUSE_BUTTON_WHEEL_DOWN):
 			new_y_range = abs(y_axis_range.y - y_axis_range.x) * zoom_factor
-			calc_zoom_range = Vector2(y_axis_centre - new_y_range * r1, y_axis_centre + new_y_range * r2)
+			calc_zoom_range = Vector2(y_axis_range.x - new_y_range * bottom_weight * tuned_ratio, y_axis_range.y + new_y_range * top_weight * tuned_ratio)
 			ax_handler.set_axis_range(calc_zoom_range, false)
 
 	var t_axis_range: Vector2 = self.t_axis_node.get_axis_range()
@@ -599,10 +607,10 @@ func _on_mouse_wheel_zoom_requested(mouse_button: MouseButton):
 
 	if (mouse_button == MouseButton.MOUSE_BUTTON_WHEEL_UP):
 		var new_range: float = abs(t_axis_range.y - t_axis_range.x) / zoom_factor
-		t_axis_node.setup_axis_range(t_axis_centre - new_range * r1, t_axis_centre + new_range * r2)
+		t_axis_node.setup_axis_range(t_axis_range.x + new_range * left_weight * tuned_ratio, t_axis_range.y - new_range * right_weight * tuned_ratio)
 	elif (mouse_button == MouseButton.MOUSE_BUTTON_WHEEL_DOWN):
 		var new_range: float = abs(t_axis_range.y - t_axis_range.x) * zoom_factor
-		t_axis_node.setup_axis_range(t_axis_centre - new_range * r1, t_axis_centre + new_range * r2)
+		t_axis_node.setup_axis_range(t_axis_range.x - new_range * left_weight * tuned_ratio, t_axis_range.y + new_range * right_weight * tuned_ratio)
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:

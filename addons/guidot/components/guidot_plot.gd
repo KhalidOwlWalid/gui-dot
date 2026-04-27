@@ -324,7 +324,11 @@ func _input(event: InputEvent) -> void:
 
 			# Ensure that only when the mouse is in the plotting area, should we emit the zoom signal
 			if (event.button_index == MOUSE_BUTTON_WHEEL_UP or event.button_index == MOUSE_BUTTON_WHEEL_DOWN) and self._mouse_in:
-				self.mouse_wheel_zoom_requested.emit(event.button_index)
+				var curr_mouse_pos: Vector2 = get_local_mouse_position()
+				var plot_frame_size: Vector2 = self.size
+				var mouse_ratio_pos: Vector2 = (curr_mouse_pos / plot_frame_size)
+				# self.log(LOG_DEBUG, ["Current mouse pos: ", curr_mouse_pos, ", plot_frame_size: ", plot_frame_size, ", Ratio: ", y_mous])
+				self.mouse_wheel_zoom_requested.emit(event.button_index, mouse_ratio_pos)
 
 		if event is InputEventMouseMotion:
 
