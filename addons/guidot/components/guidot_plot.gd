@@ -17,13 +17,19 @@ var _y_axis_ranges: Dictionary = {}
 var _curr_cursor_pos: Vector2 = Vector2(0, 0)
 var _draw_cursor_flag: bool = false
 var _mouse_inside: bool = false
-var _current_graph_mode: Graph_Buffer_Mode
+var _curr_graph_mode: Graph_Buffer_Mode
 
 # Zoom-by-drag state
 signal zoom_requested(pixel_rect: Rect2)
 var _zoom_start_pos: Vector2 = Vector2.ZERO
-var _zoom_current_pos: Vector2 = Vector2.ZERO
+var _zoom_curr_pos: Vector2 = Vector2.ZERO
 var _is_zooming: bool = false
+
+signal plot_drag_requested(delta_pos: Vector2)
+var _mouse_drag_start_pos: Vector2 = Vector2.ZERO
+var _mouse_drag_curr_pos: Vector2 = Vector2.ZERO
+var _drag_plot_mode_active: bool = false
+var _is_dragging_plot: bool = false
 
 # Axis properties
 var _n_x_ticks: int
@@ -40,6 +46,13 @@ var _parent_node: Guidot_T_Series_Graph
 # meant to queue a redraw to remove previous UI text / plot
 var _curr_ui_mode_internal: Guidot_Graph.UI_Mode = self._curr_ui_mode
 var _prev_ui_mode_internal: Guidot_Graph.UI_Mode = self._curr_ui_mode
+
+var _tmp_debug: Vector2 = Vector2.ZERO
+func update_debug_info() -> void:
+	self.debug_signals_to_trace = {
+		"drag plot mode active": self._drag_plot_mode_active,
+		"mouse cursor delta": self._tmp_debug,
+	}
 
 func _ready() -> void:
 	self.name = "plot_frame"
@@ -227,7 +240,7 @@ func _draw_cursor_values(cursor_pos: Vector2):
 		draw_string(font, str_draw_pix_pos, label, 0, -1, label_font_size, gd_data.get_line_color())
 
 func _draw_zoom_box() -> void:
-	var rect: Rect2 = Rect2(self._zoom_start_pos, self._zoom_current_pos - self._zoom_start_pos).abs()
+	var rect: Rect2 = Rect2(self._zoom_start_pos, self._zoom_curr_pos - self._zoom_start_pos).abs()
 	draw_rect(rect, Color(1, 1, 0, 0.08), true)
 	draw_rect(rect, Color(1, 1, 0, 0.9), false, 2.0)
 
@@ -243,14 +256,15 @@ func _draw_current_mode_txt():
 func _draw() -> void:
 	self._draw_vertical_grids(_n_x_ticks, _x_ticks_pos, Guidot_Utils.get_color("gd_grey"))
 	self._draw_horizontal_grids(_n_y_ticks, _y_ticks_pos, Guidot_Utils.get_color("gd_grey"))
-	# self.log(LOG_DEBUG, ["Current mode for plot node: ", Guidot_Graph.ui_mode_str[self._curr_ui_mode]])
 
 	match (self._curr_ui_mode):
 		Guidot_Graph.UI_Mode.DATA_DISPLAY:
 
 			self._draw_plots()
-			if (self._current_graph_mode == Graph_Buffer_Mode.FIXED):
-				if self._is_zooming:
+			if (self._curr_graph_mode == Graph_Buffer_Mode.FIXED):
+				if self._drag_plot_mode_active:
+					return
+				elif self._is_zooming:
 					_draw_zoom_box()
 				else:
 					var cursor_pos: Vector2 = get_local_mouse_position()
@@ -265,20 +279,42 @@ func _draw() -> void:
 			
 func _input(event: InputEvent) -> void:
 
+	if (not Input.is_key_pressed(KEY_CTRL)):
+		self._drag_plot_mode_active = false
+	elif (Input.is_key_pressed(KEY_CTRL)):
+		self._drag_plot_mode_active = true
+
+		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			self._is_dragging_plot = true
+			self._mouse_drag_curr_pos = get_local_mouse_position()
+			return
+
+		if event is InputEventMouseMotion and self._is_dragging_plot:
+			var local_mouse: Vector2 = get_local_mouse_position()
+			var delta: Vector2 = local_mouse - self._mouse_drag_curr_pos
+			self._tmp_debug = delta
+			self.plot_drag_requested.emit(delta)
+			self._mouse_drag_curr_pos = local_mouse
+			return
+		return
+
 	if event is InputEventMouseButton:
+
+		self._is_dragging_plot = false
 
 		if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 			self.log(LOG_INFO, ["Right button pressed"])
 
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			if event.pressed and self._mouse_in and _current_graph_mode == Graph_Buffer_Mode.FIXED:
+			
+			if event.pressed and self._mouse_in and _curr_graph_mode == Graph_Buffer_Mode.FIXED:
 				self._zoom_start_pos = get_local_mouse_position()
-				self._zoom_current_pos = _zoom_start_pos
+				self._zoom_curr_pos = _zoom_start_pos
 				self._is_zooming = true
 				queue_redraw()
 			elif not event.pressed and _is_zooming:
 				self._is_zooming = false
-				var rect: Rect2 = Rect2(self._zoom_start_pos, self._zoom_current_pos - self._zoom_start_pos).abs()
+				var rect: Rect2 = Rect2(self._zoom_start_pos, self._zoom_curr_pos - self._zoom_start_pos).abs()
 				if rect.size.x > 5 and rect.size.y > 5:
 					zoom_requested.emit(rect)
 				queue_redraw()
@@ -288,13 +324,28 @@ func _input(event: InputEvent) -> void:
 		var global_mouse_pos: Vector2 = get_global_mouse_position()
 
 		if _is_zooming:
-			_zoom_current_pos = get_local_mouse_position()
+			_zoom_curr_pos = get_local_mouse_position()
 			queue_redraw()
 		elif get_global_rect().has_point(global_mouse_pos):
-			if _current_graph_mode == Graph_Buffer_Mode.FIXED:
+			if _curr_graph_mode == Graph_Buffer_Mode.FIXED:
 				if _curr_cursor_pos != get_local_mouse_position():
 					_curr_cursor_pos = get_local_mouse_position()
 					queue_redraw()
+
+
+	# if (event is InputEventKey and event.pressed):
+		
+	# 	if (event.keycode == KEY_CTRL and self._curr_graph_mode == Graph_Buffer_Mode.FIXED):
+	# 		self._drag_plot_mode_active = true
+
+	# 		self.log(LOG_DEBUG, ["Dragging plot mode active now!"])
+
+
+
+	# 		self.log(LOG_DEBUG, ["Hellloooo wtf"])
+
+	# else:
+	# 	self._is_dragging_plot = false
 			
 func _process(delta: float) -> void:
 
