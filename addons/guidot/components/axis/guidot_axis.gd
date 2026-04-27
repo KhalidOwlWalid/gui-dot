@@ -74,11 +74,13 @@ func setup_axis_node(name: String, color: Color) -> void:
 	self.color = color
 	self.init_event_handler()
 
-func setup_axis_range(min: float, max: float) -> void:
+func setup_axis_range(min: float, max: float, trigger_redraw: bool = true) -> void:
 	self.min_val = min
 	self.max_val = max
 	axis_limit_changed.emit()
-	queue_redraw()
+	
+	if (trigger_redraw):
+		queue_redraw()
 
 func get_axis_range() -> Vector2:
 	return Vector2(self.min_val, self.max_val)

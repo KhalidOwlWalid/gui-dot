@@ -65,14 +65,17 @@ class AxisHandler:
 		# TODO (Khalid): Check if the y-axis ID is valid or not
 		self._axis_pos = id
 
-	func set_axis_range(new_range: Vector2) -> void:
-		self._axis_node.setup_axis_range(new_range.x, new_range.y)
+	func set_axis_range(new_range: Vector2, trigger_redraw: bool = true) -> void:
+		self._axis_node.setup_axis_range(new_range.x, new_range.y, trigger_redraw)
 
 	func set_axis_modulation(modulated_color: Color):
 		self._axis_node.set_self_modulate(modulated_color)
 
 	func get_axis_range() -> Vector2:
 		return self._axis_node.get_axis_range()
+
+	func get_axis_diff() -> float:
+		return abs(self._axis_node.max_val - self._axis_node.min_val)
 
 	func is_in_use() -> bool:
 		return self._in_use
@@ -550,16 +553,25 @@ func get_y_axis_manager() -> AxisManager:
 	return self._y_axis_manager
 
 func _on_plot_drag_requested(delta_pos: Vector2):
-	self.log(LOG_DEBUG, ["Mouse delta pos: ", delta_pos])
-	var delta_pixel: Vector2 = delta_pos
-	var delta_t: float = self.t_axis_node.axis_diff()
-	var plot_frame_size: Vector2 = self.plot_node.size
 
-	# TODO: Calculate the linear scaling to map the delta to the actual axis range position
-	var x_pixel_motion_ratio: float = delta_pixel.x / plot_frame_size.x
-	var t_increment: float = x_pixel_motion_ratio * delta_t
+	# delta_pixel is positive in the right and down direction
+	var delta_pixel: Vector2 = delta_pos
+	var plot_frame_size: Vector2 = self.plot_node.size
+	var pix_motion_ratio: Vector2 = delta_pixel / plot_frame_size
+
+	for ax_handler in self._y_axis_manager.get_axis_manager_dict().values():
+		var delta_y: float = ax_handler.get_axis_diff() 
+		var y_increment: float = pix_motion_ratio.y * delta_y
+		var y_axis_range: Vector2 = ax_handler.get_axis_range()
+		var new_y_range: Vector2 = Vector2(y_axis_range.x + y_increment, y_axis_range.y + y_increment)
+		ax_handler.set_axis_range(new_y_range, false)
+
+	var delta_t: float = self.t_axis_node.axis_diff()
+	var t_increment: float = pix_motion_ratio.x * delta_t
 	var t_axis_range: Vector2 = self.t_axis_node.get_axis_range()
-	self.t_axis_node.setup_axis_range(self.t_axis_node.min_val - t_increment, self.t_axis_node.max_val - t_increment)
+	# This needs to be substracted since the delta pixel would produce positive result when going to the right, and if
+	# user wants to drag right, the time axis would move backwards
+	self.t_axis_node.setup_axis_range(self.t_axis_node.min_val - t_increment, self.t_axis_node.max_val - t_increment, true)
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
