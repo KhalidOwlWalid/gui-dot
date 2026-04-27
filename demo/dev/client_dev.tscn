@@ -24,10 +24,10 @@ script = ExtResource("1_683k6")
 
 [node name="Guidot_Graph" type="PanelContainer" parent="."]
 layout_mode = 0
-offset_left = 226.0
-offset_top = 66.0
-offset_right = 846.0
-offset_bottom = 426.0
+offset_left = 231.0
+offset_top = 146.0
+offset_right = 851.0
+offset_bottom = 506.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_a08y6")
 script = ExtResource("2_nctrg")
 

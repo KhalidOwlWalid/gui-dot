@@ -549,6 +549,18 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 func get_y_axis_manager() -> AxisManager:
 	return self._y_axis_manager
 
+func _on_plot_drag_requested(delta_pos: Vector2):
+	self.log(LOG_DEBUG, ["Mouse delta pos: ", delta_pos])
+	var delta_pixel: Vector2 = delta_pos
+	var delta_t: float = self.t_axis_node.axis_diff()
+	var plot_frame_size: Vector2 = self.plot_node.size
+
+	# TODO: Calculate the linear scaling to map the delta to the actual axis range position
+	var x_pixel_motion_ratio: float = delta_pixel.x / plot_frame_size.x
+	var t_increment: float = x_pixel_motion_ratio * delta_t
+	var t_axis_range: Vector2 = self.t_axis_node.get_axis_range()
+	self.t_axis_node.setup_axis_range(self.t_axis_node.min_val - t_increment, self.t_axis_node.max_val - t_increment)
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 
@@ -568,6 +580,7 @@ func _ready() -> void:
 	self._init_plot_node()
 	self.plot_node.register_parent_node(self)
 	self.plot_node.zoom_requested.connect(self._on_zoom_requested)
+	self.plot_node.plot_drag_requested.connect(self._on_plot_drag_requested)
 	
 	self._init_font()
 
@@ -750,7 +763,7 @@ func plot_fixedtime_data():
 
 func _update_buffer_mode(new_buff_mode: Graph_Buffer_Mode):
 	self._current_graph_mode = new_buff_mode
-	self.plot_node._current_graph_mode = new_buff_mode
+	self.plot_node._curr_graph_mode = new_buff_mode
 
 func _input(event: InputEvent) -> void:
 
