@@ -28,6 +28,7 @@ var _selected_channels_name: Array
 @onready var plot_node: Guidot_Plot = Guidot_Plot.new()
 @onready var t_axis_node: Guidot_T_Axis = Guidot_T_Axis.new()
 @onready var _setting_button: Button = Button.new()
+@onready var _setting_icon: Texture2D = load("res://addons/guidot/icons/gear_icon.png")
 
 var _prev_opacity_setting: float
 
@@ -637,6 +638,14 @@ func _ready() -> void:
 	self._init_font()
 
 	self._setting_button.size = Vector2(30, 30)
+	var setting_icon_resized: Image = self._setting_icon.get_image()
+	setting_icon_resized.resize(30, 30)
+	self._setting_icon = ImageTexture.create_from_image(setting_icon_resized)
+
+	var empty_stylebox: StyleBoxEmpty = StyleBoxEmpty.new()
+
+	self._setting_button.add_theme_stylebox_override("normal", empty_stylebox)
+	self._setting_button.set_button_icon(self._setting_icon)
 	self._setting_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
 	self._setting_button.position = Vector2(self.size.x - self._setting_button.size.x, 0)
 	self._setting_button.pressed.connect(self._on_setting_pressed)
