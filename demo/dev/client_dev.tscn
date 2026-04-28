@@ -1,8 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://bdyylxjrf4idj"]
+[gd_scene load_steps=7 format=3 uid="uid://bdyylxjrf4idj"]
 
 [ext_resource type="Script" path="res://addons/guidot/components/data/guidot_data_server.gd" id="1_683k6"]
 [ext_resource type="Script" path="res://demo/dev/client_dev.gd" id="2_juu06"]
 [ext_resource type="Script" path="res://addons/guidot/t_graph_with_panel.gd" id="2_nctrg"]
+[ext_resource type="Texture2D" uid="uid://drw41vk21pqsg" path="res://addons/guidot/icons/gear_icon.png" id="4_sj62o"]
+[ext_resource type="Script" path="res://test/explore/button.gd" id="5_laa13"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a08y6"]
 content_margin_left = 1.0
@@ -33,3 +35,13 @@ script = ExtResource("2_nctrg")
 
 [node name="Node" type="Node" parent="."]
 script = ExtResource("2_juu06")
+
+[node name="Button" type="Button" parent="."]
+layout_mode = 0
+offset_left = 1199.0
+offset_top = 198.0
+offset_right = 1335.0
+offset_bottom = 334.0
+tooltip_text = "Test"
+icon = ExtResource("4_sj62o")
+script = ExtResource("5_laa13")
