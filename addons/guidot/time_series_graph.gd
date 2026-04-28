@@ -30,6 +30,15 @@ var _selected_channels_name: Array
 @onready var _setting_button: Button = Button.new()
 @onready var _setting_icon: Texture2D = load("res://addons/guidot/icons/gear_icon.png")
 
+@onready var _pause_button: Button = Button.new()
+@onready var _pause_icon: Texture2D = load("res://addons/guidot/icons/pause_icon.png")
+
+@onready var _edit_button: Button = Button.new()
+@onready var _edit_icon: Texture2D = load("res://addons/guidot/icons/edit_icon.png")
+
+@onready var _cursor_button: Button = Button.new()
+@onready var _cursor_icon: Texture2D = load("res://addons/guidot/icons/cursor_icon.png")
+
 var _prev_opacity_setting: float
 
 var _initialized: bool = false
@@ -613,6 +622,21 @@ func _on_mouse_wheel_zoom_requested(mouse_button: MouseButton, mouse_ratio_pos: 
 		var new_range: float = abs(t_axis_range.y - t_axis_range.x) * zoom_factor
 		t_axis_node.setup_axis_range(t_axis_range.x - new_range * left_weight * tuned_ratio, t_axis_range.y + new_range * right_weight * tuned_ratio)
 
+func setup_button(graph_button: Button, icon: Texture2D, n_row: int):
+	graph_button.size = Vector2(30, 30)
+	var setting_icon_resized: Image = icon.get_image()
+	setting_icon_resized.resize(30, 30)
+	icon = ImageTexture.create_from_image(setting_icon_resized)
+
+	var empty_stylebox: StyleBoxEmpty = StyleBoxEmpty.new()
+
+	graph_button.add_theme_stylebox_override("normal", empty_stylebox)
+	graph_button.set_button_icon(icon)
+	graph_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
+	graph_button.position = Vector2(self.size.x - graph_button.size.x, n_row * graph_button.size.y)
+	# graph_button.pressed.connect(self._on_setting_pressed)
+	self.add_child(graph_button)
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 
@@ -650,6 +674,20 @@ func _ready() -> void:
 	self._setting_button.position = Vector2(self.size.x - self._setting_button.size.x, 0)
 	self._setting_button.pressed.connect(self._on_setting_pressed)
 	self.add_child(self._setting_button)
+
+	self.setup_button(self._pause_button, self._pause_icon, 1)
+	self.setup_button(self._edit_button, self._edit_icon, 2)
+	self.setup_button(self._cursor_button, self._cursor_icon, 3)
+
+	# self._pause_button.size = Vector2(30, 30)
+	# var pause_icon_resized: Image = self._pause_icon.get_image()
+	# pause_icon_resized.resize(30, 30)
+	# self._pause_icon = ImageTexture.create_from_image(pause_icon_resized)
+	# self._pause_button.add_theme_stylebox_override("normal", empty_stylebox)
+	# self._pause_button.set_button_icon(self._pause_icon)
+	# self._pause_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
+	# self._pause_button.position = Vector2(self.size.x - self._setting_button.size.x, 30)
+	# self.add_child(self._pause_button)
 
 	# call_deferred is required as the parent is actually busy handling the child node (self, in particular)
 	# will need to be deferred
