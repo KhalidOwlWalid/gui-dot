@@ -269,9 +269,10 @@ func _draw() -> void:
 				elif self._is_zooming:
 					_draw_zoom_box()
 				else:
-					var cursor_pos: Vector2 = get_local_mouse_position()
-					self._draw_cursor(cursor_pos, Guidot_Utils.get_color("red"))
-					self._draw_cursor_values(cursor_pos)
+					if (self._draw_cursor_flag):
+						var cursor_pos: Vector2 = get_local_mouse_position()
+						self._draw_cursor(cursor_pos, Guidot_Utils.get_color("red"))
+						self._draw_cursor_values(cursor_pos)
 
 		Guidot_Graph.UI_Mode.EDIT:
 			self._draw_current_mode_txt()
@@ -300,6 +301,9 @@ func _input(event: InputEvent) -> void:
 				self._mouse_drag_curr_pos = local_mouse
 				return
 			return
+
+		if (Input.is_key_pressed(KEY_I)):
+			self._draw_cursor_flag = not self._draw_cursor_flag
 
 		if event is InputEventMouseButton:
 
