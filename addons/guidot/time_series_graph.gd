@@ -27,11 +27,22 @@ var _selected_channels_name: Array
 # Components used for building the graph 
 @onready var plot_node: Guidot_Plot = Guidot_Plot.new()
 @onready var t_axis_node: Guidot_T_Axis = Guidot_T_Axis.new()
+
 @onready var _setting_button: Button = Button.new()
 @onready var _setting_icon: Texture2D = load("res://addons/guidot/icons/gear_icon.png")
 
+func _on_setting_pressed() -> void:
+	var graph_manager_pos: Vector2 = Vector2()
+	graph_manager_pos.x = DisplayServer.screen_get_size().x/2 - self._graph_manager.size.x/2
+	graph_manager_pos.y = DisplayServer.screen_get_size().y/2 - self._graph_manager.size.y/2
+	self.log(LOG_DEBUG, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
+	self._graph_manager.show_panel_at_pos(graph_manager_pos)
+
 @onready var _pause_button: Button = Button.new()
 @onready var _pause_icon: Texture2D = load("res://addons/guidot/icons/pause_icon.png")
+
+func _on_pause_pressed() -> void:
+	self.log(LOG_DEBUG, ["Pause pressed"])
 
 @onready var _edit_button: Button = Button.new()
 @onready var _edit_icon: Texture2D = load("res://addons/guidot/icons/edit_icon.png")
@@ -466,13 +477,6 @@ func _get_data() -> PackedVector2Array:
 func _get_line_color() -> Color:
 	return self._guidot_server.query_data_line_color(self._curr_data_str)
 
-func _on_setting_pressed() -> void:
-	var graph_manager_pos: Vector2 = Vector2()
-	graph_manager_pos.x = DisplayServer.screen_get_size().x/2 - self._graph_manager.size.x/2
-	graph_manager_pos.y = DisplayServer.screen_get_size().y/2 - self._graph_manager.size.y/2
-	self.log(LOG_DEBUG, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
-	self._graph_manager.show_panel_at_pos(graph_manager_pos)
-
 func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
 
 	if (server_config_array.is_empty()):
@@ -622,7 +626,7 @@ func _on_mouse_wheel_zoom_requested(mouse_button: MouseButton, mouse_ratio_pos: 
 		var new_range: float = abs(t_axis_range.y - t_axis_range.x) * zoom_factor
 		t_axis_node.setup_axis_range(t_axis_range.x - new_range * left_weight * tuned_ratio, t_axis_range.y + new_range * right_weight * tuned_ratio)
 
-func setup_button(graph_button: Button, icon: Texture2D, n_row: int):
+func setup_button(graph_button: Button, icon: Texture2D, n_row: int, button_cb: Callable):
 	graph_button.size = Vector2(30, 30)
 	var setting_icon_resized: Image = icon.get_image()
 	setting_icon_resized.resize(30, 30)
@@ -634,7 +638,7 @@ func setup_button(graph_button: Button, icon: Texture2D, n_row: int):
 	graph_button.set_button_icon(icon)
 	graph_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
 	graph_button.position = Vector2(self.size.x - graph_button.size.x, n_row * graph_button.size.y)
-	# graph_button.pressed.connect(self._on_setting_pressed)
+	graph_button.pressed.connect(button_cb)
 	self.add_child(graph_button)
 
 # Called when the node enters the scene tree for the first time.
@@ -661,23 +665,10 @@ func _ready() -> void:
 	
 	self._init_font()
 
-	self._setting_button.size = Vector2(30, 30)
-	var setting_icon_resized: Image = self._setting_icon.get_image()
-	setting_icon_resized.resize(30, 30)
-	self._setting_icon = ImageTexture.create_from_image(setting_icon_resized)
-
-	var empty_stylebox: StyleBoxEmpty = StyleBoxEmpty.new()
-
-	self._setting_button.add_theme_stylebox_override("normal", empty_stylebox)
-	self._setting_button.set_button_icon(self._setting_icon)
-	self._setting_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
-	self._setting_button.position = Vector2(self.size.x - self._setting_button.size.x, 0)
-	self._setting_button.pressed.connect(self._on_setting_pressed)
-	self.add_child(self._setting_button)
-
-	self.setup_button(self._pause_button, self._pause_icon, 1)
-	self.setup_button(self._edit_button, self._edit_icon, 2)
-	self.setup_button(self._cursor_button, self._cursor_icon, 3)
+	self.setup_button(self._setting_button, self._setting_icon, 0, self._on_setting_pressed)
+	self.setup_button(self._pause_button, self._pause_icon, 1, self._on_pause_pressed)
+	self.setup_button(self._edit_button, self._edit_icon, 2, self._on_pause_pressed)
+	self.setup_button(self._cursor_button, self._cursor_icon, 3, self._on_pause_pressed)
 
 	# self._pause_button.size = Vector2(30, 30)
 	# var pause_icon_resized: Image = self._pause_icon.get_image()
