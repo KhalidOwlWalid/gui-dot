@@ -290,7 +290,6 @@ func _draw() -> void:
 		Guidot_Graph.UI_Mode.DATA_DISPLAY:
 
 			self._draw_plots()
-			self.log(LOG_DEBUG, ["Current UI mode: ", self._curr_ui_mode, ", Pause: ", self._is_pause])
 			if (self._curr_graph_mode == Graph_Buffer_Mode.FIXED):
 				if self._drag_plot_mode_active:
 					return

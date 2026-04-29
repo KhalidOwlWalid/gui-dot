@@ -955,8 +955,10 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed:
 
 		if (event.shift_pressed and event.keycode == KEY_H):
-			
 			if (not self.visible):
+				self._on_hide_graph_pressed()
+		elif (event.keycode == KEY_H):
+			if (self.visible):
 				self._on_hide_graph_pressed()
 
 		if (event.keycode == KEY_G):
