@@ -18,6 +18,10 @@ enum Graph_Buffer_Mode {
 	PAUSE,
 }
 
+enum Action {
+	CURSOR_MODE,
+}
+
 const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG
 const LOG_WARNING = Guidot_Log.Log_Level.WARNING
 const LOG_INFO = Guidot_Log.Log_Level.INFO

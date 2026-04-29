@@ -6,6 +6,8 @@ extends Guidot_Common
 var window_size: Vector2
 var window_color: Color
 
+signal action_request
+
 # Note (Khalid): For now, I wish to standardize the font throughout the whole node
 # This may bite me in the future, if for some reason, I wish to have different fonts
 # for different parts of the graph, but I kinda doubt that would happen
@@ -60,7 +62,7 @@ func _on_edit_pressed() -> void:
 @onready var _cursor_icon: Texture2D = load("res://addons/guidot/icons/cursor_icon.png")
 
 func _on_cursor_pressed() -> void:
-	pass
+	self.action_request.emit(Guidot_Common.Action.CURSOR_MODE)
 
 @onready var _ui_icons: Array = [
 	self._setting_icon,
