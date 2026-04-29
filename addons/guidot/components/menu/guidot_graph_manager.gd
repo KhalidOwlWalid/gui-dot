@@ -17,7 +17,8 @@ var selected_server: String
 
 @onready var _y_axis_config_tab: ScrollContainer
 @onready var _apply_y_axis_changes_btn: Button = Button.new()
-@onready var _n_left_axis: LineEdit = LineEdit.new()
+@onready var _left_axis_count: OptionButton = OptionButton.new()
+@onready var _right_axis_count: OptionButton = OptionButton.new()
 @onready var _n_axis: Vector2 = Vector2(1, 0)
 
 @onready var _t_axis_config_tab: ScrollContainer
@@ -55,6 +56,36 @@ func add_config_rows(config_tab: ScrollContainer, config_rows: Array[Node]) -> v
 	for row in config_rows:
 		config_tab_vbox.add_child(row)
 
+func create_axis_count_row(label_text: String, option_button: OptionButton, current_count: int, is_rhs: bool = false) -> HBoxContainer:
+	var row: HBoxContainer = HBoxContainer.new()
+	row.custom_minimum_size = Vector2(0, 30)
+	row.add_theme_constant_override("separation", 8)
+
+	var label: Label = Label.new()
+	label.text = label_text
+	label.custom_minimum_size = Vector2(120, 0)
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+
+	option_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	option_button.custom_minimum_size = Vector2(0, 24)
+	option_button.clear()
+	var start_idx: int
+
+	if (is_rhs):
+		start_idx = 0
+	else:
+		start_idx = 1
+
+	for i in range(start_idx, 6):
+		option_button.add_item(str(i), i)
+	var max_index: int = option_button.get_item_count() - 1
+	var selected_index: int = clamp(current_count - start_idx, 0, max_index)
+	option_button.selected = selected_index
+
+	row.add_child(label)
+	row.add_child(option_button)
+	return row
+
 func show_panel_at_pos(new_pos: Vector2) -> void:
 	self.set_position(new_pos)
 	self.visible = true
@@ -87,13 +118,14 @@ func _on_apply_changes_to_graph() -> void:
 func _on_apply_y_axis_changes() -> void:
 	self.y_axis_changes_applied.emit(self._n_axis)
 
+func _on_left_axis_count_selected(index: int) -> void:
+	self._n_axis.x = self._left_axis_count.get_item_id(index)
+
+func _on_right_axis_count_selected(index: int) -> void:
+	self._n_axis.y = self._right_axis_count.get_item_id(index)
+
 func register_axis_manager(axis_manager: Guidot_T_Series_Graph.AxisManager) -> void:
 	self._y_axis_manager_ref = axis_manager
-
-# You need to press enter for this to be activated
-func _on_n_axis_changes(n_axis_input: String) -> void:
-	var n_axis: PackedStringArray = n_axis_input.split(",")
-	self._n_axis = Vector2(n_axis[0].to_int(), n_axis[1].to_int())
 
 func _ready() -> void:
 
@@ -188,9 +220,14 @@ func _ready() -> void:
 	self._graph_config_tab_cont.add_child(self._y_axis_config_tab)
 	self._apply_y_axis_changes_btn.text = "Apply changes"
 	self._apply_y_axis_changes_btn.pressed.connect(self._on_apply_y_axis_changes)
-	self._n_left_axis.text_submitted.connect(self._on_n_axis_changes)
 
-	self.add_config_rows(self._y_axis_config_tab, [self._apply_y_axis_changes_btn, self._n_left_axis])
+	var left_axis_row: HBoxContainer = self.create_axis_count_row("Left axes", self._left_axis_count, int(self._n_axis.x))
+	var right_axis_row: HBoxContainer = self.create_axis_count_row("Right axes", self._right_axis_count, int(self._n_axis.y), true)
+
+	self._left_axis_count.item_selected.connect(self._on_left_axis_count_selected)
+	self._right_axis_count.item_selected.connect(self._on_right_axis_count_selected)
+
+	self.add_config_rows(self._y_axis_config_tab, [left_axis_row, right_axis_row, self._apply_y_axis_changes_btn])
 
 	self._t_axis_config_tab = self.create_configuration_tab("T-Axis")
 	self._graph_config_tab_cont.add_child(self._t_axis_config_tab)
