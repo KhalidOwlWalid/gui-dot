@@ -40,15 +40,27 @@ func _on_setting_pressed() -> void:
 
 @onready var _pause_button: Button = Button.new()
 @onready var _pause_icon: Texture2D = load("res://addons/guidot/icons/pause_icon.png")
+@onready var _play_icon: Texture2D = load("res://addons/guidot/icons/play_icon.png")
 
 func _on_pause_pressed() -> void:
+	self._is_pause = not self._is_pause
+	if (self._is_pause):
+		self._pause_button.set_button_icon(self._play_icon)
+	else:
+		self._pause_button.set_button_icon(self._pause_icon)
 	self.log(LOG_DEBUG, ["Pause pressed"])
 
 @onready var _edit_button: Button = Button.new()
 @onready var _edit_icon: Texture2D = load("res://addons/guidot/icons/edit_icon.png")
 
+func _on_edit_pressed() -> void:
+	pass
+
 @onready var _cursor_button: Button = Button.new()
 @onready var _cursor_icon: Texture2D = load("res://addons/guidot/icons/cursor_icon.png")
+
+func _on_cursor_pressed() -> void:
+	pass
 
 var _prev_opacity_setting: float
 
@@ -626,16 +638,20 @@ func _on_mouse_wheel_zoom_requested(mouse_button: MouseButton, mouse_ratio_pos: 
 		var new_range: float = abs(t_axis_range.y - t_axis_range.x) * zoom_factor
 		t_axis_node.setup_axis_range(t_axis_range.x - new_range * left_weight * tuned_ratio, t_axis_range.y + new_range * right_weight * tuned_ratio)
 
+func resize_button_icon(button_icon: Texture2D) -> Texture2D:
+	var resized_img: Image = button_icon.get_image()
+	resized_img.resize(30, 30)
+	var resized_icon = ImageTexture.create_from_image(resized_img)
+	return resized_icon
+
 func setup_button(graph_button: Button, icon: Texture2D, n_row: int, button_cb: Callable):
 	graph_button.size = Vector2(30, 30)
-	var setting_icon_resized: Image = icon.get_image()
-	setting_icon_resized.resize(30, 30)
-	icon = ImageTexture.create_from_image(setting_icon_resized)
+	var resized_icon: Texture2D = self.resize_button_icon(icon)
 
 	var empty_stylebox: StyleBoxEmpty = StyleBoxEmpty.new()
 
 	graph_button.add_theme_stylebox_override("normal", empty_stylebox)
-	graph_button.set_button_icon(icon)
+	graph_button.set_button_icon(resized_icon)
 	graph_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
 	graph_button.position = Vector2(self.size.x - graph_button.size.x, n_row * graph_button.size.y)
 	graph_button.pressed.connect(button_cb)
@@ -665,20 +681,15 @@ func _ready() -> void:
 	
 	self._init_font()
 
+	# var _play_icon_resized: Image = self._play_icon.get_image()
+	# _play_icon_resized.resize(30, 30)
+	self._play_icon = self.resize_button_icon(self._play_icon)
+	self._pause_icon = self.resize_button_icon(self._pause_icon)
+
 	self.setup_button(self._setting_button, self._setting_icon, 0, self._on_setting_pressed)
 	self.setup_button(self._pause_button, self._pause_icon, 1, self._on_pause_pressed)
-	self.setup_button(self._edit_button, self._edit_icon, 2, self._on_pause_pressed)
-	self.setup_button(self._cursor_button, self._cursor_icon, 3, self._on_pause_pressed)
-
-	# self._pause_button.size = Vector2(30, 30)
-	# var pause_icon_resized: Image = self._pause_icon.get_image()
-	# pause_icon_resized.resize(30, 30)
-	# self._pause_icon = ImageTexture.create_from_image(pause_icon_resized)
-	# self._pause_button.add_theme_stylebox_override("normal", empty_stylebox)
-	# self._pause_button.set_button_icon(self._pause_icon)
-	# self._pause_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
-	# self._pause_button.position = Vector2(self.size.x - self._setting_button.size.x, 30)
-	# self.add_child(self._pause_button)
+	self.setup_button(self._edit_button, self._edit_icon, 2, self._on_edit_pressed)
+	self.setup_button(self._cursor_button, self._cursor_icon, 3, self._on_cursor_pressed)
 
 	# call_deferred is required as the parent is actually busy handling the child node (self, in particular)
 	# will need to be deferred
@@ -881,10 +892,10 @@ func _input(event: InputEvent) -> void:
 		else:
 			debug_panel.hide()
 
-	if (Input.is_action_just_pressed("pause")):
-		self._is_pause = !self._is_pause
-		self.log(LOG_DEBUG, ["Pause button pressed: ", self._is_pause])
-		self.log(LOG_INFO, ["Graph paused"])
+	# if (Input.is_action_just_pressed("pause")):
+	# 	self._is_pause = !self._is_pause
+	# 	self.log(LOG_DEBUG, ["Pause button pressed: ", self._is_pause])
+	# 	self.log(LOG_INFO, ["Graph paused"])
 
 func _set_mouse_filter_action():
 	if (self._curr_ui_mode == Guidot_Graph.UI_Mode.EDIT or self._curr_ui_mode == Guidot_Graph.UI_Mode.SELECTED):
