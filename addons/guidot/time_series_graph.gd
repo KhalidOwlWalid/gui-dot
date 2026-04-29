@@ -661,7 +661,7 @@ func resize_button_icon(button_icon: Texture2D) -> Texture2D:
 	var resized_icon = ImageTexture.create_from_image(resized_img)
 	return resized_icon
 
-func setup_button(graph_button: Button, icon: Texture2D, n_row: int, button_cb: Callable):
+func setup_button(graph_button: Button, icon: Texture2D, n_row: int, button_cb: Callable, tooltip: String = ""):
 	graph_button.size = Vector2(30, 30)
 	var resized_icon: Texture2D = self.resize_button_icon(icon)
 
@@ -670,6 +670,7 @@ func setup_button(graph_button: Button, icon: Texture2D, n_row: int, button_cb: 
 	graph_button.add_theme_stylebox_override("normal", empty_stylebox)
 	graph_button.set_button_icon(resized_icon)
 	graph_button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
+	graph_button.tooltip_text = tooltip
 	graph_button.position = Vector2(self.size.x - graph_button.size.x, n_row * graph_button.size.y)
 	graph_button.pressed.connect(button_cb)
 	self.add_child(graph_button)
@@ -679,10 +680,10 @@ func _setup_all_ui_button():
 	self._pause_icon = self.resize_button_icon(self._pause_icon)
 	self._play_icon = self.resize_button_icon(self._play_icon)
 
-	self.setup_button(self._setting_button, self._setting_icon, 0, self._on_setting_pressed)
-	self.setup_button(self._pause_button, self._pause_icon, 1, self._on_pause_pressed)
-	self.setup_button(self._edit_button, self._edit_icon, 2, self._on_edit_pressed)
-	self.setup_button(self._cursor_button, self._cursor_icon, 3, self._on_cursor_pressed)
+	self.setup_button(self._setting_button, self._setting_icon, 0, self._on_setting_pressed, "Settings")
+	self.setup_button(self._pause_button, self._pause_icon, 1, self._on_pause_pressed, "Pause the realtime graph")
+	self.setup_button(self._edit_button, self._edit_icon, 2, self._on_edit_pressed, "Edit mode")
+	self.setup_button(self._cursor_button, self._cursor_icon, 3, self._on_cursor_pressed, "Toggle cursor")
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
