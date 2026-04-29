@@ -410,7 +410,6 @@ func _draw() -> void:
 		self._draw_resizing_hover_circle(resizing_hover_circle_size)
 	
 func _process(delta: float) -> void:
-	# self.log(LOG_DEBUG, ["Current UI mode: ", self.ui_mode_str[self._curr_ui_mode], ", Previous UI Mode: ", self.ui_mode_str[self._prev_ui_mode]])
 	pass
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
