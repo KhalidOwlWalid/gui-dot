@@ -246,11 +246,17 @@ func _draw_cursor_values(cursor_pos: Vector2):
 		var label: String = "%.3f, %.3f" % [interp_data.x, interp_data.y]
 		var label_font_size: int = 14
 		var label_size: Vector2 = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_font_size)
-		var str_draw_pix_pos: Vector2 = interp_pixel + Vector2(15, label_font_size/2)
 		var box_pos: Vector2 = interp_pixel + Vector2(10, -label_font_size)
 		var str_box: Rect2 = Rect2(box_pos, Vector2(label_size.x + 12, label_size.y + 5))
 		# TODO: Leaving the box drawing here, just in case I need it
 		# draw_rect(str_box, Color.WHITE, true)
+		
+		var str_draw_pix_pos: Vector2
+		if (mouse_x < self.size.x / 2):
+			str_draw_pix_pos = interp_pixel + Vector2(15, label_font_size/2)
+		else:
+			str_draw_pix_pos = interp_pixel - Vector2(label_size.x + 15, -label_font_size/2)
+
 		draw_string(font, str_draw_pix_pos, label, 0, -1, label_font_size, gd_data.get_line_color())
 
 func _draw_zoom_box() -> void:
