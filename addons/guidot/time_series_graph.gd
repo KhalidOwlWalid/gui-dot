@@ -56,13 +56,13 @@ func _on_pause_pressed() -> void:
 @onready var _edit_icon: Texture2D = load("res://addons/guidot/icons/edit_icon.png")
 
 func _on_edit_pressed() -> void:
-	pass
+	self.action_request.emit(Guidot_Common.UI_Action.EDIT_MODE)
 
 @onready var _cursor_button: Button = Button.new()
 @onready var _cursor_icon: Texture2D = load("res://addons/guidot/icons/cursor_icon.png")
 
 func _on_cursor_pressed() -> void:
-	self.action_request.emit(Guidot_Common.Action.CURSOR_MODE)
+	self.action_request.emit(Guidot_Common.UI_Action.CURSOR_MODE)
 
 @onready var _ui_icons: Array = [
 	self._setting_icon,

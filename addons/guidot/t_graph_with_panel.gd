@@ -141,12 +141,29 @@ func _ready() -> void:
 	# Signals connection
 	guidot_graph.parent_focus_requested.connect(_on_parent_focused)
 	guidot_graph._graph_manager.opacity_changed.connect(self.set_graph_opacity)
+	guidot_graph.action_request.connect(self._on_ui_action_request)
 	self.mouse_entered.connect(_on_mouse_entered)
 	self.mouse_exited.connect(_on_mouse_exited)
 
 	# Hotkeys
 	self._register_hotkeys()
 
+func _on_ui_action_request(action: Guidot_Common.UI_Action):
+	
+	match action:
+
+		# Toggle between DATA_DISPLAY and EDIT Mode
+		Guidot_Common.UI_Action.EDIT_MODE:
+			
+			if (self._curr_ui_mode == UI_Mode.DATA_DISPLAY):
+				self._prev_ui_mode = self._curr_ui_mode
+				self._curr_ui_mode = UI_Mode.EDIT
+			else:
+				self._prev_ui_mode = self._curr_ui_mode
+				self._curr_ui_mode = UI_Mode.DATA_DISPLAY
+
+			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
+			self.log(LOG_DEBUG, ["UI_Action: Edit Mode triggered"])
 
 func _on_mouse_entered() -> void:
 	self._mouse_in = true
