@@ -62,6 +62,21 @@ func _on_edit_pressed() -> void:
 func _on_cursor_pressed() -> void:
 	pass
 
+@onready var _ui_icons: Array = [
+	self._setting_icon,
+	self._play_icon,
+	self._pause_icon,
+	self._edit_icon,
+	self._cursor_icon,
+]
+
+@onready var _ui_buttons: Array = [
+	self._setting_button,
+	self._pause_button,
+	self._edit_button,
+	self._cursor_button,
+]
+
 var _prev_opacity_setting: float
 
 var _initialized: bool = false
@@ -657,6 +672,16 @@ func setup_button(graph_button: Button, icon: Texture2D, n_row: int, button_cb: 
 	graph_button.pressed.connect(button_cb)
 	self.add_child(graph_button)
 
+func _setup_all_ui_button():
+
+	self._pause_icon = self.resize_button_icon(self._pause_icon)
+	self._play_icon = self.resize_button_icon(self._play_icon)
+
+	self.setup_button(self._setting_button, self._setting_icon, 0, self._on_setting_pressed)
+	self.setup_button(self._pause_button, self._pause_icon, 1, self._on_pause_pressed)
+	self.setup_button(self._edit_button, self._edit_icon, 2, self._on_edit_pressed)
+	self.setup_button(self._cursor_button, self._cursor_icon, 3, self._on_cursor_pressed)
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 
@@ -681,15 +706,7 @@ func _ready() -> void:
 	
 	self._init_font()
 
-	# var _play_icon_resized: Image = self._play_icon.get_image()
-	# _play_icon_resized.resize(30, 30)
-	self._play_icon = self.resize_button_icon(self._play_icon)
-	self._pause_icon = self.resize_button_icon(self._pause_icon)
-
-	self.setup_button(self._setting_button, self._setting_icon, 0, self._on_setting_pressed)
-	self.setup_button(self._pause_button, self._pause_icon, 1, self._on_pause_pressed)
-	self.setup_button(self._edit_button, self._edit_icon, 2, self._on_edit_pressed)
-	self.setup_button(self._cursor_button, self._cursor_icon, 3, self._on_cursor_pressed)
+	self._setup_all_ui_button()
 
 	# call_deferred is required as the parent is actually busy handling the child node (self, in particular)
 	# will need to be deferred
@@ -791,8 +808,11 @@ func _on_display_frame_resized() -> void:
 	# that would force the axis into FIXED mode, overriding SLIDING_WINDOW mode.
 	t_axis_node.calculate_offset_from_plot_frame(self, plot_node)
 	
-	# Ensure the settings button are always at the top right during resizing
-	self._setting_button.position = Vector2(self.size.x - self._setting_button.size.x, 0)
+	# Ensure the UI buttons are always at the top right during resizing
+	var i: int = 0
+	for ui_button in self._ui_buttons:
+		ui_button.position = Vector2(self.size.x - ui_button.size.x, i * ui_button.size.y)
+		i += 1
 
 	self.log(LOG_DEBUG, ["Display frame resized"])
 
