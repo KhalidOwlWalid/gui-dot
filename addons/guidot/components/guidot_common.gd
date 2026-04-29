@@ -24,6 +24,7 @@ enum UI_Action {
 	PAUSE_MODE,
 	RESUME_MODE,
 	TOGGLE_GRAPH_MODE,
+	TOGGLE_HOTKEYS,
 }
 
 const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG

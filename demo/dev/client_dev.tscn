@@ -1,10 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://bdyylxjrf4idj"]
+[gd_scene load_steps=5 format=3 uid="uid://bdyylxjrf4idj"]
 
 [ext_resource type="Script" path="res://addons/guidot/components/data/guidot_data_server.gd" id="1_683k6"]
 [ext_resource type="Script" path="res://demo/dev/client_dev.gd" id="2_juu06"]
 [ext_resource type="Script" path="res://addons/guidot/t_graph_with_panel.gd" id="2_nctrg"]
-[ext_resource type="Texture2D" uid="uid://drw41vk21pqsg" path="res://addons/guidot/icons/gear_icon.png" id="4_sj62o"]
-[ext_resource type="Script" path="res://test/explore/button.gd" id="5_laa13"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a08y6"]
 content_margin_left = 1.0
@@ -26,22 +24,39 @@ script = ExtResource("1_683k6")
 
 [node name="Guidot_Graph" type="PanelContainer" parent="."]
 layout_mode = 0
-offset_left = 231.0
-offset_top = 146.0
-offset_right = 851.0
-offset_bottom = 506.0
+offset_left = 60.0
+offset_top = 36.0
+offset_right = 680.0
+offset_bottom = 396.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_a08y6")
 script = ExtResource("2_nctrg")
 
 [node name="Node" type="Node" parent="."]
 script = ExtResource("2_juu06")
 
-[node name="Button" type="Button" parent="."]
-layout_mode = 0
-offset_left = 1199.0
-offset_top = 198.0
-offset_right = 1335.0
-offset_bottom = 334.0
-tooltip_text = "Test"
-icon = ExtResource("4_sj62o")
-script = ExtResource("5_laa13")
+[node name="Guidot_Graph2" type="PanelContainer" parent="."]
+layout_mode = 2
+offset_left = 728.0
+offset_top = 46.0
+offset_right = 1346.0
+offset_bottom = 404.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_a08y6")
+script = ExtResource("2_nctrg")
+
+[node name="Guidot_Graph3" type="PanelContainer" parent="."]
+layout_mode = 2
+offset_left = 749.0
+offset_top = 461.0
+offset_right = 1365.0
+offset_bottom = 817.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_a08y6")
+script = ExtResource("2_nctrg")
+
+[node name="Guidot_Graph4" type="PanelContainer" parent="."]
+layout_mode = 2
+offset_left = 79.0
+offset_top = 449.0
+offset_right = 693.0
+offset_bottom = 803.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_a08y6")
+script = ExtResource("2_nctrg")

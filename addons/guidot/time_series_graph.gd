@@ -83,6 +83,14 @@ func _on_toggle_graph_pressed() -> void:
 func _on_hide_graph_pressed() -> void:
 	self.visible = not self.visible
 
+@onready var hotkey_enable: bool = true
+@onready var _toggle_hotkey_button: Button = Button.new()
+@onready var _toggle_hotkey_icon: Texture2D = load("res://addons/guidot/icons/toggle_hotkey_icon.png")
+
+func _on_toggle_hotkey_pressed() -> void:
+	self.hotkey_enable = not self.hotkey_enable
+	self.ui_action_request.emit(Guidot_Common.UI_Action.TOGGLE_HOTKEYS)
+
 @onready var _ui_icons: Array = [
 	self._setting_icon,
 	self._play_icon,
@@ -91,6 +99,7 @@ func _on_hide_graph_pressed() -> void:
 	self._cursor_icon,
 	self._toggle_graph_icon,
 	self._hide_graph_icon,
+	self._toggle_hotkey_icon,
 ]
 
 @onready var _ui_buttons: Array = [
@@ -100,6 +109,7 @@ func _on_hide_graph_pressed() -> void:
 	self._cursor_button,
 	self._toggle_graph_button,
 	self._hide_graph_button,
+	self._toggle_hotkey_button,
 ]
 
 var _prev_opacity_setting: float
@@ -710,6 +720,7 @@ func _setup_all_ui_button():
 	self.setup_button(self._cursor_button, self._cursor_icon, 3, self._on_cursor_pressed, "Toggle cursor")
 	self.setup_button(self._toggle_graph_button, self._toggle_graph_icon, 4, self._on_toggle_graph_pressed, "Toggle graph mode")
 	self.setup_button(self._hide_graph_button, self._hide_graph_icon, 5, self._on_hide_graph_pressed, "Hide graph")
+	self.setup_button(self._toggle_hotkey_button, self._toggle_hotkey_icon, 6, self._on_toggle_hotkey_pressed, "Enable/Disable hotkeys")
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -948,10 +959,8 @@ func _input(event: InputEvent) -> void:
 			if (not self.visible):
 				self._on_hide_graph_pressed()
 
-	# if (Input.is_action_just_pressed("pause")):
-	# 	self._is_pause = !self._is_pause
-	# 	self.log(LOG_DEBUG, ["Pause button pressed: ", self._is_pause])
-	# 	self.log(LOG_INFO, ["Graph paused"])
+		if (event.keycode == KEY_G):
+			self._on_toggle_graph_pressed()
 
 func _set_mouse_filter_action():
 	if (self._curr_ui_mode == Guidot_Graph.UI_Mode.EDIT or self._curr_ui_mode == Guidot_Graph.UI_Mode.SELECTED):
