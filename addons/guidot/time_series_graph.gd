@@ -6,7 +6,7 @@ extends Guidot_Common
 var window_size: Vector2
 var window_color: Color
 
-signal action_request
+signal ui_action_request
 
 # Note (Khalid): For now, I wish to standardize the font throughout the whole node
 # This may bite me in the future, if for some reason, I wish to have different fonts
@@ -48,21 +48,40 @@ func _on_pause_pressed() -> void:
 	self._is_pause = not self._is_pause
 	if (self._is_pause):
 		self._pause_button.set_button_icon(self._play_icon)
+		self.ui_action_request.emit(Guidot_Common.UI_Action.PAUSE_MODE)
 	else:
 		self._pause_button.set_button_icon(self._pause_icon)
+		self.ui_action_request.emit(Guidot_Common.UI_Action.RESUME_MODE)
 	self.log(LOG_DEBUG, ["Pause pressed"])
 
 @onready var _edit_button: Button = Button.new()
 @onready var _edit_icon: Texture2D = load("res://addons/guidot/icons/edit_icon.png")
 
 func _on_edit_pressed() -> void:
-	self.action_request.emit(Guidot_Common.UI_Action.EDIT_MODE)
+	self.ui_action_request.emit(Guidot_Common.UI_Action.EDIT_MODE)
 
 @onready var _cursor_button: Button = Button.new()
 @onready var _cursor_icon: Texture2D = load("res://addons/guidot/icons/cursor_icon.png")
 
 func _on_cursor_pressed() -> void:
-	self.action_request.emit(Guidot_Common.UI_Action.CURSOR_MODE)
+	self.ui_action_request.emit(Guidot_Common.UI_Action.CURSOR_MODE)
+
+@onready var _toggle_graph_button: Button = Button.new()
+@onready var _toggle_graph_icon: Texture2D = load("res://addons/guidot/icons/toggle_graph_icon.png")
+
+func _on_toggle_graph_pressed() -> void:
+	self.ui_action_request.emit(Guidot_Common.UI_Action.TOGGLE_GRAPH_MODE)
+	
+	if (self.t_axis_node.get_current_t_axis_mode() == Guidot_T_Axis.TAxisMode.FIXED):
+		self.t_axis_node.change_graph_mode(Guidot_T_Axis.TAxisMode.SLIDING_WINDOW)
+	else:
+		self.t_axis_node.change_graph_mode(Guidot_T_Axis.TAxisMode.FIXED)
+
+@onready var _hide_graph_button: Button = Button.new()
+@onready var _hide_graph_icon: Texture2D = load("res://addons/guidot/icons/hide_icon.png")
+
+func _on_hide_graph_pressed() -> void:
+	self.visible = not self.visible
 
 @onready var _ui_icons: Array = [
 	self._setting_icon,
@@ -70,6 +89,8 @@ func _on_cursor_pressed() -> void:
 	self._pause_icon,
 	self._edit_icon,
 	self._cursor_icon,
+	self._toggle_graph_icon,
+	self._hide_graph_icon,
 ]
 
 @onready var _ui_buttons: Array = [
@@ -77,6 +98,8 @@ func _on_cursor_pressed() -> void:
 	self._pause_button,
 	self._edit_button,
 	self._cursor_button,
+	self._toggle_graph_button,
+	self._hide_graph_button,
 ]
 
 var _prev_opacity_setting: float
@@ -677,6 +700,7 @@ func setup_button(graph_button: Button, icon: Texture2D, n_row: int, button_cb: 
 
 func _setup_all_ui_button():
 
+	# Had to do it separately
 	self._pause_icon = self.resize_button_icon(self._pause_icon)
 	self._play_icon = self.resize_button_icon(self._play_icon)
 
@@ -684,6 +708,8 @@ func _setup_all_ui_button():
 	self.setup_button(self._pause_button, self._pause_icon, 1, self._on_pause_pressed, "Pause the realtime graph")
 	self.setup_button(self._edit_button, self._edit_icon, 2, self._on_edit_pressed, "Edit mode")
 	self.setup_button(self._cursor_button, self._cursor_icon, 3, self._on_cursor_pressed, "Toggle cursor")
+	self.setup_button(self._toggle_graph_button, self._toggle_graph_icon, 4, self._on_toggle_graph_pressed, "Toggle graph mode")
+	self.setup_button(self._hide_graph_button, self._hide_graph_icon, 5, self._on_hide_graph_pressed, "Hide graph")
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -914,6 +940,13 @@ func _input(event: InputEvent) -> void:
 			debug_panel.show()
 		else:
 			debug_panel.hide()
+
+	if event is InputEventKey and event.pressed:
+
+		if (event.shift_pressed and event.keycode == KEY_H):
+			
+			if (not self.visible):
+				self._on_hide_graph_pressed()
 
 	# if (Input.is_action_just_pressed("pause")):
 	# 	self._is_pause = !self._is_pause

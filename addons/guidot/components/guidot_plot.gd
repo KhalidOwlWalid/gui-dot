@@ -19,6 +19,8 @@ var _draw_cursor_flag: bool = false
 var _mouse_inside: bool = false
 var _curr_graph_mode: Graph_Buffer_Mode
 
+var _is_pause: bool = false
+
 signal mouse_wheel_zoom_requested(mouse_button: MouseButton)
 
 # Zoom-by-drag state
@@ -88,9 +90,16 @@ func _on_ui_action_request(action: Guidot_Common.UI_Action):
 		Guidot_Common.UI_Action.EDIT_MODE:
 			pass
 
+		Guidot_Common.UI_Action.PAUSE_MODE:
+			self.log(LOG_DEBUG, ["Pause mode triggered"])
+			self._is_pause = true 
+
+		Guidot_Common.UI_Action.RESUME_MODE:
+			self._is_pause = true
+
 func register_parent_node(parent_node: Guidot_T_Series_Graph):
 	self._parent_node = parent_node
-	self._parent_node.action_request.connect(self._on_ui_action_request)
+	self._parent_node.ui_action_request.connect(self._on_ui_action_request)
 
 func setup_plot_anchor() -> void:
 	pass
@@ -281,6 +290,7 @@ func _draw() -> void:
 		Guidot_Graph.UI_Mode.DATA_DISPLAY:
 
 			self._draw_plots()
+			self.log(LOG_DEBUG, ["Current UI mode: ", self._curr_ui_mode, ", Pause: ", self._is_pause])
 			if (self._curr_graph_mode == Graph_Buffer_Mode.FIXED):
 				if self._drag_plot_mode_active:
 					return
