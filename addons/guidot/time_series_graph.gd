@@ -464,12 +464,14 @@ func _setup_plot_node() -> void:
 
 	# Explicit offset calculation for better clarity
 	var left_offset: float = n_left_yax_comp * y_axis_width
+	var button_width: float = self._setting_button.size.x if self._setting_button.size.x > 0 else 30
+	var right_padding: float = 50 + 4.0
 	var right_offset: float
 	if (n_right_yax_comp == 0):
-		right_offset = self.size.x - self._setting_button.size.x
+		right_offset = self.size.x - right_padding
 	else:
 		var right_ax_width = n_right_yax_comp * y_axis_width
-		right_offset = self.size.x - right_ax_width - self._setting_button.size.x
+		right_offset = self.size.x - right_ax_width - right_padding
 	var top_offset: int = int(header_margin * self.size.y)
 	var bottom_offset: int = int(self.size.y - t_axis_node.norm_comp_size.y * self.size.y)
 
