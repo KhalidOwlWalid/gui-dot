@@ -77,8 +77,17 @@ func _ready() -> void:
 	self.mouse_entered.connect(self._on_mouse_entered)
 	self.mouse_exited.connect(self._on_mouse_exited)
 
+
+func _on_parent_action_request(action: Guidot_Common.Action):
+	
+	match (action):
+
+		Guidot_Common.Action.CURSOR_MODE:
+			self._draw_cursor_flag = not self._draw_cursor_flag
+
 func register_parent_node(parent_node: Guidot_T_Series_Graph):
 	self._parent_node = parent_node
+	self._parent_node.action_request.connect(self._on_parent_action_request)
 
 func setup_plot_anchor() -> void:
 	pass
