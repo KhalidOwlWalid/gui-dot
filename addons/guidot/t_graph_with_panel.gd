@@ -165,6 +165,9 @@ func _on_ui_action_request(action: Guidot_Common.UI_Action):
 			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
 			self.log(LOG_DEBUG, ["UI_Action: Edit Mode triggered"])
 
+		Guidot_Common.UI_Action.TOGGLE_HOTKEYS:
+			pass
+
 func _on_mouse_entered() -> void:
 	self._mouse_in = true
 
@@ -221,13 +224,13 @@ func _input(event: InputEvent) -> void:
 
 	if (event is InputEventKey and event.pressed):
 
-		if (event.shift_pressed and event.keycode == KEY_E):
+		if (event.shift_pressed and event.keycode == KEY_E and guidot_graph.hotkey_enable):
 			self._prev_ui_mode = self._curr_ui_mode
 			self._curr_ui_mode = UI_Mode.EDIT
 			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
 			self.log(LOG_DEBUG, ["Shift + E just pressed, going back into edit mode from select mode"])
 
-		elif (event.keycode == KEY_E):
+		elif (event.keycode == KEY_E and guidot_graph.hotkey_enable):
 			self._prev_ui_mode = UI_Mode.DATA_DISPLAY
 			self._curr_ui_mode = UI_Mode.EDIT
 			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
