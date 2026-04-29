@@ -141,7 +141,7 @@ func _ready() -> void:
 	# Signals connection
 	guidot_graph.parent_focus_requested.connect(_on_parent_focused)
 	guidot_graph._graph_manager.opacity_changed.connect(self.set_graph_opacity)
-	guidot_graph.action_request.connect(self._on_ui_action_request)
+	guidot_graph.ui_action_request.connect(self._on_ui_action_request)
 	self.mouse_entered.connect(_on_mouse_entered)
 	self.mouse_exited.connect(_on_mouse_exited)
 

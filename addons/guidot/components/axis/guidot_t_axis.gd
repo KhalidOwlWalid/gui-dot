@@ -30,6 +30,9 @@ func _ready() -> void:
 	_axis_config_popup.add_item("Sliding Window Settings")
 	_setup_window_config_popup()
 
+func change_graph_mode(new_mode: TAxisMode):
+	self._mode = new_mode
+
 # Override so that any user-initiated range change (inline edit, Axis Limit
 # Settings apply) switches the axis to FIXED mode.  The internal sliding-
 # window update bypasses this by calling _advance_window() instead.
