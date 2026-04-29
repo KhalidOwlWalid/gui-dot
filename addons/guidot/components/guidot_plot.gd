@@ -301,9 +301,9 @@ func _draw() -> void:
 func _input(event: InputEvent) -> void:
 
 	if (self._curr_graph_mode == Graph_Buffer_Mode.FIXED):
-		if (not Input.is_key_pressed(KEY_CTRL)):
+		if (not Input.is_key_pressed(KEY_CTRL) or not self._mouse_in):
 			self._drag_plot_mode_active = false
-		elif (Input.is_key_pressed(KEY_CTRL)):
+		elif (Input.is_key_pressed(KEY_CTRL) and self._mouse_in):
 			self._drag_plot_mode_active = true
 
 			if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
