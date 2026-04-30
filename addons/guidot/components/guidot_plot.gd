@@ -1,4 +1,4 @@
-class_name Guidot_Plot
+class_name Guidot_Plot_Canvas
 extends Guidot_Common
 
 @onready var default_color = Color(0.17, 0.17, 0.17, 1)
@@ -44,12 +44,12 @@ var _n_y_ax_cached: Vector2 = Vector2(1,0)
 
 var test_popup: PopupMenu
 
-var _parent_node: Guidot_T_Series_Graph
+var _parent_node: Guidot_Time_Series_Canvas
 
 # This is an internal flag to check if there is any changed in mode for every process frame
 # meant to queue a redraw to remove previous UI text / plot
-var _curr_ui_mode_internal: Guidot_Graph.UI_Mode = self._curr_ui_mode
-var _prev_ui_mode_internal: Guidot_Graph.UI_Mode = self._curr_ui_mode
+var _curr_ui_mode_internal: Guidot_Time_Series_Graph.UI_Mode = self._curr_ui_mode
+var _prev_ui_mode_internal: Guidot_Time_Series_Graph.UI_Mode = self._curr_ui_mode
 
 var _tmp_debug: Vector2 = Vector2.ZERO
 func update_debug_info() -> void:
@@ -97,7 +97,7 @@ func _on_ui_action_request(action: Guidot_Common.UI_Action):
 		Guidot_Common.UI_Action.RESUME_MODE:
 			self._is_pause = true
 
-func register_parent_node(parent_node: Guidot_T_Series_Graph):
+func register_parent_node(parent_node: Guidot_Time_Series_Canvas):
 	self._parent_node = parent_node
 	self._parent_node.ui_action_request.connect(self._on_ui_action_request)
 
@@ -175,7 +175,7 @@ func plot_multiple_data(datasets: Dictionary, y_axis_manager: RefCounted, time_r
 	
 	for gd_data in datasets.keys():
 		# Update the cached data channel which will be useful for cursor(s)
-		var ax_id: Guidot_Y_Axis.AxisPosition =  Guidot_Y_Axis.AxisPosition[data_axis_map[gd_data]]
+		var ax_id: Guidot_Y_Axis_Canvas.AxisPosition =  Guidot_Y_Axis_Canvas.AxisPosition[data_axis_map[gd_data]]
 		var axis_handler: RefCounted = y_axis_manager.get_axis_handler(ax_id)
 		var y_axis_limit: Vector2 = axis_handler.get_axis_range()
 		var data_channel_pixel_pos: PackedVector2Array = self._map_data_points_to_pixel_pos(gd_data, datasets[gd_data], time_range, y_axis_limit)
@@ -275,7 +275,7 @@ func _draw_zoom_box() -> void:
 
 func _draw_current_mode_txt():
 	var font: Font = get_theme_default_font()
-	var label: String = Guidot_Graph.ui_mode_str[self._curr_ui_mode]
+	var label: String = Guidot_Time_Series_Graph.ui_mode_str[self._curr_ui_mode]
 	var label_font_size: int = 30
 	var label_size: Vector2 = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_font_size)
 	var str_draw_pix_pos: Vector2 = self.size / 2.0 - Vector2(label_size.x / 2.0, -label_size.y / 2.0)
@@ -287,7 +287,7 @@ func _draw() -> void:
 	self._draw_horizontal_grids(_n_y_ticks, _y_ticks_pos, Guidot_Utils.get_color("gd_grey"))
 
 	match (self._curr_ui_mode):
-		Guidot_Graph.UI_Mode.DATA_DISPLAY:
+		Guidot_Time_Series_Graph.UI_Mode.DATA_DISPLAY:
 
 			self._draw_plots()
 			if (self._curr_graph_mode == Graph_Buffer_Mode.FIXED):
@@ -301,10 +301,10 @@ func _draw() -> void:
 						self._draw_cursor(cursor_pos, Guidot_Utils.get_color("red"))
 						self._draw_cursor_values(cursor_pos)
 
-		Guidot_Graph.UI_Mode.EDIT:
+		Guidot_Time_Series_Graph.UI_Mode.EDIT:
 			self._draw_current_mode_txt()
 
-		Guidot_Graph.UI_Mode.SELECTED:
+		Guidot_Time_Series_Graph.UI_Mode.SELECTED:
 			self._draw_current_mode_txt()
 			
 func _input(event: InputEvent) -> void:

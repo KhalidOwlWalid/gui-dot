@@ -8,7 +8,7 @@ signal focus_escaped
 static var _server_group_name: String = "Guidot_Server"
 static var _client_group_name: String = "Guidot_Client"
 static var _clock_group_name: String = "Guidot_Clock"
-static var _graph_group_name: String = "Guidot_Graph"
+static var _graph_group_name: String = "Guidot_Time_Series_Graph"
 
 enum Graph_Buffer_Mode {
 	FIXED,      # If user wants to display a set window span. User will have to manually reset the time axes
@@ -53,8 +53,8 @@ enum Origin {
 @onready var _dragging_distance: float = 0
 @onready var _component_tag: String = "COMP_TAG"
 @onready var _is_in_focus: bool = false
-@onready var _curr_ui_mode: Guidot_Graph.UI_Mode = Guidot_Graph.UI_Mode.DATA_DISPLAY
-@onready var _prev_ui_mode: Guidot_Graph.UI_Mode = self._curr_ui_mode
+@onready var _curr_ui_mode: Guidot_Time_Series_Graph.UI_Mode = Guidot_Time_Series_Graph.UI_Mode.DATA_DISPLAY
+@onready var _prev_ui_mode: Guidot_Time_Series_Graph.UI_Mode = self._curr_ui_mode
 
 @onready var debug_signals_to_trace = {}
 
@@ -71,7 +71,7 @@ func _on_mouse_exited() -> void:
 func get_component_size() -> Vector2:
 	return self.size
 
-func set_ui_mode(ui_mode: Guidot_Graph.UI_Mode):
+func set_ui_mode(ui_mode: Guidot_Time_Series_Graph.UI_Mode):
 	self._prev_ui_mode = self._curr_ui_mode
 	self._curr_ui_mode = ui_mode
 

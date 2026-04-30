@@ -1,62 +1,35 @@
-[gd_scene load_steps=5 format=3 uid="uid://bdyylxjrf4idj"]
+[gd_scene load_steps=4 format=3 uid="uid://bdyylxjrf4idj"]
 
 [ext_resource type="Script" path="res://addons/guidot/components/data/guidot_data_server.gd" id="1_683k6"]
 [ext_resource type="Script" path="res://demo/dev/client_dev.gd" id="2_juu06"]
-[ext_resource type="Script" path="res://addons/guidot/t_graph_with_panel.gd" id="2_nctrg"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a08y6"]
-content_margin_left = 1.0
-content_margin_top = 1.0
-content_margin_right = 1.0
-content_margin_bottom = 1.0
-bg_color = Color(0, 0, 0, 1)
+[ext_resource type="Script" path="res://addons/guidot/guidot_time_series_graph.gd" id="3_ti0gx"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_right = 521.0
+offset_bottom = 306.0
 grow_horizontal = 2
 grow_vertical = 2
 
 [node name="Guidot_Data_Server2" type="Node" parent="."]
 script = ExtResource("1_683k6")
 
-[node name="Guidot_Graph" type="PanelContainer" parent="."]
-layout_mode = 0
-offset_left = 60.0
-offset_top = 36.0
-offset_right = 680.0
-offset_bottom = 396.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_a08y6")
-script = ExtResource("2_nctrg")
-
 [node name="Node" type="Node" parent="."]
 script = ExtResource("2_juu06")
 
-[node name="Guidot_Graph2" type="PanelContainer" parent="."]
-layout_mode = 2
-offset_left = 728.0
-offset_top = 46.0
-offset_right = 1346.0
-offset_bottom = 404.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_a08y6")
-script = ExtResource("2_nctrg")
+[node name="Guidot_Time_Series_Graph" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_left = 305.0
+offset_top = 150.0
+offset_right = 718.0
+offset_bottom = 385.0
+script = ExtResource("3_ti0gx")
 
-[node name="Guidot_Graph3" type="PanelContainer" parent="."]
-layout_mode = 2
-offset_left = 749.0
-offset_top = 461.0
-offset_right = 1365.0
-offset_bottom = 817.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_a08y6")
-script = ExtResource("2_nctrg")
-
-[node name="Guidot_Graph4" type="PanelContainer" parent="."]
-layout_mode = 2
-offset_left = 79.0
-offset_top = 449.0
-offset_right = 693.0
-offset_bottom = 803.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_a08y6")
-script = ExtResource("2_nctrg")
+[node name="Guidot_Time_Series_Graph2" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_right = 265.0
+offset_bottom = 173.0
+script = ExtResource("3_ti0gx")

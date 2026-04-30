@@ -1,4 +1,4 @@
-class_name Guidot_Graph_Manager
+class_name Guidot_Time_Series_Graph_Manager
 extends Guidot_Panel2
 
 signal changes_applied
@@ -27,7 +27,7 @@ var selected_server: String
 @onready var _server_config_manager: Array[Guidot_Server_Config] = []
 
 # The graph node that the graph manager is responsible for
-var _y_axis_manager_ref: Guidot_T_Series_Graph.AxisManager
+var _y_axis_manager_ref: Guidot_Time_Series_Canvas.AxisManager
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
@@ -124,7 +124,7 @@ func _on_left_axis_count_selected(index: int) -> void:
 func _on_right_axis_count_selected(index: int) -> void:
 	self._n_axis.y = self._right_axis_count.get_item_id(index)
 
-func register_axis_manager(axis_manager: Guidot_T_Series_Graph.AxisManager) -> void:
+func register_axis_manager(axis_manager: Guidot_Time_Series_Canvas.AxisManager) -> void:
 	self._y_axis_manager_ref = axis_manager
 
 func _ready() -> void:

@@ -1,5 +1,4 @@
-# @tool
-class_name Guidot_T_Series_Graph
+class_name Guidot_Time_Series_Canvas
 extends Guidot_Common
 
 # Property of the graph
@@ -20,15 +19,15 @@ var _curr_data_str: String
 var _selected_channels_name: Array
 @onready var _guidot_clock_node: Guidot_Clock = self.get_tree().get_nodes_in_group(Guidot_Common._clock_group_name)[0]
 # TODO: Remove this, since at the moment, without mouse_x being initialized, it breaks
-@onready var _graph_manager: Guidot_Graph_Manager = Guidot_Graph_Manager.new()
+@onready var _graph_manager: Guidot_Time_Series_Graph_Manager = Guidot_Time_Series_Graph_Manager.new()
 
 @onready var default_window_size: Vector2 = Vector2(620, 360)
 @onready var default_window_color: Color = Guidot_Utils.get_color("gd_black")
 @onready var prev_display_color: Color = default_window_color
 
 # Components used for building the graph 
-@onready var plot_node: Guidot_Plot = Guidot_Plot.new()
-@onready var t_axis_node: Guidot_T_Axis = Guidot_T_Axis.new()
+@onready var plot_node: Guidot_Plot_Canvas = Guidot_Plot_Canvas.new()
+@onready var t_axis_node: Guidot_T_Axis_Canvas = Guidot_T_Axis_Canvas.new()
 
 @onready var _setting_button: Button = Button.new()
 @onready var _setting_icon: Texture2D = load("res://addons/guidot/icons/gear_icon.png")
@@ -72,10 +71,10 @@ func _on_cursor_pressed() -> void:
 func _on_toggle_graph_pressed() -> void:
 	self.ui_action_request.emit(Guidot_Common.UI_Action.TOGGLE_GRAPH_MODE)
 	
-	if (self.t_axis_node.get_current_t_axis_mode() == Guidot_T_Axis.TAxisMode.FIXED):
-		self.t_axis_node.change_graph_mode(Guidot_T_Axis.TAxisMode.SLIDING_WINDOW)
+	if (self.t_axis_node.get_current_t_axis_mode() == Guidot_T_Axis_Canvas.TAxisMode.FIXED):
+		self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.SLIDING_WINDOW)
 	else:
-		self.t_axis_node.change_graph_mode(Guidot_T_Axis.TAxisMode.FIXED)
+		self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.FIXED)
 
 @onready var _hide_graph_button: Button = Button.new()
 @onready var _hide_graph_icon: Texture2D = load("res://addons/guidot/icons/hide_icon.png")
@@ -124,16 +123,16 @@ class AxisHandler:
 	# accordingly, where an axis_pos of -1, will be drawn left to the plot frame, axis_pos of -2 drawn left
 	# to the first y-axis etc.
 	# axis_pos of 1 will draw to the right of the plot frame etc.
-	var _axis_pos: Guidot_Y_Axis.AxisPosition
+	var _axis_pos: Guidot_Y_Axis_Canvas.AxisPosition
 
 	var _axis_id: int
-	var _axis_node: Guidot_Y_Axis
+	var _axis_node: Guidot_Y_Axis_Canvas
 	var _in_use: bool
 	var _use_count: int = 0
-	var _master_graph_node: Guidot_T_Series_Graph
+	var _master_graph_node: Guidot_Time_Series_Canvas
 
-	func init_axis(parent: Node, axis_id: Guidot_Y_Axis.AxisPosition, axis_range: Vector2, in_use: bool = false):
-		self._axis_node = Guidot_Y_Axis.new()
+	func init_axis(parent: Node, axis_id: Guidot_Y_Axis_Canvas.AxisPosition, axis_range: Vector2, in_use: bool = false):
+		self._axis_node = Guidot_Y_Axis_Canvas.new()
 		self._axis_node.setup_axis_range(axis_range.x, axis_range.y)
 		self._axis_pos = axis_id
 		self._in_use = in_use
@@ -144,7 +143,7 @@ class AxisHandler:
 	func use_axis(flag: bool) -> void:
 		self._in_use = flag
 
-	func set_axis_id(id: Guidot_Y_Axis.AxisPosition) -> void:
+	func set_axis_id(id: Guidot_Y_Axis_Canvas.AxisPosition) -> void:
 		# TODO (Khalid): Check if the y-axis ID is valid or not
 		self._axis_pos = id
 
@@ -163,10 +162,10 @@ class AxisHandler:
 	func is_in_use() -> bool:
 		return self._in_use
 
-	func get_axis_node() -> Guidot_Y_Axis:
+	func get_axis_node() -> Guidot_Y_Axis_Canvas:
 		return self._axis_node
 
-	func get_axis_id() -> Guidot_Y_Axis.AxisPosition:
+	func get_axis_id() -> Guidot_Y_Axis_Canvas.AxisPosition:
 		return self._axis_pos
 
 	func get_axis_width() -> int:
@@ -187,7 +186,7 @@ class AxisHandler:
 	func get_use_count() -> int:
 		return self._use_count
 
-	func reassign_axis_id(new_ax_id: Guidot_Y_Axis.AxisPosition) -> void:
+	func reassign_axis_id(new_ax_id: Guidot_Y_Axis_Canvas.AxisPosition) -> void:
 		self._ax_id = new_ax_id
 		self.id_reassigned.emit(self._axis_pos)
 
@@ -196,9 +195,9 @@ class AxisManager:
 
 	signal updated
 
-	# Format: { (int)<Guidot_Y_Axis.AxisPosition>: (Node)<AxisHandler Node> }
+	# Format: { (int)<Guidot_Y_Axis_Canvas.AxisPosition>: (Node)<AxisHandler Node> }
 	var _axis_manager: Dictionary
-	# Format: { (int)<Guidot_Data_RefCounted>: (String)<Guidot_Y_Axis.AxisPosition> }
+	# Format: { (int)<Guidot_Data_RefCounted>: (String)<Guidot_Y_Axis_Canvas.AxisPosition> }
 	var _data_to_axis_map: Dictionary
 	var _parent_node: Node
 	var _tag: String = "Axis_Manager"
@@ -207,7 +206,7 @@ class AxisManager:
 	# This is to ensure we always have at least a single y-axis to display
 	func init_axis_manager(parent_node: Node) -> void:
 		self._parent_node = parent_node
-		self.add_axis_handler(Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT)
+		self.add_axis_handler(Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_LEFT)
 
 	func add_data_to_axis(gd_data_server: Guidot_Data_Server, chan_name: String, axis_id_enum_str: String) -> bool:
 		var gd_data_node: Guidot_Data = gd_data_server.get_channel_id(chan_name)
@@ -227,7 +226,7 @@ class AxisManager:
 		return true
 
 	func set_data_node_to_axis(gd_data_node: Guidot_Data, axis_id_enum_str: String):
-		var axis_exist: bool = self.has_axis_handler(Guidot_Y_Axis.AxisPosition[axis_id_enum_str])
+		var axis_exist: bool = self.has_axis_handler(Guidot_Y_Axis_Canvas.AxisPosition[axis_id_enum_str])
 		var gd_data_exist_in_map: bool = gd_data_node in self._data_to_axis_map.keys()
 		if gd_data_exist_in_map and axis_exist:
 			self._data_to_axis_map[gd_data_node] = axis_id_enum_str
@@ -244,11 +243,11 @@ class AxisManager:
 				self._data_to_axis_map.erase(gd_node)
 
 	# Returning channel name and color to ease the process of drawing the axis title and labelling the title based on the line color
-	func get_chan_name_and_color_on_axis(axis_pos: Guidot_Y_Axis.AxisPosition) -> Array[Array]:
+	func get_chan_name_and_color_on_axis(axis_pos: Guidot_Y_Axis_Canvas.AxisPosition) -> Array[Array]:
 		var chan_name_and_color: Array[Array]
 
 		for data_node in self._data_to_axis_map.keys():
-			if (self._data_to_axis_map[data_node] == Guidot_Y_Axis.get_axis_id_str_from_value(axis_pos)):
+			if (self._data_to_axis_map[data_node] == Guidot_Y_Axis_Canvas.get_axis_id_str_from_value(axis_pos)):
 				chan_name_and_color.append([data_node.get_name(), data_node.get_line_color()])
 
 		return chan_name_and_color
@@ -260,11 +259,11 @@ class AxisManager:
 	# Each axis should have its own unique AxisID and should not conflict
 	# If conflicts occur, axis manager should handle this smartly
 	# Returns 0 if invalid ID has been chosen
-	func add_axis_handler(ax_pos: Guidot_Y_Axis.AxisPosition, axis_range: Vector2 = Vector2(-1, 1)) -> Guidot_Y_Axis.AxisPosition:
+	func add_axis_handler(ax_pos: Guidot_Y_Axis_Canvas.AxisPosition, axis_range: Vector2 = Vector2(-1, 1)) -> Guidot_Y_Axis_Canvas.AxisPosition:
 		
-		if (ax_pos not in Guidot_Y_Axis.AxisPosition.values()):
+		if (ax_pos not in Guidot_Y_Axis_Canvas.AxisPosition.values()):
 			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Invalid Axis ID (", ax_pos, ") has been passed."])
-			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Please choose from the following options: ", Guidot_Y_Axis.AxisPosition.keys()])
+			Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Please choose from the following options: ", Guidot_Y_Axis_Canvas.AxisPosition.keys()])
 			return 0
 
 		var ax1: AxisHandler = AxisHandler.new()
@@ -278,7 +277,7 @@ class AxisManager:
 			# Isolate left and right axis for ease of comparison later
 			var all_left_axis: Array = self._axis_manager.keys().filter(func(n): return n < 0)
 			var all_right_axis: Array = self._axis_manager.keys().filter(func(n): return n > 0)
-			var new_ax_pos: Guidot_Y_Axis.AxisPosition
+			var new_ax_pos: Guidot_Y_Axis_Canvas.AxisPosition
 			
 			# Since the y-axis drawing offset is handled by figuring out its offset based on its width and axis position
 			# it is important that the axis is in incremental order such that secondary axis needs to exist if we want to create the
@@ -291,7 +290,7 @@ class AxisManager:
 					ax_pos = new_ax_pos
 			# If there are no axis on the left side, then force it to be primary left
 			elif (ax_pos < 0 and all_left_axis.is_empty()):
-				new_ax_pos = Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT
+				new_ax_pos = Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_LEFT
 				Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_pos, " to ", new_ax_pos])
 				ax_pos = new_ax_pos
 
@@ -302,7 +301,7 @@ class AxisManager:
 					ax_pos = new_ax_pos
 			# If there are no axis on the right side, then force it to be primary right
 			elif (ax_pos > 0 and all_right_axis.is_empty()):
-				new_ax_pos = Guidot_Y_Axis.AxisPosition.PRIMARY_RIGHT
+				new_ax_pos = Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_RIGHT
 				Guidot_Log.gd_log(Guidot_Log.Log_Level.WARNING, self._tag, ["Reshifting the axis ID from ", ax_pos, " to ", new_ax_pos])
 				ax_pos = new_ax_pos
 		
@@ -334,16 +333,16 @@ class AxisManager:
 		return self._axis_manager.values()
 
 	# Returns null if the requested axis handler does not exist	
-	func get_axis_handler(ax_pos: Guidot_Y_Axis.AxisPosition) -> AxisHandler:
+	func get_axis_handler(ax_pos: Guidot_Y_Axis_Canvas.AxisPosition) -> AxisHandler:
 		# TODO: Ensure the axis exist
 		if (not self.has_axis_handler(ax_pos)):
 			return null
 		return self._axis_manager[ax_pos]
 
-	func has_axis_handler(ax_pos: Guidot_Y_Axis.AxisPosition) -> bool:
+	func has_axis_handler(ax_pos: Guidot_Y_Axis_Canvas.AxisPosition) -> bool:
 		return self._axis_manager.has(ax_pos)
 
-	func delete_axis_handler(ax_pos: Guidot_Y_Axis.AxisPosition) -> bool:
+	func delete_axis_handler(ax_pos: Guidot_Y_Axis_Canvas.AxisPosition) -> bool:
 		return true
 
 	# This function returns the number of axis that is on the left and right side of the graph
@@ -380,7 +379,7 @@ class AxisManager:
 @onready var _current_graph_mode: Graph_Buffer_Mode = Graph_Buffer_Mode.REALTIME
 @onready var _prev_graph_mode: Graph_Buffer_Mode = self._current_graph_mode
 
-# Axis count is limited up to Guidot_Y_Axis._max_axis_num
+# Axis count is limited up to Guidot_Y_Axis_Canvas._max_axis_num
 @onready var _curr_y_axis_count: int = 1
 
 @onready var fps_last_update_ms: float = Time.get_ticks_msec()
@@ -482,13 +481,13 @@ func _init_plot_node():
 	self._setup_plot_node()
 	self.add_child(plot_node)
 
-func _setup_axis(axis_node: Guidot_Axis, axis_id: int, axis_name: String, axis_color: Color, axis_range: Vector2) -> void:
+func _setup_axis(axis_node: Guidot_Axis_Canvas, axis_id: int, axis_name: String, axis_color: Color, axis_range: Vector2) -> void:
 	self._init_axis(axis_node, axis_name, axis_color, axis_range)
 	axis_node.set_axis_id(axis_id)
 	axis_node.setup_axis_range(axis_range.x, axis_range.y)
 	axis_node.calculate_offset_from_plot_frame(self, plot_node)
 
-func _init_axis(axis_node: Guidot_Axis, axis_name: String, axis_color: Color, axis_range: Vector2) -> void:
+func _init_axis(axis_node: Guidot_Axis_Canvas, axis_name: String, axis_color: Color, axis_range: Vector2) -> void:
 	axis_node.setup_axis_node(axis_name, axis_color)
 	axis_node.setup_axis_range(axis_range.x, axis_range.y)
 
@@ -575,8 +574,8 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 
 	# Disconnect the pre-existing primary axis from handling the horizontal axis drawing
 	# This will get re-assigned once all of the axis has been initialized again
-	var paxis_handler: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
-	var primary_axis: Guidot_Y_Axis = paxis_handler.get_axis_node()
+	var paxis_handler: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_LEFT]
+	var primary_axis: Guidot_Y_Axis_Canvas = paxis_handler.get_axis_node()
 	primary_axis.axis_limit_changed.disconnect(_on_y_axis_changed)
 
 	# Instead of trying to dynamically find existing axis handler and then try and fit the remaining axis as per requested by the
@@ -591,7 +590,7 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 		self._y_axis_manager.add_axis_handler(i)
 
 	# Renew the primary axis connection for drawing the horizontal axis
-	paxis_handler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
+	paxis_handler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_LEFT]
 	primary_axis = paxis_handler.get_axis_node()
 	primary_axis.axis_limit_changed.connect(_on_y_axis_changed.bind(primary_axis))
 	
@@ -617,10 +616,10 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 	# of performance.
 	for data_node in self._y_axis_manager.get_data_to_axis_map().keys():
 		var curr_ax_id_str: String = self._y_axis_manager.get_data_to_axis_map()[data_node]
-		if (not Guidot_Y_Axis.AxisPosition[curr_ax_id_str] in available_axis):
+		if (not Guidot_Y_Axis_Canvas.AxisPosition[curr_ax_id_str] in available_axis):
 			self._y_axis_manager.get_data_to_axis_map()[data_node] = "PRIMARY_LEFT"
 		else:
-			var axis_node: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition[curr_ax_id_str]]
+			var axis_node: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis_Canvas.AxisPosition[curr_ax_id_str]]
 			axis_node.set_axis_range(data_node.get_min_max())
 	
 	# Trigger the resized signal so that we redraw the newly configured axis
@@ -731,8 +730,8 @@ func _ready() -> void:
 	self._register_graph_client()
 
 	self._y_axis_manager.init_axis_manager(self)
-	var paxis_handler: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT]
-	var primary_axis: Guidot_Y_Axis = paxis_handler.get_axis_node()
+	var paxis_handler: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_LEFT]
+	var primary_axis: Guidot_Y_Axis_Canvas = paxis_handler.get_axis_node()
 	primary_axis.axis_limit_changed.connect(_on_y_axis_changed.bind(primary_axis))
 
 	# X/Y axis rectangle anchor offset calculation depends on the plot node anchor offset maths
@@ -810,7 +809,7 @@ func _on_graph_opacity_changed(alpha: float) -> void:
 	
 	# For the axis, we still want to see the data being plotted, so at minimum, an alpha of 0.3
 	# would still allow you to see the plots nicely
-	if (self._curr_ui_mode == Guidot_Graph.UI_Mode.DATA_DISPLAY):
+	if (self._curr_ui_mode == Guidot_Time_Series_Graph.UI_Mode.DATA_DISPLAY):
 		a = clamp(alpha, 0.3, 1.0)
 	modulated_color = Color(1.0, 1.0, 1.0, a)
 	self.plot_node.set_self_modulate(modulated_color)
@@ -901,14 +900,14 @@ func _on_t_axis_changed() -> void:
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
 	self.plot_realtime_data()
 
-func update_ui_mode_state(ui_mode: Guidot_Graph.UI_Mode):
+func update_ui_mode_state(ui_mode: Guidot_Time_Series_Graph.UI_Mode):
 
 	self.set_ui_mode(ui_mode)
 	self.plot_node.set_ui_mode(ui_mode)
 	
-	if (self._curr_ui_mode == Guidot_Graph.UI_Mode.EDIT):
+	if (self._curr_ui_mode == Guidot_Time_Series_Graph.UI_Mode.EDIT):
 		self._prev_opacity_setting = self.get_self_modulate().a
-	elif (self._prev_ui_mode == Guidot_Graph.UI_Mode.EDIT and self._curr_ui_mode == Guidot_Graph.UI_Mode.DATA_DISPLAY):
+	elif (self._prev_ui_mode == Guidot_Time_Series_Graph.UI_Mode.EDIT and self._curr_ui_mode == Guidot_Time_Series_Graph.UI_Mode.DATA_DISPLAY):
 		self.log(LOG_DEBUG, ["Previous opacity is ", self._prev_opacity_setting])
 		self._on_graph_opacity_changed(self._prev_opacity_setting)
 	else:
@@ -916,7 +915,7 @@ func update_ui_mode_state(ui_mode: Guidot_Graph.UI_Mode):
 
 
 # This needs to be tied to the primary axis to draw the horizontal grids
-func _on_y_axis_changed(primary_axis: Guidot_Y_Axis) -> void:
+func _on_y_axis_changed(primary_axis: Guidot_Y_Axis_Canvas) -> void:
 	self.y_axis_lim_signal += 1
 	plot_node.update_y_ticks_properties(primary_axis.n_steps, primary_axis.ticks_pos)
 	# plot_node.update_y_ticks_properties(n_steps, ticks_pos)
@@ -967,7 +966,7 @@ func _input(event: InputEvent) -> void:
 			self._on_toggle_graph_pressed()
 
 func _set_mouse_filter_action():
-	if (self._curr_ui_mode == Guidot_Graph.UI_Mode.EDIT or self._curr_ui_mode == Guidot_Graph.UI_Mode.SELECTED):
+	if (self._curr_ui_mode == Guidot_Time_Series_Graph.UI_Mode.EDIT or self._curr_ui_mode == Guidot_Time_Series_Graph.UI_Mode.SELECTED):
 		self.set_mouse_filter(MOUSE_FILTER_IGNORE)
 		self.plot_node.set_mouse_filter(MOUSE_FILTER_IGNORE)
 		
@@ -1000,17 +999,17 @@ func _process(delta: float) -> void:
 
 	match (self._curr_ui_mode):
 
-		Guidot_Graph.UI_Mode.EDIT:
+		Guidot_Time_Series_Graph.UI_Mode.EDIT:
 			# self._on_graph_opacity_changed(1.0)
 			self.plot_node.queue_redraw()
 		
-		Guidot_Graph.UI_Mode.SELECTED:
+		Guidot_Time_Series_Graph.UI_Mode.SELECTED:
 			# self._on_graph_opacity_changed(1.0)
 			self.plot_node.queue_redraw()
 
 		# BUGFIX: When the user sets opacity during edit mode, the previous opacity setting is still held in place, which means that the opacity slider
 		# does not have any effect until the user goes back to data display mode
-		Guidot_Graph.UI_Mode.DATA_DISPLAY:
+		Guidot_Time_Series_Graph.UI_Mode.DATA_DISPLAY:
 
 			match (self._current_graph_mode):
 

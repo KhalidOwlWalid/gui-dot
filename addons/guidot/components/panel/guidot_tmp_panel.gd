@@ -1,5 +1,5 @@
 # @tool
-class_name Guidot_Panel
+class_name Guidot_Tmp_Panel
 extends PanelContainer
 
 # const Guidot_Utils = preload("/home/khalidowlwalid/Documents/KhalidOWlWalid-Github-Projects/Godot/gui-dot/gdscript/utils/guidot_utils.gd")

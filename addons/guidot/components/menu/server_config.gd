@@ -12,10 +12,10 @@ var data_subscriber_manager: Guidot_Data_Sub_Manager
 @onready var selected_server: String = ""
 var curr_server_node: Guidot_Data_Server
 
-@onready var axis_pos_selection: Array = Guidot_Y_Axis.AxisPosition.keys()
+@onready var axis_pos_selection: Array = Guidot_Y_Axis_Canvas.AxisPosition.keys()
 @onready var color_selection: Array = Guidot_Utils.color_dict.keys()
 
-var _y_axis_manager_ref: Guidot_T_Series_Graph.AxisManager
+var _y_axis_manager_ref: Guidot_Time_Series_Canvas.AxisManager
 
 func _get_server_dropdown() -> OptionButton:
 	var hbox_server_sel: HBoxContainer = self.server_selection.get_child(0)
@@ -56,20 +56,20 @@ func _color_selected_callback(idx: int, gd_data_node: Guidot_Data) -> void:
 
 func _axis_id_selected_callback(idx: int, chan_name: String, option_node: OptionButton) -> void:
 	var axis_id_str: String = option_node.get_item_text(idx)
-	var axis_id_enum_str: String = Guidot_Y_Axis.get_axis_id_str_from_value(int(axis_id_str))
+	var axis_id_enum_str: String = Guidot_Y_Axis_Canvas.get_axis_id_str_from_value(int(axis_id_str))
 	self._y_axis_manager_ref.set_data_to_axis(self.get_selected_server(), chan_name, axis_id_enum_str)
 
 func _on_update_y_axis_manager() -> void:
 	self.log(LOG_DEBUG, ["y-axis updated emit"])
 	self._on_data_selected(self.selected_data)
 
-func register_y_axis_manager(axis_manager_ref: Guidot_T_Series_Graph.AxisManager) -> void:
+func register_y_axis_manager(axis_manager_ref: Guidot_Time_Series_Canvas.AxisManager) -> void:
 	self._y_axis_manager_ref = axis_manager_ref
 	self._y_axis_manager_ref.updated.connect(self._on_update_y_axis_manager)
 
 # This function creates the row to allow the user to configure the properties
 # of their data
-# ax_id takes in String of Guidot_Y_Axis.AxisPosition
+# ax_id takes in String of Guidot_Y_Axis_Canvas.AxisPosition
 func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data, ax_id: String) -> HBoxContainer:
 	var chan_config_hbox: HBoxContainer = HBoxContainer.new()
 	var chan_label: Label = Label.new()
@@ -88,7 +88,7 @@ func _create_channel_config_name(chan_name: String, gd_data_node: Guidot_Data, a
 	for i in range(available_axis.size()):
 		axis_id_dropdown.add_item(str(available_axis[i]))
 
-		var ax_id_enum: Guidot_Y_Axis.AxisPosition = Guidot_Y_Axis.AxisPosition[ax_id]
+		var ax_id_enum: Guidot_Y_Axis_Canvas.AxisPosition = Guidot_Y_Axis_Canvas.AxisPosition[ax_id]
 		if (ax_id_enum == available_axis[i]):
 			axis_id_dropdown.select(i)
 		else:

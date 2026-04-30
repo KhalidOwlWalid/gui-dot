@@ -1,4 +1,4 @@
-class_name Guidot_Axis_Limit_Config
+class_name Guidot_Axis_Canvas_Limit_Config
 extends PopupPanel
 
 signal limits_applied(min_val: float, max_val: float)

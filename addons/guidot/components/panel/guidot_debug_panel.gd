@@ -1,6 +1,6 @@
 # @tool
 class_name Guidot_Debug_Panel
-extends Guidot_Panel
+extends Guidot_Tmp_Panel
 
 @onready var _debugging_text_window: PanelContainer = PanelContainer.new()
 @onready var _debug_panel_vbox_cont: VBoxContainer = VBoxContainer.new()
