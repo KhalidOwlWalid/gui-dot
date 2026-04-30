@@ -1,15 +1,15 @@
 # @tool
-class_name Guidot_Graph
+class_name Guidot_Time_Series_Graph
 extends PanelContainer
 
-const Guidot_T_Series_Graph := preload("res://addons/guidot/time_series_graph.gd")
+# const Guidot_Time_Series_Canvas := preload("res://addons/guidot/time_series_graph.gd")
 
 const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG
 const LOG_WARNING = Guidot_Log.Log_Level.WARNING
 const LOG_INFO = Guidot_Log.Log_Level.INFO
 const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 
-@onready var guidot_graph = Guidot_T_Series_Graph.new()
+@onready var _guidot_ts_canvas = Guidot_Time_Series_Canvas.new()
 @onready var _guidot_stylebox: StyleBoxFlat = StyleBoxFlat.new()
 @onready var margin_val: int = 1
 
@@ -122,10 +122,10 @@ func _register_hotkeys() -> void:
 	Guidot_Utils.add_action_with_keycode("escape", KEY_ESCAPE) 
 
 func _ready() -> void:
-	self.name = "Guidot_Graph"
+	self.name = "Guidot_Time_Series_Graph"
 	var factor: float = 1
 	self.size = Vector2(620*factor, 360*factor)
-	self.add_child(guidot_graph)
+	self.add_child(_guidot_ts_canvas)
 
 	_guidot_stylebox.bg_color = Color(0, 0, 0, 0)
 	_guidot_stylebox.border_color = Color(0, 0, 0, 0)
@@ -139,9 +139,9 @@ func _ready() -> void:
 	self._last_mouse_position = self.get_viewport().get_mouse_position()
 
 	# Signals connection
-	guidot_graph.parent_focus_requested.connect(_on_parent_focused)
-	guidot_graph._graph_manager.opacity_changed.connect(self.set_graph_opacity)
-	guidot_graph.ui_action_request.connect(self._on_ui_action_request)
+	_guidot_ts_canvas.parent_focus_requested.connect(_on_parent_focused)
+	_guidot_ts_canvas._graph_manager.opacity_changed.connect(self.set_graph_opacity)
+	_guidot_ts_canvas.ui_action_request.connect(self._on_ui_action_request)
 	self.mouse_entered.connect(_on_mouse_entered)
 	self.mouse_exited.connect(_on_mouse_exited)
 
@@ -162,7 +162,7 @@ func _on_ui_action_request(action: Guidot_Common.UI_Action):
 				self._prev_ui_mode = self._curr_ui_mode
 				self._curr_ui_mode = UI_Mode.DATA_DISPLAY
 
-			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
+			self._guidot_ts_canvas.update_ui_mode_state(self._curr_ui_mode)
 			self.log(LOG_DEBUG, ["UI_Action: Edit Mode triggered"])
 
 		Guidot_Common.UI_Action.TOGGLE_HOTKEYS:
@@ -224,22 +224,22 @@ func _input(event: InputEvent) -> void:
 
 	if (event is InputEventKey and event.pressed):
 
-		if (event.shift_pressed and event.keycode == KEY_E and guidot_graph.hotkey_enable):
+		if (event.shift_pressed and event.keycode == KEY_E and _guidot_ts_canvas.hotkey_enable):
 			self._prev_ui_mode = self._curr_ui_mode
 			self._curr_ui_mode = UI_Mode.EDIT
-			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
+			self._guidot_ts_canvas.update_ui_mode_state(self._curr_ui_mode)
 			self.log(LOG_DEBUG, ["Shift + E just pressed, going back into edit mode from select mode"])
 
-		elif (event.keycode == KEY_E and guidot_graph.hotkey_enable):
+		elif (event.keycode == KEY_E and _guidot_ts_canvas.hotkey_enable):
 			self._prev_ui_mode = UI_Mode.DATA_DISPLAY
 			self._curr_ui_mode = UI_Mode.EDIT
-			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
+			self._guidot_ts_canvas.update_ui_mode_state(self._curr_ui_mode)
 			self.log(LOG_DEBUG, ["Button E just pressed, going into edit mode"])
 
 		elif (event.keycode == KEY_ESCAPE):
 			self._prev_ui_mode = UI_Mode.EDIT
 			self._curr_ui_mode = UI_Mode.DATA_DISPLAY
-			self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
+			self._guidot_ts_canvas.update_ui_mode_state(self._curr_ui_mode)
 			self.log(LOG_DEBUG, ["Escape key just pressed"])
 		
 		else:
@@ -257,7 +257,7 @@ func _input(event: InputEvent) -> void:
 				if (self._mouse_in and event.is_pressed() and event.button_index == MOUSE_BUTTON_LEFT):
 					self._prev_ui_mode = self._curr_ui_mode
 					self._curr_ui_mode = UI_Mode.SELECTED
-					self.guidot_graph.update_ui_mode_state(self._curr_ui_mode)
+					self._guidot_ts_canvas.update_ui_mode_state(self._curr_ui_mode)
 
 		UI_Mode.SELECTED:
 

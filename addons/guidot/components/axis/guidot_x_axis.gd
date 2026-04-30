@@ -1,5 +1,5 @@
-class_name Guidot_X_Axis
-extends Guidot_Axis
+class_name Guidot_X_Axis_Canvas
+extends Guidot_Axis_Canvas
 
 func update_debug_info() -> void:
 	self.debug_signals_to_trace = {

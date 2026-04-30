@@ -1,9 +1,9 @@
-class_name Guidot_T_Axis
-extends Guidot_X_Axis
+class_name Guidot_T_Axis_Canvas
+extends Guidot_X_Axis_Canvas
 
 # For the t-axis, we have a slightly different tick drawing implementation
 # If we are plotting in real-time, then the plot will basically move like a sliding window
-# Hence, we override the _draw_ticks function from the Guidot_X_Axis class
+# Hence, we override the _draw_ticks function from the Guidot_X_Axis_Canvas class
 
 enum TAxisMode {
 	# User sets min/max directly via inline edit or context menu.

@@ -18,10 +18,10 @@ var _max: float = 1
 # Frequency/update rate of the data
 var _freq: float = 60.0
 # # Axis can be either left or right on the plot
-# var _axis_pos: Guidot_Y_Axis.AxisPosition = Guidot_Y_Axis.AxisPosition.LEFT
+# var _axis_pos: Guidot_Y_Axis_Canvas.AxisPosition = Guidot_Y_Axis_Canvas.AxisPosition.LEFT
 var _axis_n: int = 1
 # Which axis it should be plotted on
-var _axis_id: Guidot_Y_Axis.AxisPosition = Guidot_Y_Axis.AxisPosition.PRIMARY_LEFT
+var _axis_id: Guidot_Y_Axis_Canvas.AxisPosition = Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_LEFT
 
 
 var _last_update_ms: int = Time.get_ticks_msec()
@@ -75,11 +75,11 @@ func set_frequency(freq: float) -> void:
 	self._freq = freq
 	self._metadata["expected_frequency"] = self._freq
 
-func set_axis_id(ax_id: Guidot_Y_Axis.AxisPosition) -> void:
+func set_axis_id(ax_id: Guidot_Y_Axis_Canvas.AxisPosition) -> void:
 	self._axis_id = ax_id
 	self._metadata["axis_id"] = self._axis_id
 
-# func set_axis_pos(ax_pos: Guidot_Y_Axis.AxisPosition) -> void:
+# func set_axis_pos(ax_pos: Guidot_Y_Axis_Canvas.AxisPosition) -> void:
 # 	self._axis_pos = ax_pos
 # 	self._metadata["axis_pos"] = self._axis_pos
 # 	# For now, I am making the assumption that this will correctly cast it to an existing enum
@@ -119,7 +119,7 @@ func get_unique_id() -> int:
 func get_expected_freq() -> float:
 	return self._freq
 
-func get_axis_id() -> Guidot_Y_Axis.AxisPosition:
+func get_axis_id() -> Guidot_Y_Axis_Canvas.AxisPosition:
 	return self._axis_id
 
 func _set_metadata(name: String, unit: String, description: String, min: float, max: float, line_color: String) -> void:

@@ -1,5 +1,5 @@
-class_name Guidot_Y_Axis
-extends Guidot_Axis
+class_name Guidot_Y_Axis_Canvas
+extends Guidot_Axis_Canvas
 
 signal axis_removed
 

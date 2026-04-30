@@ -1,4 +1,4 @@
-class_name Guidot_Axis
+class_name Guidot_Axis_Canvas
 extends Guidot_Common
 
 signal axis_limit_changed
@@ -34,7 +34,7 @@ var top_offset
 var bottom_offset
 
 var _axis_config_popup: PopupMenu
-var _axis_limit_config: Guidot_Axis_Limit_Config
+var _axis_limit_config: Guidot_Axis_Canvas_Limit_Config
 
 var _mouse_hold_frame_count: int = 5
 var _mouse_hold_frame_count_max: int = 5
@@ -136,7 +136,7 @@ func _setup_axis_config_menu() -> void:
 	_axis_config_popup.hide_on_state_item_selection = false
 	_axis_config_popup.index_pressed.connect(_on_axis_config_menu_index_pressed)
 
-	_axis_limit_config = Guidot_Axis_Limit_Config.new()
+	_axis_limit_config = Guidot_Axis_Canvas_Limit_Config.new()
 	_axis_limit_config.limits_applied.connect(func(new_min: float, new_max: float): self.setup_axis_range(new_min, new_max))
 	add_child(_axis_limit_config)
 
@@ -153,7 +153,7 @@ func _setup_inline_edit() -> void:
 
 # Show the inline LineEdit over the chosen limit label.
 # The edit always shows/accepts the raw axis value so there is no
-# exponent-related confusion (see bug fix in guidot_y_axis.gd for details).
+# exponent-related confusion (see bug fix in Guidot_Y_Axis_Canvas.gd for details).
 func _start_inline_edit(editing_max: bool) -> void:
 	_editing_max = editing_max
 	var rect: Rect2 = _max_label_rect if editing_max else _min_label_rect
