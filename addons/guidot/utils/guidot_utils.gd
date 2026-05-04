@@ -19,7 +19,7 @@ static var color_dict: Dictionary = {
 	"cyan": Color.CYAN,
 
 	# Godot editor color scheme
-	"gd_black": Color(0.1, 0.12, 0.15, 1), 	# Same as Godot text editor background color
+	"gd_black": Color(0.13, 0.15, 0.18, 1), 	# Same as Godot text editor background color
 	"gd_bright_green": Color(per_255(172), per_255(221), per_255(206), 1), 	# Same blue color as when files are highlighted when editing the file
 	"gd_light_blue": Color(per_255(56), per_255(79), per_255(103), 1), 	# Same blue color as when files are highlighted when editing the file
 	"gd_dim_blue": Color(per_255(56), per_255(79), per_255(103), 0.15), 	# Same blue color as when files are highlighted when editing the file but more transparent
@@ -33,6 +33,9 @@ static func per_255(val: float) -> float:
 
 static func rgba(r: int, g: int, b: int, a: int) -> Color:
 	return Color(per_255(r), per_255(g), per_255(b), per_255(a))
+
+static func get_guidot_base_color():
+	return color_dict["gd_black"]
 
 static var some_val: int = 10
 

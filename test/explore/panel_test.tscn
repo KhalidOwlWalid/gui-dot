@@ -1,6 +1,7 @@
-[gd_scene load_steps=16 format=3 uid="uid://6pwpnys08knm"]
+[gd_scene load_steps=19 format=3 uid="uid://6pwpnys08knm"]
 
 [ext_resource type="Script" path="res://test/explore/button.gd" id="1_apovk"]
+[ext_resource type="Script" path="res://addons/guidot/components/panel/guidot_movable_panel.gd" id="2_ffqg4"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d5b1e"]
 bg_color = Color(0.129412, 0.14902, 0.180392, 1)
@@ -33,8 +34,10 @@ bg_color = Color(0.219608, 0.239216, 0.266667, 1)
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2r5ls"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pxbqc"]
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6qhrj"]
-bg_color = Color(0.101961, 0.105882, 0.109804, 1)
+bg_color = Color(0.211765, 0.239216, 0.290196, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_i481s"]
 bg_color = Color(0.25098, 0.266667, 0.298039, 1)
@@ -56,6 +59,18 @@ bg_color = Color(0.145098, 0.168627, 0.203922, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2w2x0"]
 bg_color = Color(0.113725, 0.133333, 0.160784, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rv36p"]
+content_margin_left = 1.0
+content_margin_top = 1.0
+content_margin_right = 1.0
+content_margin_bottom = 1.0
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 0)
+
 [node name="PanelTest" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -64,20 +79,21 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="PanelContainer" type="PanelContainer" parent="."]
+[node name="Guidot_Movable_Panel_Prototype" type="PanelContainer" parent="."]
+visible = false
 layout_mode = 1
-offset_right = 380.0
+offset_right = 230.0
 offset_bottom = 428.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_d5b1e")
 
-[node name="PanelContainer" type="PanelContainer" parent="PanelContainer"]
+[node name="PanelContainer" type="PanelContainer" parent="Guidot_Movable_Panel_Prototype"]
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_c40qm")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/PanelContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Guidot_Movable_Panel_Prototype/PanelContainer"]
 layout_mode = 2
 
-[node name="Guidot_Lens" type="Label" parent="PanelContainer/PanelContainer/VBoxContainer"]
+[node name="Guidot_Lens" type="Label" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -85,35 +101,35 @@ size_flags_vertical = 1
 text = "Guidot Lens"
 horizontal_alignment = 1
 
-[node name="Filter_Node" type="LineEdit" parent="PanelContainer/PanelContainer/VBoxContainer"]
+[node name="Filter_Node" type="LineEdit" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 placeholder_text = "Filter Properties"
 
-[node name="PanelContainer" type="PanelContainer" parent="PanelContainer/PanelContainer/VBoxContainer"]
+[node name="PanelContainer" type="PanelContainer" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_styles/panel = SubResource("StyleBoxFlat_jtvyn")
 
-[node name="TabContainer" type="TabContainer" parent="PanelContainer/PanelContainer/VBoxContainer/PanelContainer"]
+[node name="TabContainer" type="TabContainer" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer/PanelContainer"]
 layout_mode = 2
 current_tab = 1
 
-[node name="Subscriber" type="ScrollContainer" parent="PanelContainer/PanelContainer/VBoxContainer/PanelContainer/TabContainer"]
+[node name="Subscriber" type="ScrollContainer" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer/PanelContainer/TabContainer"]
 visible = false
 custom_minimum_size = Vector2(200, 300)
 layout_mode = 2
 metadata/_tab_index = 0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Subscriber"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Subscriber"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Subscriber/VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Subscriber/VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = -1
 
-[node name="group1" type="Button" parent="PanelContainer/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Subscriber/VBoxContainer/HBoxContainer"]
+[node name="group1" type="Button" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Subscriber/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/icon_normal_color = Color(0.211765, 0.239216, 0.290196, 1)
@@ -125,23 +141,23 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_w7j4k")
 text = "> Group1"
 alignment = 0
 
-[node name="CheckBox" type="CheckBox" parent="PanelContainer/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Subscriber/VBoxContainer/HBoxContainer"]
+[node name="CheckBox" type="CheckBox" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Subscriber/VBoxContainer/HBoxContainer"]
 layout_mode = 2
 theme_override_styles/focus = SubResource("StyleBoxEmpty_2r5ls")
+theme_override_styles/hover = SubResource("StyleBoxFlat_pxbqc")
 theme_override_styles/normal = SubResource("StyleBoxFlat_6qhrj")
-text = "Plot all"
 
-[node name="Graph Settings" type="ScrollContainer" parent="PanelContainer/PanelContainer/VBoxContainer/PanelContainer/TabContainer"]
+[node name="Graph Settings" type="ScrollContainer" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer/PanelContainer/TabContainer"]
 custom_minimum_size = Vector2(200, 300)
 layout_mode = 2
 metadata/_tab_index = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Graph Settings"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Graph Settings"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = -1
 
-[node name="global_settings_label" type="Label" parent="PanelContainer/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Graph Settings/VBoxContainer"]
+[node name="global_settings_label" type="Label" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Graph Settings/VBoxContainer"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 size_flags_vertical = 3
@@ -149,7 +165,7 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_i481s")
 text = "Global"
 horizontal_alignment = 1
 
-[node name="preferences_button" type="Button" parent="PanelContainer/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Graph Settings/VBoxContainer"]
+[node name="preferences_button" type="Button" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Graph Settings/VBoxContainer"]
 layout_mode = 2
 theme_override_colors/icon_normal_color = Color(0.211765, 0.239216, 0.290196, 1)
 theme_override_colors/icon_focus_color = Color(0.25098, 0.266667, 0.298039, 1)
@@ -164,23 +180,32 @@ text = "> Preferences"
 alignment = 0
 script = ExtResource("1_apovk")
 
-[node name="hotkeys" type="HBoxContainer" parent="PanelContainer/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Graph Settings/VBoxContainer"]
+[node name="hotkeys" type="HBoxContainer" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Graph Settings/VBoxContainer"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="PanelContainer/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Graph Settings/VBoxContainer/hotkeys"]
+[node name="Label" type="Label" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Graph Settings/VBoxContainer/hotkeys"]
 layout_mode = 2
 text = "Disable hotkeys"
 
-[node name="CheckBox" type="CheckBox" parent="PanelContainer/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Graph Settings/VBoxContainer/hotkeys"]
+[node name="CheckBox" type="CheckBox" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Graph Settings/VBoxContainer/hotkeys"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_styles/focus = SubResource("StyleBoxEmpty_wftvm")
 theme_override_styles/normal = SubResource("StyleBoxFlat_2w2x0")
 text = "Off"
 
-[node name="local_settings_label" type="Label" parent="PanelContainer/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Graph Settings/VBoxContainer"]
+[node name="local_settings_label" type="Label" parent="Guidot_Movable_Panel_Prototype/PanelContainer/VBoxContainer/PanelContainer/TabContainer/Graph Settings/VBoxContainer"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_i481s")
 text = "Local"
 horizontal_alignment = 1
+
+[node name="Guidot_Movable_Panel" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_left = 866.0
+offset_top = 71.0
+offset_right = 1486.0
+offset_bottom = 431.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_rv36p")
+script = ExtResource("2_ffqg4")

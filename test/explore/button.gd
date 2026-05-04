@@ -12,6 +12,6 @@ func _toggle() -> void:
 	get_parent().get_node("hotkeys").visible = expanded
 	
 	if (expanded):
-		self.text = "] Preferences"
+		self.text = "⇓ Preferences"
 	else:
-		self.text = "> Preferences"
+		self.text = "⇒ Preferences"
