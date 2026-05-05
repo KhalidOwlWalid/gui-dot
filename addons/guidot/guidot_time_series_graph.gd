@@ -2,8 +2,6 @@
 class_name Guidot_Time_Series_Graph
 extends PanelContainer
 
-# const Guidot_Time_Series_Canvas := preload("res://addons/guidot/time_series_graph.gd")
-
 const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG
 const LOG_WARNING = Guidot_Log.Log_Level.WARNING
 const LOG_INFO = Guidot_Log.Log_Level.INFO

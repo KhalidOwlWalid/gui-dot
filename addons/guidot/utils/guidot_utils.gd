@@ -1,4 +1,4 @@
-# @tool
+@tool
 class_name Guidot_Utils
 # extends Node
 
@@ -26,6 +26,8 @@ static var color_dict: Dictionary = {
 	"gd_bright_yellow": rgba(240,223,152,255),  # Same as yellow color for the text in godot text editor
 	"gd_grey": rgba(145,149,155,25), # Same as godot's debugging message color,
 	"gd_grey_transparent": rgba(54, 61, 74, 125),
+
+	"menu_panel_cont": Color(0.212, 0.239, 0.29, 1),
 }
 
 static func per_255(val: float) -> float:
