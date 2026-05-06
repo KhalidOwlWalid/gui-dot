@@ -43,13 +43,21 @@ var sign: float = 1.0
 @onready var _close_icon: Texture2D = load("res://addons/guidot/icons/close_icon.png")
 
 func _on_close_pressed():
-	self.visible = true
+	self.visible = false
 
 @onready var _maximize_button: Button = Button.new()
 @onready var _maximize_icon: Texture2D = load("res://addons/guidot/icons/maximize_icon.png")
 
+func _on_max_pressed():
+	pass
+
 @onready var _move_button: Button = Button.new()
 @onready var _move_icon: Texture2D = load("res://addons/guidot/icons/move_icon.png")
+@onready var _move_shortcut: InputEventKey = InputEventKey.new()
+
+func _on_move_pressed() -> void:
+	self._curr_ui_mode = UI_Mode.SELECTED
+	self.queue_redraw()
 
 enum UI_Mode {
 	NORMAL,
@@ -127,6 +135,7 @@ func bottom_right() -> Vector2:
 func _ready() -> void:
 	self.name = "Guidot_Movable_Panel"
 	self.size = self._panel_default_size
+	self.custom_minimum_size = Vector2(200, 200)
 
 	# Sets the base color of the panel to fit the theme
 	_guidot_stylebox.bg_color = Guidot_Utils.get_guidot_base_color()
@@ -165,12 +174,24 @@ func _ready() -> void:
 	self.set_margin_size(_menu_cont_stylebox, 5)
 	_menu_cont_stylebox
 	var _panel_cont: PanelContainer = PanelContainer.new()
-	_panel_cont.custom_minimum_size = Vector2(10, 500)
+	_panel_cont.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_panel_cont.add_theme_stylebox_override("panel", _menu_cont_stylebox)
 
 	self._close_button = self.setup_ui_button(self._close_button, self._close_icon, 0, self._on_close_pressed, "Close panel")
-	self._maximize_button = self.setup_ui_button(self._maximize_button, self._maximize_icon, 1, self._on_close_pressed, "Maximize panel")
-	self._move_button = self.setup_ui_button(self._move_button, self._move_icon, 2, self._on_close_pressed, "Move panel")
+	self._maximize_button = self.setup_ui_button(self._maximize_button, self._maximize_icon, 1, self._on_max_pressed, "Maximize panel")
+	self._move_button = self.setup_ui_button(self._move_button, self._move_icon, 2, self._on_move_pressed, "Move panel")
+
+	var _input_example: InputEventKey = InputEventKey.new()
+	var _shortcuts: Shortcut = Shortcut.new()
+	_shortcuts.events.append(_input_example)
+
+	_input_example.keycode = KEY_M
+	_input_example.ctrl_pressed = true
+
+	self._move_button.shortcut = _shortcuts
+	self._move_button.shortcut_feedback = true
+	self._move_button.shortcut_in_tooltip = true
+
 	_hbox.add_child(self._move_button)
 	_hbox.add_child(self._maximize_button)
 	_hbox.add_child(self._close_button)
@@ -186,7 +207,7 @@ func _ready() -> void:
 	_menu_vbox.add_child(filter_prop_line_edit)
 
 	var _menu_tab_cont: PanelContainer = PanelContainer.new()
-	_menu_tab_cont.custom_minimum_size = Vector2(100, 100)
+	_menu_tab_cont.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
 	self._menu_cont_stylebox.bg_color = Guidot_Utils.get_guidot_base_color()
 	self.set_margin_size(self._menu_cont_stylebox, 3)
@@ -295,25 +316,148 @@ func _draw() -> void:
 	var resizing_circle_size: int  = 4
 	var resizing_hover_circle_size: int = 10
 		
-	# Draw 4 circle points for user reference where to resize
-	self.draw_circle(self.top_left(), resizing_circle_size, Color.RED)
-	self.draw_circle(self.top_right(), resizing_circle_size, Color.RED)
-	self.draw_circle(self.bottom_left(), resizing_circle_size, Color.RED)
-	self.draw_circle(self.bottom_right(), resizing_circle_size, Color.RED)
+	if (self._curr_ui_mode == UI_Mode.SELECTED):
+		# Draw 4 circle points for user reference where to resize
+		self.draw_circle(self.top_left(), resizing_circle_size, Color.RED)
+		self.draw_circle(self.top_right(), resizing_circle_size, Color.RED)
+		self.draw_circle(self.bottom_left(), resizing_circle_size, Color.RED)
+		self.draw_circle(self.bottom_right(), resizing_circle_size, Color.RED)
 
-	# Show active corner the user is hovering above to enable resizing
-	self._draw_resizing_hover_circle(resizing_hover_circle_size)
+		# Show active corner the user is hovering above to enable resizing
+		self._draw_resizing_hover_circle(resizing_hover_circle_size)
 
 func _process(delta: float) -> void:
 
-	if (self._mouse_in):
-		self.set_stylebox_color(self._guidot_stylebox, Guidot_Utils.get_color("red"))
-		self._active_resize_corner = self._get_hovered_resize_corner(10)
-	else:
-		self.set_stylebox_color(self._guidot_stylebox, Guidot_Utils.get_color("gd_black"))
+	match (self._curr_ui_mode):
 
-	# TODO: Remove, this is temporary to always trigger a redraw
-	self.queue_redraw()
+		UI_Mode.SELECTED:
+			self.set_stylebox_color(self._guidot_stylebox, Guidot_Utils.get_color("red"))
+
+func _input(event: InputEvent) -> void:
+
+	if (event is InputEventKey and event.pressed):
+		
+		if (event.keycode == KEY_ESCAPE):
+			self._curr_ui_mode = UI_Mode.NORMAL
+			self.queue_redraw()
+
+	match (self._curr_ui_mode):
+		
+		UI_Mode.SELECTED:
+			self._active_resize_corner = self._get_hovered_resize_corner(10)
+
+			# Possible resizing when user is hovering above the resizing corners but have yet click the left button
+			if (self._active_resize_corner != Resize_Corner.NONE and not self._is_holding_left_click):
+				self._last_edit_mode = self._curr_edit_mode
+				self._curr_edit_mode = Edit_Mode.POSSIBLE_RESIZING
+			# User is currently holding the left click to resize the graph display
+			elif (self._active_resize_corner != Resize_Corner.NONE and self._is_holding_left_click):
+				self._last_edit_mode = self._curr_edit_mode
+				self._curr_edit_mode = Edit_Mode.RESIZE
+			elif (self._last_edit_mode == Edit_Mode.RESIZE and self._is_holding_left_click):
+				self._curr_edit_mode = Edit_Mode.RESIZE
+			else:
+				self._last_edit_mode = self._curr_edit_mode
+				self._curr_edit_mode = Edit_Mode.NONE
+			self.queue_redraw()
+
+			if event is InputEventMouseButton:
+				if event.button_index == MOUSE_BUTTON_LEFT:	
+					# Allow the user to be able to start resizing the graph
+					if event.is_pressed() and self._active_resize_corner != Resize_Corner.NONE and self._curr_edit_mode == Edit_Mode.POSSIBLE_RESIZING:
+						self.log(LOG_DEBUG, ["Graph panel ready to be resize"])
+						self._last_edit_mode = self._curr_edit_mode
+						self._is_holding_left_click = true
+					# Go back to possible resizing if the user releases the left mouse
+					elif not event.is_pressed() \
+						and (self._last_edit_mode == Edit_Mode.POSSIBLE_RESIZING and self._curr_edit_mode == Edit_Mode.RESIZE):
+						self._last_edit_mode = self._curr_edit_mode
+						self._is_holding_left_click = false
+						self.log(LOG_DEBUG, ["Left click resizing released"])
+					elif event.is_pressed() and self._mouse_in:
+						_is_dragging = true
+						self._curr_edit_mode = Edit_Mode.MOVE
+						_drag_offset = get_global_mouse_position() - self.global_position
+						self._last_position = self.position
+						get_viewport().set_input_as_handled()
+					else:
+						_is_dragging = false
+
+					if event.is_pressed():
+						self.log(LOG_DEBUG, ["I am pressing my left button"])
+						self._is_holding_left_click = true
+					else:
+						self.log(LOG_DEBUG, ["I am releasing my left button"])
+						self._is_holding_left_click = false
+
+			if event is InputEventMouseMotion:
+
+				var curr_mouse_pos_global: Vector2 = get_global_mouse_position()
+				var curr_mouse_pos_local: Vector2 = get_local_mouse_position()
+				var new_size: Vector2
+				var new_pos: Vector2
+				var mouse_offset: Vector2
+				# Only allow the user to drag when the mouse is inside the panel
+				if (self._curr_edit_mode == Edit_Mode.RESIZE and self._is_holding_left_click):
+
+					self._last_position = self.global_position
+					var old_size: Vector2 = self.size
+		
+					match (self._active_resize_corner):
+						Resize_Corner.TOP_LEFT:
+							new_pos = self._last_position + curr_mouse_pos_local
+							new_size = self.size - curr_mouse_pos_local
+						Resize_Corner.TOP_RIGHT:
+							mouse_offset = Vector2(curr_mouse_pos_local.x - self.size.x, curr_mouse_pos_local.y)
+							new_pos = Vector2(self._last_position.x, self._last_position.y + mouse_offset.y)
+							
+							# This helps handle the negative offset when the user is trying to scale down the graph with the top right corner
+							if (mouse_offset.y < 0):
+								new_size = Vector2(self.size.x + mouse_offset.x, self.size.y + abs(mouse_offset.y))
+							else:
+								new_size = Vector2(self.size.x + mouse_offset.x, self.size.y - abs(mouse_offset.y))
+
+						Resize_Corner.BOTTOM_LEFT:
+							mouse_offset = Vector2(curr_mouse_pos_local.x, curr_mouse_pos_local.y - self.size.y)
+							new_pos = Vector2(self._last_position.x + mouse_offset.x, self._last_position.y)
+
+							if (mouse_offset.x < 0):
+								new_size.x = self.size.x + abs(mouse_offset.x)
+							else:
+								new_size.x = self.size.x - abs(mouse_offset.x)
+
+							if (mouse_offset.y < 0):
+								new_size.y = self.size.y - abs(mouse_offset.y)
+							else:
+								new_size.y = self.size.y + abs(mouse_offset.y)
+
+						Resize_Corner.BOTTOM_RIGHT:
+							mouse_offset = curr_mouse_pos_local - self.size
+							new_size = self.size + mouse_offset
+							new_pos = self.global_position
+						Resize_Corner.NONE:
+							new_size = self.size
+							new_pos = self.global_position
+
+					self.log(LOG_DEBUG, [self.size, " ", self.custom_minimum_size])
+					# Only update position if size actually changed (wasn't constrained)
+					self.size = new_size
+					if self.size != old_size:
+						self.global_position = new_pos
+					self._last_mouse_position = curr_mouse_pos_global
+
+				if self._is_dragging:
+					self.set_default_cursor_shape(Control.CURSOR_DRAG)
+					get_viewport().set_input_as_handled()
+					new_pos = curr_mouse_pos_global - _drag_offset
+					self.global_position = new_pos
+					self._last_mouse_position = curr_mouse_pos_global
+					self._last_position = self.position
+				elif not self._is_dragging:
+					self.set_default_cursor_shape(Control.CURSOR_ARROW)
+
+		_:
+			self.set_stylebox_color(self._guidot_stylebox, Guidot_Utils.get_color("gd_black"))
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
 	Guidot_Log.gd_log(log_level, "MASTER_PANEL", msg)
