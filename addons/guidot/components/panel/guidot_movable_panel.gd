@@ -39,6 +39,11 @@ var sign: float = 1.0
 
 @onready var _curr_ui_mode: UI_Mode = UI_Mode.NORMAL
 
+@onready var _master_vbox: VBoxContainer = VBoxContainer.new()
+@onready var _header_hbox: HBoxContainer = HBoxContainer.new()
+@onready var _title_label: Label = Label.new()
+@onready var _panel_space: PanelContainer = PanelContainer.new()
+
 class Guidot_Button:
 
 	var _button: Button
@@ -170,6 +175,13 @@ func bottom_right() -> Vector2:
 	_bot_right = Vector2(x_new, y_new)
 	return _bot_right
 
+func set_title_name(new_title: String) -> void:
+	self._title_label.text = new_title
+
+# Useful for if the nodes that inherit this wishes to disable its header for any reason
+func disable_header() -> void:
+	self._master_vbox.remove_child(self._header_hbox)
+
 func _ready() -> void:
 	self.name = "Guidot_Movable_Panel"
 	self.size = self._panel_default_size
@@ -192,14 +204,11 @@ func _ready() -> void:
 	self.mouse_entered.connect(_on_mouse_entered)
 	self.mouse_exited.connect(_on_mouse_exited)
 
-	var vbox1: VBoxContainer = VBoxContainer.new()
-	var hbox1: HBoxContainer = HBoxContainer.new()
-	var title_label: Label = Label.new()
-	title_label.text = self.name
-	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_label.custom_minimum_size = Vector2(120, 0)
-	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hbox1.add_child(title_label)
+	_title_label.text = self.name
+	_title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_title_label.custom_minimum_size = Vector2(120, 0)
+	_title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_header_hbox.add_child(_title_label)
 
 	var menu_cont_stylebox: StyleBoxFlat = StyleBoxFlat.new()
 	menu_cont_stylebox.bg_color = Guidot_Utils.get_color("menu_panel_cont")
@@ -211,33 +220,17 @@ func _ready() -> void:
 	menu_cont_stylebox.border_width_bottom = menu_border_width
 	self.set_margin_size(menu_cont_stylebox, 5)
 	menu_cont_stylebox
-	var panel_cont1: PanelContainer = PanelContainer.new()
-	panel_cont1.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel_cont1.add_theme_stylebox_override("panel", menu_cont_stylebox)
+	_panel_space.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_panel_space.add_theme_stylebox_override("panel", menu_cont_stylebox)
 
 	var button_size: Vector2 = Vector2(20, 20)
-	self._move_button.init_button(hbox1, self._move_icon, button_size, self._on_move_pressed, "Move panel")
-	self._maximize_button.init_button(hbox1, self._maximize_icon, button_size, self._on_max_pressed, "Maximize panel")
-	self._close_button.init_button(hbox1, self._close_icon, button_size, self._on_close_pressed, "Close panel")
+	self._move_button.init_button(self._header_hbox, self._move_icon, button_size, self._on_move_pressed, "Move panel")
+	self._maximize_button.init_button(self._header_hbox, self._maximize_icon, button_size, self._on_max_pressed, "Maximize panel")
+	self._close_button.init_button(self._header_hbox, self._close_icon, button_size, self._on_close_pressed, "Close panel")
 
-	vbox1.add_child(hbox1)
-	vbox1.add_child(panel_cont1)
-	self.add_child(vbox1)
- 
-	var _menu_vbox: VBoxContainer = VBoxContainer.new()
-	var filter_prop_line_edit: LineEdit = LineEdit.new()
-	filter_prop_line_edit.placeholder_text = "Filter Properties"
-	_menu_vbox.add_child(filter_prop_line_edit)
-
-	var _menu_tab_cont: PanelContainer = PanelContainer.new()
-	_menu_tab_cont.size_flags_vertical = Control.SIZE_EXPAND_FILL
-
-	self._menu_cont_stylebox.bg_color = Guidot_Utils.get_guidot_base_color()
-	self.set_margin_size(self._menu_cont_stylebox, 3)
-	_menu_tab_cont.add_theme_stylebox_override("panel", self._menu_cont_stylebox)
-	_menu_vbox.add_child(_menu_tab_cont)
-
-	panel_cont1.add_child(_menu_vbox)
+	self._master_vbox.add_child(self._header_hbox)
+	self._master_vbox.add_child(self._panel_space)
+	self.add_child(_master_vbox) 
 
 func setup_ui_button(ui_button: Button, icon: Texture2D, n_col: int, button_cb: Callable, tooltip: String = ""):
 	ui_button.size = Vector2(20, 20)
