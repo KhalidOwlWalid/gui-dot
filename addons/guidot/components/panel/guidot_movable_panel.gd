@@ -39,21 +39,59 @@ var sign: float = 1.0
 
 @onready var _curr_ui_mode: UI_Mode = UI_Mode.NORMAL
 
-@onready var _close_button: Button = Button.new()
-@onready var _close_icon: Texture2D = load("res://addons/guidot/icons/close_icon.png")
+class Guidot_Button:
+
+	var _button: Button
+	var _shortcuts: Shortcut
+	var _default_icon: Texture2D
+	
+	# TODO: Dictionary of different icons when different action is done
+	var _icons: Dictionary
+
+	func init_button(parent: Node, default_icon: Texture2D, size: Vector2, callback_fcn: Callable, tooltip: String):
+		self._button = Button.new()
+		self._setup_ui_button(default_icon, size, callback_fcn, tooltip) 
+		self._attach_to_parent(parent)
+
+	func resize_button_icon(button_icon: Texture2D) -> Texture2D:
+		var resized_img: Image = button_icon.get_image()
+		resized_img.resize(20, 20)
+		var resized_icon = ImageTexture.create_from_image(resized_img)
+		return resized_icon
+
+	func _setup_ui_button(icon: Texture2D, size: Vector2, button_cb: Callable, tooltip: String = ""):
+		self._button.size = size
+
+		# Remove all of Godot's default settings for a button, customizing it to what I feel is best
+		var empty_stylebox: StyleBoxEmpty = StyleBoxEmpty.new()
+		var theme_to_override: Array[String] = ["normal", "hover", "focus"]
+		for theme in theme_to_override:
+			self._button.add_theme_stylebox_override(theme, empty_stylebox)
+
+		var resized_icon: Texture2D = self.resize_button_icon(icon)
+		self._button.set_button_icon(resized_icon)
+
+		self._button.set_anchors_preset(Control.LayoutPreset.PRESET_TOP_LEFT)
+		self._button.tooltip_text = tooltip
+		self._button.pressed.connect(button_cb)
+
+	func _attach_to_parent(parent: Node):
+		parent.add_child(self._button)
+
+@onready var _close_button: Guidot_Button = Guidot_Button.new()
+const _close_icon: Texture2D = preload("res://addons/guidot/icons/close_icon.png")
 
 func _on_close_pressed():
-	self.visible = false
+	self.hide()
 
-@onready var _maximize_button: Button = Button.new()
-@onready var _maximize_icon: Texture2D = load("res://addons/guidot/icons/maximize_icon.png")
+@onready var _maximize_button: Guidot_Button = Guidot_Button.new()
+const _maximize_icon: Texture2D = preload("res://addons/guidot/icons/maximize_icon.png")
 
 func _on_max_pressed():
 	pass
 
-@onready var _move_button: Button = Button.new()
-@onready var _move_icon: Texture2D = load("res://addons/guidot/icons/move_icon.png")
-@onready var _move_shortcut: InputEventKey = InputEventKey.new()
+@onready var _move_button: Guidot_Button = Guidot_Button.new()
+const _move_icon: Texture2D = preload("res://addons/guidot/icons/move_icon.png")
 
 func _on_move_pressed() -> void:
 	self._curr_ui_mode = UI_Mode.SELECTED
@@ -154,52 +192,37 @@ func _ready() -> void:
 	self.mouse_entered.connect(_on_mouse_entered)
 	self.mouse_exited.connect(_on_mouse_exited)
 
-	var _vbox: VBoxContainer = VBoxContainer.new()
-	var _hbox: HBoxContainer = HBoxContainer.new()
-	var _label: Label = Label.new()
-	_label.text = self.name
-	_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_label.custom_minimum_size = Vector2(120, 0)
-	_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_hbox.add_child(_label)
+	var vbox1: VBoxContainer = VBoxContainer.new()
+	var hbox1: HBoxContainer = HBoxContainer.new()
+	var title_label: Label = Label.new()
+	title_label.text = self.name
+	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_label.custom_minimum_size = Vector2(120, 0)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hbox1.add_child(title_label)
 
-	var _menu_cont_stylebox: StyleBoxFlat = StyleBoxFlat.new()
-	_menu_cont_stylebox.bg_color = Guidot_Utils.get_color("menu_panel_cont")
-	_menu_cont_stylebox.border_color = _menu_cont_stylebox.bg_color
-	var _menu_border_width: int = 2
-	_menu_cont_stylebox.border_width_left   = _menu_border_width
-	_menu_cont_stylebox.border_width_right  = _menu_border_width
-	_menu_cont_stylebox.border_width_top    = _menu_border_width
-	_menu_cont_stylebox.border_width_bottom = _menu_border_width
-	self.set_margin_size(_menu_cont_stylebox, 5)
-	_menu_cont_stylebox
-	var _panel_cont: PanelContainer = PanelContainer.new()
-	_panel_cont.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_panel_cont.add_theme_stylebox_override("panel", _menu_cont_stylebox)
+	var menu_cont_stylebox: StyleBoxFlat = StyleBoxFlat.new()
+	menu_cont_stylebox.bg_color = Guidot_Utils.get_color("menu_panel_cont")
+	menu_cont_stylebox.border_color = menu_cont_stylebox.bg_color
+	var menu_border_width: int = 2
+	menu_cont_stylebox.border_width_left   = menu_border_width
+	menu_cont_stylebox.border_width_right  = menu_border_width
+	menu_cont_stylebox.border_width_top    = menu_border_width
+	menu_cont_stylebox.border_width_bottom = menu_border_width
+	self.set_margin_size(menu_cont_stylebox, 5)
+	menu_cont_stylebox
+	var panel_cont1: PanelContainer = PanelContainer.new()
+	panel_cont1.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel_cont1.add_theme_stylebox_override("panel", menu_cont_stylebox)
 
-	self._close_button = self.setup_ui_button(self._close_button, self._close_icon, 0, self._on_close_pressed, "Close panel")
-	self._maximize_button = self.setup_ui_button(self._maximize_button, self._maximize_icon, 1, self._on_max_pressed, "Maximize panel")
-	self._move_button = self.setup_ui_button(self._move_button, self._move_icon, 2, self._on_move_pressed, "Move panel")
+	var button_size: Vector2 = Vector2(20, 20)
+	self._move_button.init_button(hbox1, self._move_icon, button_size, self._on_move_pressed, "Move panel")
+	self._maximize_button.init_button(hbox1, self._maximize_icon, button_size, self._on_max_pressed, "Maximize panel")
+	self._close_button.init_button(hbox1, self._close_icon, button_size, self._on_close_pressed, "Close panel")
 
-	var _input_example: InputEventKey = InputEventKey.new()
-	var _shortcuts: Shortcut = Shortcut.new()
-	_shortcuts.events.append(_input_example)
-
-	_input_example.keycode = KEY_M
-	_input_example.ctrl_pressed = true
-
-	self._move_button.shortcut = _shortcuts
-	self._move_button.shortcut_feedback = true
-	self._move_button.shortcut_in_tooltip = true
-
-	_hbox.add_child(self._move_button)
-	_hbox.add_child(self._maximize_button)
-	_hbox.add_child(self._close_button)
-
-	_vbox.add_child(_hbox)
-	_vbox.add_child(_panel_cont)
-	self.add_child(_vbox)
-
+	vbox1.add_child(hbox1)
+	vbox1.add_child(panel_cont1)
+	self.add_child(vbox1)
  
 	var _menu_vbox: VBoxContainer = VBoxContainer.new()
 	var filter_prop_line_edit: LineEdit = LineEdit.new()
@@ -214,7 +237,7 @@ func _ready() -> void:
 	_menu_tab_cont.add_theme_stylebox_override("panel", self._menu_cont_stylebox)
 	_menu_vbox.add_child(_menu_tab_cont)
 
-	_panel_cont.add_child(_menu_vbox)
+	panel_cont1.add_child(_menu_vbox)
 
 func setup_ui_button(ui_button: Button, icon: Texture2D, n_col: int, button_cb: Callable, tooltip: String = ""):
 	ui_button.size = Vector2(20, 20)
@@ -341,6 +364,9 @@ func _input(event: InputEvent) -> void:
 			self._curr_ui_mode = UI_Mode.NORMAL
 			self.queue_redraw()
 
+		if (event.keycode == KEY_M and event.ctrl_pressed):
+			self._on_move_pressed()
+
 	match (self._curr_ui_mode):
 		
 		UI_Mode.SELECTED:
@@ -453,7 +479,7 @@ func _input(event: InputEvent) -> void:
 					self.global_position = new_pos
 					self._last_mouse_position = curr_mouse_pos_global
 					self._last_position = self.position
-				elif not self._is_dragging:
+				else:
 					self.set_default_cursor_shape(Control.CURSOR_ARROW)
 
 		_:
