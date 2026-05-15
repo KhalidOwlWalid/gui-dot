@@ -28,6 +28,10 @@ static var color_dict: Dictionary = {
 	"gd_grey_transparent": rgba(54, 61, 74, 125),
 
 	"menu_panel_cont": Color(0.212, 0.239, 0.29, 1),
+	
+	# TODO: Make this a bit more structured please
+	# Custom ones (hardcoding this here)
+	"graph_settings_label": Color(0.251, 0.267, 0.298, 1.0)
 }
 
 static func per_255(val: float) -> float:
