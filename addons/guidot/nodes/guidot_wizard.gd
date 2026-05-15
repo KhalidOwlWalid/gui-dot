@@ -1,4 +1,4 @@
-# @tool
+@tool
 class_name Guidot_Wizard
 extends Guidot_Movable_Panel
 
@@ -43,34 +43,59 @@ func _create_config_label(config_label: String) -> Label:
 	label1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	return label1
 
-# Recursively parses the config tree to build the UI
-func _parse_config_tree(config_tree: Dictionary, depth: int  = 0) -> void:
+func _create_config_button(config_label: String) -> Button:
+	var button1: Button = Button.new()
+	button1.text = "> " + config_label
+	button1.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	
+	# Default button style (Replicating Godot's UI style)
+	var normal_color: Color = 1.3 * Guidot_Utils.get_color("gd_black")
+	var pressed_color: Color = 1.05 * Guidot_Utils.get_color("graph_settings_label")
+	var normal_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(normal_color, normal_color)
+	var pressed_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(pressed_color, pressed_color)
+	button1.add_theme_stylebox_override("normal", normal_stylebox)
+	button1.add_theme_stylebox_override("hover", pressed_stylebox)
+	button1.add_theme_stylebox_override("hover_pressed", pressed_stylebox)
+	button1.add_theme_stylebox_override("pressed", pressed_stylebox)
+	var empty_stylebox: StyleBoxEmpty = StyleBoxEmpty.new()
+	button1.add_theme_stylebox_override("focus", empty_stylebox)
+
+	return button1
+
+func _create_settings_label(config_header: String, depth: int) -> Label:
+	var label1: Label = self._create_config_label(config_header)
+	var label_color: Color = Guidot_Utils.get_color("graph_settings_label")
+	var label_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(label_color, label_color, [0, 0, 0, 0])
+	label1.add_theme_stylebox_override("normal", label_stylebox)
+	return label1
+
+func _create_toggle_button(button_header: String) -> Button:
+	var button1: Button = Button.new()
+	button1.hori
+	button1.text = button_header
+	return button1
+
+func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0):
+
 	for key in config_tree:
-		# print(key, typeof(config_tree[key]))
+
+		# All keys at depth 0 are headers
+		if (depth == 0):
+			var label: Label = self._create_settings_label(key, depth)
+			self._graph_config_vbox.add_child(label)
 	
 		var key_type: Variant.Type = typeof(config_tree[key])
 
 		if (key_type == TYPE_DICTIONARY):
 			self.log(LOG_DEBUG, [key, "is a dictionary of depth ", depth])
-			self._parse_config_tree(config_tree[key], depth + 1)
+
+			if (depth > 0):
+				var button: Button = self._create_config_button(key)
+				self._graph_config_vbox.add_child(button)
+			self._update_graph_config_tree(config_tree[key], depth + 1)
 
 		if (key_type == TYPE_ARRAY):
 			self.log(LOG_DEBUG, [key, " is a setting ", depth])
-
-
-func _update_graph_config_tree(config_tree: Dictionary):
-
-	# Parse nested dictionary here to determine tree depths
-	var test: Array = []
-	var label1: Label = self._create_config_label("Global")
-
-	test.append(label1)
-
-	for label in test:
-		self._graph_config_vbox.add_child(label)
-		var label_color: Color = Guidot_Utils.get_color("graph_settings_label")
-		var label_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(label_color, label_color, [0, 0, 0, 0])
-		label.add_theme_stylebox_override("normal", label_stylebox)
 
 func _ready() -> void:
 	super._ready()
@@ -92,6 +117,7 @@ func _ready() -> void:
 	self._data_subscriber_cont.name = "Data Subscriber"
 
 	self._graph_config_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	self._graph_config_vbox.add_theme_constant_override("separation", -1)
 	self._graph_config_cont.add_child(self._graph_config_vbox)
 
 	var _data_sub_vbox = VBoxContainer.new()
@@ -102,7 +128,6 @@ func _ready() -> void:
 	self._menu_vbox.add_child(_wizard_panel_cont)
 
 	var config_tree: Dictionary = {}
-	self._update_graph_config_tree(config_tree)
 
 	_panel_space.add_child(_menu_vbox)
 
@@ -111,6 +136,14 @@ func _ready() -> void:
 	"graph_node_id": "<Node_ID>",
 	"graph_type": "Guidot_Time_Series_Graph",
 	"global": {
+		"test1": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, false),
+		"preferences": {
+			"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, false),
+			"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT, 100),
+			"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, 0),
+		},
+	},
+	"local": {
 		"preferences": {
 			"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, false),
 			"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT, 100),
@@ -118,8 +151,9 @@ func _ready() -> void:
 		},
 	},
 	}
-	self._parse_config_tree(config_tree)
 
+	self._update_graph_config_tree(config_tree)
+	# self._update_graph_config_tree(config_tree)
 
 func _process(delta: float) -> void:
 	super._process(delta)
