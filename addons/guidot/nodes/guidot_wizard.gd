@@ -29,9 +29,16 @@ class _GBS extends Guidot_Base_Setting:
 			"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT, 100),
 			"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, 0),
 		},
+		"another_one": {
+			"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, false),
+			"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT, 100),
+			"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, 0),
+		},
 	},
 }
 
+# Helps with storing the HBoxContainer object of each configuration to allow us to hide/unhide
+# the objects when not needed
 var _internal_config_tree: Dictionary
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
@@ -114,6 +121,7 @@ func _on_config_button_pressed(tree_name: String) -> void:
 	for config_key in self._internal_config_tree.keys():
 		if (tree_name in config_key):
 			self._internal_config_tree[config_key].visible = !self._internal_config_tree[config_key].visible
+			self.log(LOG_DEBUG, ["Toggling ", config_key, " visibility due to ", tree_name, " button pressed"])
 
 func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key: String = ""):
 
@@ -130,14 +138,15 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 
 		if (key_type == TYPE_DICTIONARY):
 
+			var nested_key: String = curr_key
 			if (not curr_key == key):
-				curr_key = curr_key + "." + key
+				nested_key = curr_key + "." + key
 
 			if (depth > 0):
 				var button: Button = self._create_config_button(key)
-				button.pressed.connect(self._on_config_button_pressed.bind(curr_key))
+				button.pressed.connect(self._on_config_button_pressed.bind(nested_key))
 				self._graph_config_vbox.add_child(button)
-			self._update_graph_config_tree(config_tree[key], depth + 1, curr_key)
+			self._update_graph_config_tree(config_tree[key], depth + 1, nested_key)
 
 		if (key_type == TYPE_ARRAY):
 
@@ -187,6 +196,11 @@ func _ready() -> void:
 	"global": {
 		# "test1": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, false),
 		"preferences": {
+			"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
+			"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT, 100),
+			"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, 0),
+		},
+		"another_one": {
 			"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
 			"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT, 100),
 			"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, 0),
