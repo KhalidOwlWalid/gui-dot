@@ -54,7 +54,7 @@ func _create_config_button(config_label: String) -> Button:
 	
 	# Default button style (Replicating Godot's UI style)
 	var normal_color: Color = 1.3 * Guidot_Utils.get_color("gd_black")
-	var pressed_color: Color = 1.05 * Guidot_Utils.get_color("graph_settings_label")
+	var pressed_color: Color = 0.85 * Guidot_Utils.get_color("graph_settings_label")
 	var normal_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(normal_color, normal_color, [5, -1, -1, -1])
 	var pressed_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(pressed_color, pressed_color, [5, -1, -1, -1])
 	button1.add_theme_stylebox_override("normal", normal_stylebox)
@@ -107,6 +107,14 @@ func _create_config_row(config_name: String, selection_type: _GBS.SelectionType,
 	self._graph_config_vbox.add_child(config_hbox)
 	return config_hbox
 
+func _on_config_button_pressed(tree_name: String) -> void:
+
+	# Iterate through the internal config tree list which contains the HBoxContainer object of the configurator
+	# This allows us to access the object directly and hide or unhide it
+	for config_key in self._internal_config_tree.keys():
+		if (tree_name in config_key):
+			self._internal_config_tree[config_key].visible = !self._internal_config_tree[config_key].visible
+
 func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key: String = ""):
 
 	var full_key: String = ""
@@ -127,6 +135,7 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 
 			if (depth > 0):
 				var button: Button = self._create_config_button(key)
+				button.pressed.connect(self._on_config_button_pressed.bind(curr_key))
 				self._graph_config_vbox.add_child(button)
 			self._update_graph_config_tree(config_tree[key], depth + 1, curr_key)
 
