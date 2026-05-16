@@ -88,7 +88,7 @@ func _create_checkbox_button(def_val: bool) -> CheckBox:
 
 	return checkbox
 
-func _create_config_row(config_name: String, selection_type: _GBS.SelectionType, def_val):
+func _create_config_row(config_name: String, selection_type: _GBS.SelectionType, def_val) -> HBoxContainer:
 	var config_hbox: HBoxContainer = HBoxContainer.new()
 	var config_label: Label = self._create_label(config_name, false)
 	config_label.text = config_name
@@ -105,6 +105,7 @@ func _create_config_row(config_name: String, selection_type: _GBS.SelectionType,
 			pass
 
 	self._graph_config_vbox.add_child(config_hbox)
+	return config_hbox
 
 func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key: String = ""):
 
@@ -115,26 +116,26 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 		if (depth == 0):
 			var label: Label = self._create_label(key, true, Guidot_Utils.get_color("graph_settings_label"))
 			self._graph_config_vbox.add_child(label)
+			curr_key = key
 	
 		var key_type: Variant.Type = typeof(config_tree[key])
 
 		if (key_type == TYPE_DICTIONARY):
-			self.log(LOG_DEBUG, [key, "is a dictionary of depth ", depth])
 
-			curr_key = key
+			if (not curr_key == key):
+				curr_key = curr_key + "." + key
 
 			if (depth > 0):
 				var button: Button = self._create_config_button(key)
 				self._graph_config_vbox.add_child(button)
-			self._update_graph_config_tree(config_tree[key], depth + 1, key)
+			self._update_graph_config_tree(config_tree[key], depth + 1, curr_key)
 
 		if (key_type == TYPE_ARRAY):
 
 			var final_key: String = curr_key + "." + key
-			self._create_config_row(key, config_tree[key][0], config_tree[key][1])
-			self.log(LOG_DEBUG, [key, " is a setting ", depth])
+			var hbox_obj: HBoxContainer = self._create_config_row(key, config_tree[key][0], config_tree[key][1])
 
-			self.log(LOG_DEBUG, [final_key])
+			self._internal_config_tree[final_key] = hbox_obj
 
 func _ready() -> void:
 	super._ready()
@@ -175,7 +176,7 @@ func _ready() -> void:
 	"graph_node_id": "<Node_ID>",
 	"graph_type": "Guidot_Time_Series_Graph",
 	"global": {
-		"test1": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, false),
+		# "test1": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, false),
 		"preferences": {
 			"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
 			"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT, 100),
