@@ -22,6 +22,14 @@ static var opacity_key: String = "opacity"
 static var graph_mode_key: String = "graph_mode"
 static var sync_with_global_key: String = "sync_with_global"
 
+static var selection_type_key: String = "ui_type"
+static var value_key: String = "value"
+static var default_value_key: String = "default_value"
+static var tooltip_key: String = "tooltip"
+static var dropdown_selection_key: String = "dropdown_selection"
+
+static var common_keys: Array = [Guidot_Base_Setting.selection_type_key, Guidot_Base_Setting.value_key]
+
 enum SelectionType {
 	DROPDOWN,
 	LINE_EDIT_FLOAT,
@@ -68,5 +76,10 @@ func setup_base_settings(node_ref: String, node_id: String) -> void:
 	self._settings[gd_node_ref] = node_ref
 	self._settings[gd_node_id_key] = node_id
 
-static func create_selection_type(ui_type: SelectionType, default_val) -> Array:
-	return [ui_type, default_val]
+static func create_selection_type(ui_type: SelectionType, val: Variant, dropdown_selection: Array = [], tooltip: String = "") -> Dictionary:
+	var config_dict: Dictionary
+	config_dict[Guidot_Base_Setting.selection_type_key] = ui_type
+	config_dict[Guidot_Base_Setting.value_key] = val
+	config_dict[Guidot_Base_Setting.tooltip_key] = tooltip
+	config_dict[Guidot_Base_Setting.dropdown_selection_key] = dropdown_selection
+	return config_dict
