@@ -21,28 +21,7 @@ class _GBS extends Guidot_Base_Setting:
 
 @onready var SelectionType = _GBS.SelectionType
 
-@onready var config_tree: Dictionary = {
-	"graph_node_ref": "<gd_node_ref>",
-	"graph_node_id": "<Node_ID>",
-	"graph_type": "Guidot_Time_Series_Graph",
-	"global": {
-		"preferences": {
-			"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, false),
-			"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
-			"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, 0),
-		},
-		"another_one": {
-			"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, false),
-			"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
-			"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, 0),
-		},
-		"settings": {
-			"type": _GBS.SelectionType.CHECKBOX,
-			"value": true,
-			"default": false,
-		}
-	},
-}
+@onready var config_tree: Dictionary = {}
 
 # Helps with storing the HBoxContainer object of each configuration to allow us to hide/unhide
 # the objects when not needed
@@ -123,12 +102,39 @@ func _create_line_edit(def_val: String) -> LineEdit:
 
 	return line_edit
 
-func _create_config_row(config_name: String, full_key_name: String, selection_type: _GBS.SelectionType, def_val) -> HBoxContainer:
+func _create_dropdown_selection(def_val: Variant, config_dict: Dictionary):
+	var dropdown: OptionButton = OptionButton.new()
+	dropdown.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var dropdown_color: Color = Guidot_Utils.get_color("wizard_line_edit")
+	var dropdown_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(dropdown_color, dropdown_color)
+
+	dropdown.add_theme_stylebox_override("normal", dropdown_stylebox)
+	dropdown.add_theme_stylebox_override("hover", dropdown_stylebox)
+
+	var focus_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(dropdown_color, dropdown_color)
+	focus_stylebox.expand_margin_left = 5
+	focus_stylebox.set_border_width_all(1)
+	focus_stylebox.border_color = Color.SKY_BLUE
+	dropdown.add_theme_stylebox_override("focus", focus_stylebox)
+	
+	for selection in config_dict[_GBS.dropdown_selection_key]:
+		dropdown.add_item(selection)
+	
+	dropdown.select(def_val)
+	
+	return dropdown
+	
+
+func _create_config_row(config_name: String, full_key_name: String, config_dict: Dictionary) -> HBoxContainer:
 	var config_hbox: HBoxContainer = HBoxContainer.new()
 	var config_label: Label = self._create_label(config_name, false)
 	config_label.text = config_name
 	config_hbox.add_theme_constant_override("separation", -1)
 	config_hbox.add_child(config_label)
+
+	var def_val = config_dict[_GBS.value_key]
+	var selection_type: _GBS.SelectionType = config_dict[_GBS.selection_type_key]
 	
 	match (selection_type):
 
@@ -144,7 +150,8 @@ func _create_config_row(config_name: String, full_key_name: String, selection_ty
 			config_hbox.add_child(line_edit)
 
 		_GBS.SelectionType.DROPDOWN:
-			pass
+			var dropdown: OptionButton = self._create_dropdown_selection(def_val, config_dict)
+			config_hbox.add_child(dropdown)
 
 		_:
 			pass
@@ -175,11 +182,12 @@ func _set_config_tree_value(dict: Dictionary, path: Array, value: Variant) -> vo
 	# TODO: Perform checks wether the assigned value is valid or not
 	# Reminder: The structure of the array for any settings are: [SelectionType, value]
 	# Hence, accessing current[1] changes the "value" of the settings
-	current[path[-1]][1] = value
+	current[path[-1]][_GBS.value_key] = value
 
 func _on_checkbox_pressed(cbox: CheckBox, branch_name: String) -> void:
 	self._set_config_tree_value(self.config_tree, branch_name.rsplit("."), cbox.button_pressed)	
 	self.config_tree_configured.emit(branch_name)
+	print(self.config_tree)
 
 func _on_line_edit_float_change(new_text: String, branch_name) -> void:
 	
@@ -215,18 +223,21 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 			if (not curr_key == key):
 				nested_key = curr_key + "." + key
 
-			if (depth > 0):
-				var button: Button = self._create_config_button(key)
-				button.pressed.connect(self._on_config_button_pressed.bind(nested_key))
-				self._graph_config_vbox.add_child(button)
-			self._update_graph_config_tree(config_tree[key], depth + 1, nested_key)
+			if (config_tree[key].has_all(Guidot_Base_Setting.common_keys)):
+				# This is a leaf node (user-configurable item)
+				var final_key: String = nested_key
+				var hbox_obj: HBoxContainer = self._create_config_row(key, final_key, config_tree[key])
+				self._internal_config_tree[final_key] = hbox_obj
 
-		if (key_type == TYPE_ARRAY):
+			else:
+				# This is a nested group node (not configurable directly, but contains sub-items)
+				if (depth > 0):
+					var button: Button = self._create_config_button(key)
+					button.pressed.connect(self._on_config_button_pressed.bind(nested_key))
+					self._graph_config_vbox.add_child(button)
 
-			var final_key: String = curr_key + "." + key
-			var hbox_obj: HBoxContainer = self._create_config_row(key, final_key, config_tree[key][0], config_tree[key][1])
-
-			self._internal_config_tree[final_key] = hbox_obj
+				# Recurse into the nested group
+				self._update_graph_config_tree(config_tree[key], depth + 1, nested_key)
 
 func _ready() -> void:
 	super._ready()
@@ -266,24 +277,37 @@ func _ready() -> void:
 
 	_panel_space.add_child(_menu_vbox)
 
-	config_tree = {
-		# "graph_node_ref": "<gd_node_ref>",
-		# "graph_node_id": "<Node_ID>",
-		# "graph_type": "Guidot_Time_Series_Graph",
-		"global": {
-			# "test1": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, false),
-			"preferences": {
-				"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
-				"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
-				"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, 0),
-			},
-		},
-	}
-
-	self._update_graph_config_tree(config_tree)
+var j: int = 0
+enum SomeRandom  {
+	HELLO,
+	GOOD_MORNING,
+}
 
 func _process(delta: float) -> void:
 	super._process(delta)
+
+	if (j == 0):
+		config_tree = {
+			# "graph_node_ref": "<gd_node_ref>",
+			# "graph_node_id": "<Node_ID>",
+			# "graph_type": "Guidot_Time_Series_Graph",
+			"global": {
+				# "test1": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, false),
+				"preferences": {
+					"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
+					"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
+					"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_LEFT, Guidot_Y_Axis_Canvas.AxisPosition.keys()),
+				},
+				"more_preferences": {
+					"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
+					"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
+					"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_LEFT, Guidot_Y_Axis_Canvas.AxisPosition.keys()),
+				},
+			},
+		}
+
+		self._update_graph_config_tree(config_tree)
+		j += 1
 
 func _input(event: InputEvent) -> void:
 	super._input(event)
