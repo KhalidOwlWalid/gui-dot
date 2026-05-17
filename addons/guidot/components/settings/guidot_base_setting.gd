@@ -24,7 +24,7 @@ static var sync_with_global_key: String = "sync_with_global"
 
 enum SelectionType {
 	DROPDOWN,
-	LINE_EDIT,
+	LINE_EDIT_FLOAT,
 	CHECKBOX,
 }
 
