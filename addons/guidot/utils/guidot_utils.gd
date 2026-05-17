@@ -33,7 +33,8 @@ static var color_dict: Dictionary = {
 	# Custom ones (hardcoding this here)
 	"graph_settings_label": Color(0.251, 0.267, 0.298, 1.0),
 	"graph_settings_button": Color(0.212, 0.239, 0.29, 1.0),
-	"graph_settings_button_action": Color(0.22, 0.239, 0.267, 1.0)
+	"graph_settings_button_action": Color(0.22, 0.239, 0.267, 1.0),
+	"wizard_line_edit": Color(0.145, 0.169, 0.204, 1.0),
 }
 
 static func per_255(val: float) -> float:
