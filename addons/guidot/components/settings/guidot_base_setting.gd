@@ -27,6 +27,7 @@ static var value_key: String = "value"
 static var default_value_key: String = "default_value"
 static var tooltip_key: String = "tooltip"
 static var dropdown_selection_key: String = "dropdown_selection"
+static var enum_selection_key: String = "enum_selection"
 
 static var common_keys: Array = [Guidot_Base_Setting.selection_type_key, Guidot_Base_Setting.value_key]
 
@@ -76,10 +77,11 @@ func setup_base_settings(node_ref: String, node_id: String) -> void:
 	self._settings[gd_node_ref] = node_ref
 	self._settings[gd_node_id_key] = node_id
 
-static func create_selection_type(ui_type: SelectionType, val: Variant, dropdown_selection: Array = [], tooltip: String = "") -> Dictionary:
+static func create_selection_type(ui_type: SelectionType, val: Variant, dropdown_selection: Array = [], enum_ref: Variant = null)-> Dictionary:
 	var config_dict: Dictionary
 	config_dict[Guidot_Base_Setting.selection_type_key] = ui_type
 	config_dict[Guidot_Base_Setting.value_key] = val
-	config_dict[Guidot_Base_Setting.tooltip_key] = tooltip
+	config_dict[Guidot_Base_Setting.tooltip_key] = ""
 	config_dict[Guidot_Base_Setting.dropdown_selection_key] = dropdown_selection
+	config_dict[Guidot_Base_Setting.enum_selection_key] = enum_ref
 	return config_dict
