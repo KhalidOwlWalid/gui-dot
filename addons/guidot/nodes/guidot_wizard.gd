@@ -120,8 +120,14 @@ func _create_dropdown_selection(def_val: Variant, config_dict: Dictionary):
 	
 	for selection in config_dict[_GBS.dropdown_selection_key]:
 		dropdown.add_item(selection)
-	
-	dropdown.select(def_val)
+
+	# Note: This hack had to be done since the y-axis position enumeration contains negative values
+	# OptionButton does not indexed with negative values and will start from 0 by default unless specified through the use of index in the add_item
+	# function
+	# This hack allows me to still utilize the negative numbers, and requires a reverse search to set the correct default value for the dropdown
+	# menu
+	var val_to_select: String = config_dict[_GBS.enum_selection_key].find_key(def_val)
+	dropdown.select(config_dict[_GBS.dropdown_selection_key].find(val_to_select))
 	
 	return dropdown
 	
@@ -151,6 +157,7 @@ func _create_config_row(config_name: String, full_key_name: String, config_dict:
 
 		_GBS.SelectionType.DROPDOWN:
 			var dropdown: OptionButton = self._create_dropdown_selection(def_val, config_dict)
+			dropdown.item_selected.connect(self._on_dropdown_selected.bind(dropdown, full_key_name, config_dict[_GBS.enum_selection_key]))
 			config_hbox.add_child(dropdown)
 
 		_:
@@ -201,6 +208,14 @@ func _on_line_edit_float_change(new_text: String, branch_name) -> void:
 
 	self.config_tree_configured.emit(branch_name)
 
+# enum_ref stores the reference to the actual enumeration so we can keep back reference the actual enumeration value
+# once the index has been selected
+func _on_dropdown_selected(index: int, dropdown: OptionButton, branch_name: String, enum_ref: Variant):	
+	var dropdown_selection: String = dropdown.get_item_text(index)
+	var selected_enum: int = enum_ref[dropdown_selection]
+	self.log(LOG_DEBUG, ["Selected enum is", dropdown_selection, "(", selected_enum, ")"])
+	self._set_config_tree_value(self.config_tree, branch_name.rsplit("."), selected_enum)
+
 # Currently, the graph config tree builder only supports up to level 1 depth of nesting
 # so adding a nested dictionary inside another level 1 dictionary will simply add it to the same depth level
 # Nested dictionary handling will be handled in future updates. For now, it is not the highest priority
@@ -238,6 +253,10 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 
 				# Recurse into the nested group
 				self._update_graph_config_tree(config_tree[key], depth + 1, nested_key)
+
+		elif (key_type == TYPE_STRING):
+			var label = self._create_label(config_tree[key], true)
+			self._graph_config_vbox.add_child(label)
 
 func _ready() -> void:
 	super._ready()
@@ -279,7 +298,7 @@ func _ready() -> void:
 
 var j: int = 0
 enum SomeRandom  {
-	HELLO,
+	HELLO = -1,
 	GOOD_MORNING,
 }
 
@@ -288,21 +307,21 @@ func _process(delta: float) -> void:
 
 	if (j == 0):
 		config_tree = {
-			# "graph_node_ref": "<gd_node_ref>",
-			# "graph_node_id": "<Node_ID>",
-			# "graph_type": "Guidot_Time_Series_Graph",
+			"graph_node_ref": "<gd_node_ref>",
+			"graph_node_id": "<Node_ID>",
+			"graph_type": "Guidot_Time_Series_Graph",
 			"global": {
 				# "test1": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, false),
 				"preferences": {
 					"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
 					"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
-					"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_LEFT, Guidot_Y_Axis_Canvas.AxisPosition.keys()),
+					"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Y_Axis_Canvas.AxisPosition.TERTIARY_LEFT, Guidot_Y_Axis_Canvas.AxisPosition.keys(), Guidot_Y_Axis_Canvas.AxisPosition),
 				},
-				"more_preferences": {
-					"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
-					"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
-					"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_LEFT, Guidot_Y_Axis_Canvas.AxisPosition.keys()),
-				},
+				# "more_preferences": {
+				# 	"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
+				# 	"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
+				# 	"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_LEFT, Guidot_Y_Axis_Canvas.AxisPosition.keys()),
+				# },
 			},
 		}
 
