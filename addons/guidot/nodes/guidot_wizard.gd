@@ -283,6 +283,15 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 			var label = self._create_label(config_tree[key], true)
 			self._graph_config_vbox.add_child(label)
 
+func update_config_tree(config_tree: Dictionary) -> void:
+	self.config_tree = config_tree
+
+	for child_node in self._graph_config_vbox.get_children():
+		child_node.queue_free()
+
+	self._update_graph_config_tree(self.config_tree)
+	self.visible = true
+
 func _ready() -> void:
 	super._ready()
 	self.name = "Guidot Wizard"
@@ -321,6 +330,8 @@ func _ready() -> void:
 
 	_panel_space.add_child(_menu_vbox)
 
+	self.add_to_group("guidot_wizard")
+
 var j: int = 0
 enum SomeRandom  {
 	HELLO = -1,
@@ -332,9 +343,9 @@ func _process(delta: float) -> void:
 
 	if (j == 0):
 		config_tree = {
-			"graph_node_ref": "<gd_node_ref>",
-			"graph_node_id": "<Node_ID>",
-			"graph_type": "Guidot_Time_Series_Graph",
+			"graph_node_ref": str(self),
+			"graph_node_id": str(self.get_instance_id()),
+			"graph_type": str(self.name),
 			"global": {
 				"primary_left": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 10),
 				"preferences_test": {
