@@ -32,7 +32,14 @@ func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
 
 func _create_config_label(config_label: String, center_text: bool = false) -> Label:
 	var label1: Label = Label.new()
-	label1.text = config_label
+
+	# Capitalize the first letter of each word of the header
+	var config_label_array: Array = config_label.rsplit("_")
+	var new_config_label: String
+	for word in config_label_array:
+		new_config_label = new_config_label + word[0].to_upper() + word.substr(1, -1) + " "
+
+	label1.text = new_config_label
 	label1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label1.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	
@@ -311,17 +318,21 @@ func _process(delta: float) -> void:
 			"graph_node_id": "<Node_ID>",
 			"graph_type": "Guidot_Time_Series_Graph",
 			"global": {
-				# "test1": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, false),
+				"primary_left": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 10),
 				"preferences": {
 					"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
 					"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
 					"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Y_Axis_Canvas.AxisPosition.TERTIARY_LEFT, Guidot_Y_Axis_Canvas.AxisPosition.keys(), Guidot_Y_Axis_Canvas.AxisPosition),
 				},
-				# "more_preferences": {
-				# 	"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
-				# 	"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
-				# 	"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_LEFT, Guidot_Y_Axis_Canvas.AxisPosition.keys()),
-				# },
+			},
+			"local": {
+				"primary_left": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 10),
+				"preferences": {
+					"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
+					"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
+					"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Y_Axis_Canvas.AxisPosition.TERTIARY_LEFT, Guidot_Y_Axis_Canvas.AxisPosition.keys(), Guidot_Y_Axis_Canvas.AxisPosition),
+				},
+
 			},
 		}
 
