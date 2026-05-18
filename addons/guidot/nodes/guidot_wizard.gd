@@ -30,14 +30,23 @@ var _internal_config_tree: Dictionary
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
 	Guidot_Log.gd_log(log_level, self.name, msg)
 
-func _create_config_label(config_label: String, center_text: bool = false) -> Label:
+func capitalize_words(words_with_delim: String, delimiter: String = "_") -> String:
+	var words: Array = words_with_delim.rsplit("_")
+	var new_config_label: String
+	for word in words:
+		new_config_label = new_config_label + word[0].to_upper() + word.substr(1, -1) + " "
+	return new_config_label
+
+
+func _create_config_label(config_label: String, center_text: bool = false, capitalize: bool = true) -> Label:
 	var label1: Label = Label.new()
 
 	# Capitalize the first letter of each word of the header
-	var config_label_array: Array = config_label.rsplit("_")
 	var new_config_label: String
-	for word in config_label_array:
-		new_config_label = new_config_label + word[0].to_upper() + word.substr(1, -1) + " "
+	if (capitalize):
+		new_config_label = self.capitalize_words(config_label)
+	else:
+		new_config_label = config_label
 
 	label1.text = new_config_label
 	label1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -49,7 +58,7 @@ func _create_config_label(config_label: String, center_text: bool = false) -> La
 
 func _create_config_button(config_label: String) -> Button:
 	var button1: Button = Button.new()
-	button1.text = "> " + config_label
+	button1.text = "⇓" + self.capitalize_words(config_label)
 	button1.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	
 	# Default button style (Replicating Godot's UI style)
@@ -66,8 +75,8 @@ func _create_config_button(config_label: String) -> Button:
 
 	return button1
 
-func _create_label(config_header: String, center_text: bool = false, color: Color = Guidot_Utils.get_color("gd_black")) -> Label:
-	var label1: Label = self._create_config_label(config_header, center_text)
+func _create_label(config_header: String, center_text: bool = false, color: Color = Guidot_Utils.get_color("gd_black"), capitalize: bool = true) -> Label:
+	var label1: Label = self._create_config_label(config_header, center_text, capitalize)
 	var label_color: Color = color
 	var label_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(label_color, label_color, [5, -1, -1, -1],
 		[0, 0, 0, 0], [5, 5, 5, 5])
@@ -141,8 +150,8 @@ func _create_dropdown_selection(def_val: Variant, config_dict: Dictionary):
 
 func _create_config_row(config_name: String, full_key_name: String, config_dict: Dictionary) -> HBoxContainer:
 	var config_hbox: HBoxContainer = HBoxContainer.new()
-	var config_label: Label = self._create_label(config_name, false)
-	config_label.text = config_name
+	var config_label: Label = self._create_label(config_name, false, Guidot_Utils.get_color("gd_black"), true)
+	# config_label.text = config_name
 	config_hbox.add_theme_constant_override("separation", -1)
 	config_hbox.add_child(config_label)
 
@@ -173,14 +182,23 @@ func _create_config_row(config_name: String, full_key_name: String, config_dict:
 	self._graph_config_vbox.add_child(config_hbox)
 	return config_hbox
 
-func _on_config_button_pressed(base_branch_name: String) -> void:
+func _on_config_button_pressed(key_name: String, button: Button, base_branch_name: String) -> void:
 
 	# Iterate through the internal config tree list which contains the HBoxContainer object of the configurator
 	# This allows us to access the object directly and hide or unhide it
+	var visible: bool
 	for config_key in self._internal_config_tree.keys():
 		if (base_branch_name in config_key):
 			self._internal_config_tree[config_key].visible = !self._internal_config_tree[config_key].visible
+			visible = self._internal_config_tree[config_key].visible
 			self.log(LOG_DEBUG, ["Toggling ", config_key, " visibility due to ", base_branch_name, " button pressed"])
+
+	key_name = self.capitalize_words(key_name)
+	if (not visible):
+		button.text = "⇒ " + key_name
+	else:
+		button.text = "⇓ " + key_name
+
 
 # path argument expects a valid full key path (nested dictionary) that exist in the dictionary
 # For instance, foo = {"bar": {"new_val": 1}}
@@ -255,7 +273,7 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 				# This is a nested group node (not configurable directly, but contains sub-items)
 				if (depth > 0):
 					var button: Button = self._create_config_button(key)
-					button.pressed.connect(self._on_config_button_pressed.bind(nested_key))
+					button.pressed.connect(self._on_config_button_pressed.bind(key, button, nested_key))
 					self._graph_config_vbox.add_child(button)
 
 				# Recurse into the nested group
@@ -319,10 +337,11 @@ func _process(delta: float) -> void:
 			"graph_type": "Guidot_Time_Series_Graph",
 			"global": {
 				"primary_left": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 10),
-				"preferences": {
+				"preferences_test": {
 					"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
 					"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
-					"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Y_Axis_Canvas.AxisPosition.TERTIARY_LEFT, Guidot_Y_Axis_Canvas.AxisPosition.keys(), Guidot_Y_Axis_Canvas.AxisPosition),
+					"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Common.Graph_Buffer_Mode.FIXED,
+						Guidot_Common.Graph_Buffer_Mode.keys(), Guidot_Y_Axis_Canvas.Graph_Buffer_Mode),
 				},
 			},
 			"local": {
