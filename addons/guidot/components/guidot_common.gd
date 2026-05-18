@@ -10,6 +10,9 @@ static var _client_group_name: String = "Guidot_Client"
 static var _clock_group_name: String = "Guidot_Clock"
 static var _graph_group_name: String = "Guidot_Time_Series_Graph"
 
+class _GBS extends Guidot_Base_Setting:
+	pass
+
 enum Graph_Buffer_Mode {
 	FIXED,      # If user wants to display a set window span. User will have to manually reset the time axes
 	SNAPSHOT,   # Alias of fixed (thats the plan for now)
