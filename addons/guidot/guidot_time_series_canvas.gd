@@ -40,7 +40,7 @@ func _on_setting_pressed() -> void:
 	graph_manager_pos.x = DisplayServer.screen_get_size().x/2 - self._graph_manager.size.x/2
 	graph_manager_pos.y = DisplayServer.screen_get_size().y/2 - self._graph_manager.size.y/2
 	self.log(LOG_DEBUG, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
-	# self._graph_manager.show_panel_at_pos(graph_manager_pos)
+	self._graph_manager.show_panel_at_pos(graph_manager_pos)
 
 	# Guidot_Wizard upon ready will insert itself into its own group name
 	# There should only be one guidot wizard, so the first node in this array should be the guidot wizard itself
@@ -95,8 +95,9 @@ func _on_hide_graph_pressed() -> void:
 @onready var _toggle_hotkey_button: Button = Button.new()
 @onready var _toggle_hotkey_icon: Texture2D = load("res://addons/guidot/icons/toggle_hotkey_icon.png")
 
-@onready var _sync_data_global_key: String = "sync_data_global"
-@onready var _opacity_key: String = "opacity"
+const _sync_data_global_key: String = "sync_data_global"
+const _opacity_key: String = "opacity"
+const _graph_buffer_mode_key: String = "graph_mode"
 
 @onready var _sync_data_global: bool = false
 
@@ -105,11 +106,14 @@ func _on_hide_graph_pressed() -> void:
 	"graph_node_id": str(self.get_instance_id()),
 	"guidot_type": str(self.name),
 	"global": {
+		# TODO: Sync all graphs configuration
 		self._sync_data_global_key: _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, self._sync_data_global),
 		self._opacity_key: _GBS.create_float_edit_type(_GBS.SelectionType.SLIDER, self.get_self_modulate().a, 0.0, 1.0, 0.05),
 	},
 	"local": {
 		self._opacity_key: _GBS.create_float_edit_type(_GBS.SelectionType.SLIDER, self.get_self_modulate().a, 0.0, 1.0, 0.05),
+		self._graph_buffer_mode_key: _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Common.Graph_Buffer_Mode.FIXED,
+			Guidot_Common.Graph_Buffer_Mode.keys(), Guidot_Common.Graph_Buffer_Mode),
 	}
 }
 
@@ -149,28 +153,54 @@ func _handle_new_config(branch_name: String):
 		queue_redraw()
 		return
 
-	var parts: Array = branch_name.rsplit(".")
-	var key: String = parts[-1]
+	var branch_path: Array = branch_name.rsplit(".")
+	var leaf_key: String = branch_path[-1]
+
+	var get_key_leaf_value = func() -> Variant:
+		var branch_end: Variant = self._config_tree
+		var leaf_value: Variant
+
+		for branch in branch_path:
+			if branch_end is Dictionary and branch_end.has(branch):
+				branch_end = branch_end[branch]
+			else:
+				branch_end = null
+
+		if (branch_end != null and branch_end is Dictionary and branch_end.has(_GBS.value_key)):
+			leaf_value = branch_end[_GBS.value_key]
+		else:
+			leaf_value = null
+
+		return leaf_value
+
 
 	# If opacity changed, read the value from the config tree and apply it.
-	if key == self._opacity_key:
-		var current: Variant = self._config_tree
-		for p in parts:
-			if current is Dictionary and current.has(p):
-				current = current[p]
-			else:
-				current = null
-				break
+	# if key == self._opacity_key:
+	match (leaf_key):
 
-		if current != null and current is Dictionary and current.has(_GBS.value_key):
-			var new_val = current[_GBS.value_key]
-			var alpha: float = float(new_val)
+		self._opacity_key:
+
+			var alpha: float = get_key_leaf_value.call()
 			alpha = clamp(alpha, 0.0, 1.0)
 			# Only apply when the value actually changed to avoid unnecessary redraws
 			if alpha != self.get_self_modulate().a:
 				self._on_graph_opacity_changed(alpha)
-	else:
-		queue_redraw()
+		
+		self._graph_buffer_mode_key:
+			# self.t_axis_node.change_graph_mode(
+			var selected_mode: Graph_Buffer_Mode = get_key_leaf_value.call()
+
+			match (selected_mode):
+				Graph_Buffer_Mode.FIXED:
+					self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.FIXED)
+				Graph_Buffer_Mode.REALTIME:
+					self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.SLIDING_WINDOW)
+				_:
+					self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.SLIDING_WINDOW)
+			queue_redraw()
+
+		_:
+			queue_redraw()
 
 class AxisHandler:
 
@@ -979,6 +1009,8 @@ func plot_fixedtime_data():
 	pass
 
 func _update_buffer_mode(new_buff_mode: Graph_Buffer_Mode):
+	# self._config_tree[_GBS.global_key][self._graph_buffer_mode_key][_GBS.value_key]  = new_buff_mode
+	self._config_tree[_GBS.local_key][self._graph_buffer_mode_key][_GBS.value_key]  = new_buff_mode
 	self._current_graph_mode = new_buff_mode
 	self.plot_node._curr_graph_mode = new_buff_mode
 
