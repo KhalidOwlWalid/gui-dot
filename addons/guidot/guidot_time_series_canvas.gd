@@ -39,7 +39,7 @@ func _on_setting_pressed() -> void:
 	self.log(LOG_DEBUG, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
 	# self._graph_manager.show_panel_at_pos(graph_manager_pos)
 
-	self.get_tree().call_group("guidot_wizard", "update_config_tree", self._config_tree)
+	self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree)
 
 @onready var _pause_button: Button = Button.new()
 @onready var _pause_icon: Texture2D = load("res://addons/guidot/icons/pause_icon.png")
@@ -88,28 +88,19 @@ func _on_hide_graph_pressed() -> void:
 @onready var _toggle_hotkey_button: Button = Button.new()
 @onready var _toggle_hotkey_icon: Texture2D = load("res://addons/guidot/icons/toggle_hotkey_icon.png")
 
+@onready var _sync_data_global_key: String = "sync_data_global"
+@onready var _opacity_key: String = "opacity"
+
+@onready var _sync_data_global: bool = false
+
 @onready var _config_tree: Dictionary = {
 	"graph_node_ref": str(self),
 	"graph_node_id": str(self.get_instance_id()),
 	"guidot_type": str(self.name),
-	# "global": {
-	# 	"primary_left": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 10),
-	# 	"preferences": {
-	# 		"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
-	# 		"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
-	# 		"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Common.Graph_Buffer_Mode.FIXED,
-	# 			Guidot_Common.Graph_Buffer_Mode.keys(), Guidot_Y_Axis_Canvas.Graph_Buffer_Mode),
-	# 	},
-	# },
-	# "local": {
-	# 	"primary_left": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 10),
-	# 	"preferences": {
-	# 		"disable_hotkeys": _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
-	# 		"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
-	# 		"axis_selection": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Y_Axis_Canvas.AxisPosition.TERTIARY_LEFT, Guidot_Y_Axis_Canvas.AxisPosition.keys(), Guidot_Y_Axis_Canvas.AxisPosition),
-	# 	},
-
-	# },
+	"global": {
+		self._sync_data_global_key: _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, self._sync_data_global),
+		self._opacity_key: _GBS.create_selection_type(_GBS.SelectionType.SLIDER, self.get_self_modulate()),
+	}
 }
 
 func _on_toggle_hotkey_pressed() -> void:

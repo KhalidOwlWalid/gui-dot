@@ -146,6 +146,19 @@ func _create_dropdown_selection(def_val: Variant, config_dict: Dictionary):
 	dropdown.select(config_dict[_GBS.dropdown_selection_key].find(val_to_select))
 	
 	return dropdown
+
+func _create_slider(def_val: float, min_val: float, max_val: float, step: float = 1) -> HSlider:
+	var slider: HSlider = HSlider.new()
+	slider.value = def_val
+	slider.min_value = min_val
+	slider.max_value = max_val
+	slider.step = step
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var slider_highlight_color: Color = Color.SKY_BLUE
+	var slider_highlight_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(slider_highlight_color,
+		slider_highlight_color, [-1, -1, -1, -1], [0, 0, 0, 0], [4, 4, 4, 4])
+	slider.add_theme_stylebox_override("grabber_area_highlight", slider_highlight_stylebox)
+	return slider
 	
 
 func _create_config_row(config_name: String, full_key_name: String, config_dict: Dictionary) -> HBoxContainer:
@@ -176,11 +189,23 @@ func _create_config_row(config_name: String, full_key_name: String, config_dict:
 			dropdown.item_selected.connect(self._on_dropdown_selected.bind(dropdown, full_key_name, config_dict[_GBS.enum_selection_key]))
 			config_hbox.add_child(dropdown)
 
+		_GBS.SelectionType.SLIDER:
+
+			var min_val = config_dict[_GBS.min_value_key]
+			var max_val = config_dict[_GBS.max_value_key]
+			var step = config_dict[_GBS.step_key]
+			var slider: Slider = self._create_slider(def_val, min_val, max_val, step)
+			slider.value_changed.connect(self._on_slider_value_changed)
+			config_hbox.add_child(slider)
+
 		_:
 			pass
 
 	self._graph_config_vbox.add_child(config_hbox)
 	return config_hbox
+
+func _on_slider_value_changed(value: float):
+	print(value)
 
 func _on_config_button_pressed(key_name: String, button: Button, base_branch_name: String) -> void:
 
@@ -330,7 +355,7 @@ func _ready() -> void:
 
 	_panel_space.add_child(_menu_vbox)
 
-	self.add_to_group("guidot_wizard")
+	self.add_to_group(Guidot_Common._wizard_group_name)
 
 var j: int = 0
 enum SomeRandom  {
@@ -353,6 +378,7 @@ func _process(delta: float) -> void:
 					"opacity": _GBS.create_selection_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 100),
 					"graph_mode": _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Common.Graph_Buffer_Mode.FIXED,
 						Guidot_Common.Graph_Buffer_Mode.keys(), Guidot_Y_Axis_Canvas.Graph_Buffer_Mode),
+					"slider": _GBS.create_float_edit_type(_GBS.SelectionType.SLIDER, 10, 0, 100, 0.1),
 				},
 			},
 			"local": {
