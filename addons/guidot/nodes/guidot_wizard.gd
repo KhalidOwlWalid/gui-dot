@@ -269,6 +269,7 @@ func _on_dropdown_selected(index: int, dropdown: OptionButton, branch_name: Stri
 	var selected_enum: int = enum_ref[dropdown_selection]
 	self.log(LOG_DEBUG, ["Selected enum is", dropdown_selection, "(", selected_enum, ")"])
 	self._set_config_tree_value(self.config_tree, branch_name.rsplit("."), selected_enum)
+	self.config_tree_configured.emit(branch_name)
 
 # Currently, the graph config tree builder only supports up to level 1 depth of nesting
 # so adding a nested dictionary inside another level 1 dictionary will simply add it to the same depth level
