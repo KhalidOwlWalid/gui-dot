@@ -195,7 +195,7 @@ func _create_config_row(config_name: String, full_key_name: String, config_dict:
 			var max_val = config_dict[_GBS.max_value_key]
 			var step = config_dict[_GBS.step_key]
 			var slider: Slider = self._create_slider(def_val, min_val, max_val, step)
-			slider.value_changed.connect(self._on_slider_value_changed)
+			slider.value_changed.connect(self._on_slider_value_changed.bind(full_key_name))
 			config_hbox.add_child(slider)
 
 		_:
@@ -204,8 +204,12 @@ func _create_config_row(config_name: String, full_key_name: String, config_dict:
 	self._graph_config_vbox.add_child(config_hbox)
 	return config_hbox
 
-func _on_slider_value_changed(value: float):
-	print(value)
+func _on_slider_value_changed(value: float, branch_name: String):
+	# Making use of the line edit function but having to convert the float into string to ensure its compatible
+	# which the function then converts this value back from string to float
+	# Stupid, I know, dont ask, I could have just duplicate the function itself, but I'm lazy
+	# Unless I see bottlenecks with this method, then this is fine
+	self._on_line_edit_float_change(str(value), branch_name)
 
 func _on_config_button_pressed(key_name: String, button: Button, base_branch_name: String) -> void:
 
@@ -244,9 +248,9 @@ func _set_config_tree_value(dict: Dictionary, path: Array, value: Variant) -> vo
 func _on_checkbox_pressed(cbox: CheckBox, branch_name: String) -> void:
 	self._set_config_tree_value(self.config_tree, branch_name.rsplit("."), cbox.button_pressed)	
 	self.config_tree_configured.emit(branch_name)
-	print(self.config_tree)
+	self.log(LOG_DEBUG, ["Guidot Wizard config:", self.config_tree])
 
-func _on_line_edit_float_change(new_text: String, branch_name) -> void:
+func _on_line_edit_float_change(new_text: String, branch_name: String) -> void:
 	
 	var value: float
 	if (new_text.is_valid_float()):
