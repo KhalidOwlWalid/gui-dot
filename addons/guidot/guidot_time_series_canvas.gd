@@ -6,6 +6,7 @@ var window_size: Vector2
 var window_color: Color
 
 signal ui_action_request
+signal parent_focus_requested
 
 # Note (Khalid): For now, I wish to standardize the font throughout the whole node
 # This may bite me in the future, if for some reason, I wish to have different fonts
@@ -32,6 +33,8 @@ var _selected_channels_name: Array
 @onready var _setting_button: Button = Button.new()
 @onready var _setting_icon: Texture2D = load("res://addons/guidot/icons/gear_icon.png")
 
+@onready var _guidot_wizard: Guidot_Wizard
+
 func _on_setting_pressed() -> void:
 	var graph_manager_pos: Vector2 = Vector2()
 	graph_manager_pos.x = DisplayServer.screen_get_size().x/2 - self._graph_manager.size.x/2
@@ -39,6 +42,10 @@ func _on_setting_pressed() -> void:
 	self.log(LOG_DEBUG, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
 	# self._graph_manager.show_panel_at_pos(graph_manager_pos)
 
+	# Guidot_Wizard upon ready will insert itself into its own group name
+	# There should only be one guidot wizard, so the first node in this array should be the guidot wizard itself
+	self._guidot_wizard = self.get_tree().get_nodes_in_group(Guidot_Common._wizard_group_name)[0]
+	self._guidot_wizard.config_tree_configured.connect(self._handle_new_config)
 	self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree)
 
 @onready var _pause_button: Button = Button.new()
@@ -99,7 +106,10 @@ func _on_hide_graph_pressed() -> void:
 	"guidot_type": str(self.name),
 	"global": {
 		self._sync_data_global_key: _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, self._sync_data_global),
-		self._opacity_key: _GBS.create_selection_type(_GBS.SelectionType.SLIDER, self.get_self_modulate()),
+		self._opacity_key: _GBS.create_float_edit_type(_GBS.SelectionType.SLIDER, self.get_self_modulate().a, 0.0, 1.0, 0.05),
+	},
+	"local": {
+		self._opacity_key: _GBS.create_float_edit_type(_GBS.SelectionType.SLIDER, self.get_self_modulate().a, 0.0, 1.0, 0.05),
 	}
 }
 
@@ -131,6 +141,36 @@ func _on_toggle_hotkey_pressed() -> void:
 var _prev_opacity_setting: float
 
 var _initialized: bool = false
+
+func _handle_new_config(branch_name: String):
+	# Only react to relevant config changes. If opacity changed, update modulation;
+	# otherwise just queue a redraw.
+	if branch_name == null:
+		queue_redraw()
+		return
+
+	var parts: Array = branch_name.rsplit(".")
+	var key: String = parts[-1]
+
+	# If opacity changed, read the value from the config tree and apply it.
+	if key == self._opacity_key:
+		var current: Variant = self._config_tree
+		for p in parts:
+			if current is Dictionary and current.has(p):
+				current = current[p]
+			else:
+				current = null
+				break
+
+		if current != null and current is Dictionary and current.has(_GBS.value_key):
+			var new_val = current[_GBS.value_key]
+			var alpha: float = float(new_val)
+			alpha = clamp(alpha, 0.0, 1.0)
+			# Only apply when the value actually changed to avoid unnecessary redraws
+			if alpha != self.get_self_modulate().a:
+				self._on_graph_opacity_changed(alpha)
+	else:
+		queue_redraw()
 
 class AxisHandler:
 
@@ -403,8 +443,6 @@ class AxisManager:
 
 # Helper tool
 var debug_panel: Guidot_Debug_Panel
-
-signal parent_focus_requested
 
 # Final debug trace signals are used to encapsulate all of the debug tace signals of each of our components
 @onready var final_debug_trace_signals: Dictionary = {}
