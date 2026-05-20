@@ -180,7 +180,7 @@ func _create_config_row(config_name: String, full_key_name: String, config_dict:
 
 		_GBS.SelectionType.LINE_EDIT_FLOAT:
 			var line_edit: LineEdit = self._create_line_edit(str(def_val))
-			line_edit.text_submitted.connect(self._on_line_edit_float_change.bind(full_key_name))
+			line_edit.text_submitted.connect(self._on_line_edit_float_change.bind(full_key_name, line_edit, config_dict))
 
 			config_hbox.add_child(line_edit)
 
@@ -204,12 +204,15 @@ func _create_config_row(config_name: String, full_key_name: String, config_dict:
 	self._graph_config_vbox.add_child(config_hbox)
 	return config_hbox
 
-func _on_slider_value_changed(value: float, branch_name: String):
+func _on_slider_value_changed(value: float, branch_name: String) -> void:
 	# Making use of the line edit function but having to convert the float into string to ensure its compatible
 	# which the function then converts this value back from string to float
 	# Stupid, I know, dont ask, I could have just duplicate the function itself, but I'm lazy
 	# Unless I see bottlenecks with this method, then this is fine
-	self._on_line_edit_float_change(str(value), branch_name)
+	# self._on_line_edit_float_change(str(value), branch_name, config_dict)
+	self._set_config_tree_value(self.config_tree, branch_name.rsplit("."), value) 
+	self.log(LOG_INFO, [branch_name, " value changed to ", value])
+	self.config_tree_configured.emit(branch_name)
 
 func _on_config_button_pressed(key_name: String, button: Button, base_branch_name: String) -> void:
 
@@ -250,13 +253,21 @@ func _on_checkbox_pressed(cbox: CheckBox, branch_name: String) -> void:
 	self.config_tree_configured.emit(branch_name)
 	self.log(LOG_DEBUG, ["Guidot Wizard config:", self.config_tree])
 
-func _on_line_edit_float_change(new_text: String, branch_name: String) -> void:
+func _on_line_edit_float_change(new_text: String, branch_name: String, line_edit: LineEdit, config_dict: Dictionary) -> void:
 	
 	var value: float
+	var min_val: float = config_dict[_GBS.min_value_key]
+	var max_val: float = config_dict[_GBS.max_value_key]
 	if (new_text.is_valid_float()):
 		value = new_text.to_float()
-		self.log(LOG_DEBUG, [branch_name, " value changed to ", value])
-		self._set_config_tree_value(self.config_tree, branch_name.rsplit("."), value) 
+
+		if (value < min_val or value > max_val):
+			value = config_dict[_GBS.value_key]
+			self.log(LOG_DEBUG, [branch_name, "new value (", value, ") exceeded the min (", min_val, ") and max (", max_val, ")"])
+			line_edit.text = str(value)
+		else:
+			self._set_config_tree_value(self.config_tree, branch_name.rsplit("."), value) 
+			self.log(LOG_INFO, [branch_name, " value changed to ", value])
 	else:
 		self.log(LOG_WARNING, [branch_name, "expects float. Instead", new_text, "received."])
 

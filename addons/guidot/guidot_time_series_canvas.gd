@@ -8,98 +8,13 @@ var window_color: Color
 signal ui_action_request
 signal parent_focus_requested
 
-# Note (Khalid): For now, I wish to standardize the font throughout the whole node
-# This may bite me in the future, if for some reason, I wish to have different fonts
-# for different parts of the graph, but I kinda doubt that would happen
-@onready var font_node: SystemFont = SystemFont.new()
-
-# TODO (Khalid): This should only be temporary for prototyping, but the plugin is created
-# I need to find a better way to interface this
-var _guidot_server: Guidot_Data_Server
-var _curr_data_str: String
-var _selected_channels_name: Array
-@onready var _guidot_clock_node: Guidot_Clock = self.get_tree().get_nodes_in_group(Guidot_Common._clock_group_name)[0]
-# TODO: Remove this, since at the moment, without mouse_x being initialized, it breaks
-@onready var _graph_manager: Guidot_Time_Series_Graph_Manager = Guidot_Time_Series_Graph_Manager.new()
-
-@onready var default_window_size: Vector2 = Vector2(620, 360)
-@onready var default_window_color: Color = Guidot_Utils.get_color("gd_black")
-@onready var prev_display_color: Color = default_window_color
-
-# Components used for building the graph 
-@onready var plot_node: Guidot_Plot_Canvas = Guidot_Plot_Canvas.new()
-@onready var t_axis_node: Guidot_T_Axis_Canvas = Guidot_T_Axis_Canvas.new()
-
-@onready var _setting_button: Button = Button.new()
-@onready var _setting_icon: Texture2D = load("res://addons/guidot/icons/gear_icon.png")
-
-@onready var _guidot_wizard: Guidot_Wizard
-
-func _on_setting_pressed() -> void:
-	var graph_manager_pos: Vector2 = Vector2()
-	graph_manager_pos.x = DisplayServer.screen_get_size().x/2 - self._graph_manager.size.x/2
-	graph_manager_pos.y = DisplayServer.screen_get_size().y/2 - self._graph_manager.size.y/2
-	self.log(LOG_DEBUG, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
-	self._graph_manager.show_panel_at_pos(graph_manager_pos)
-
-	# Guidot_Wizard upon ready will insert itself into its own group name
-	# There should only be one guidot wizard, so the first node in this array should be the guidot wizard itself
-	self._guidot_wizard = self.get_tree().get_nodes_in_group(Guidot_Common._wizard_group_name)[0]
-	self._guidot_wizard.config_tree_configured.connect(self._handle_new_config)
-	self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree)
-
-@onready var _pause_button: Button = Button.new()
-@onready var _pause_icon: Texture2D = load("res://addons/guidot/icons/pause_icon.png")
-@onready var _play_icon: Texture2D = load("res://addons/guidot/icons/play_icon.png")
-
-func _on_pause_pressed() -> void:
-	self._is_pause = not self._is_pause
-	if (self._is_pause):
-		self._pause_button.set_button_icon(self._play_icon)
-		self.ui_action_request.emit(Guidot_Common.UI_Action.PAUSE_MODE)
-	else:
-		self._pause_button.set_button_icon(self._pause_icon)
-		self.ui_action_request.emit(Guidot_Common.UI_Action.RESUME_MODE)
-	self.log(LOG_DEBUG, ["Pause pressed"])
-
-@onready var _edit_button: Button = Button.new()
-@onready var _edit_icon: Texture2D = load("res://addons/guidot/icons/edit_icon.png")
-
-func _on_edit_pressed() -> void:
-	self.ui_action_request.emit(Guidot_Common.UI_Action.EDIT_MODE)
-
-@onready var _cursor_button: Button = Button.new()
-@onready var _cursor_icon: Texture2D = load("res://addons/guidot/icons/cursor_icon.png")
-
-func _on_cursor_pressed() -> void:
-	self.ui_action_request.emit(Guidot_Common.UI_Action.CURSOR_MODE)
-
-@onready var _toggle_graph_button: Button = Button.new()
-@onready var _toggle_graph_icon: Texture2D = load("res://addons/guidot/icons/toggle_graph_icon.png")
-
-func _on_toggle_graph_pressed() -> void:
-	self.ui_action_request.emit(Guidot_Common.UI_Action.TOGGLE_GRAPH_MODE)
-	
-	if (self.t_axis_node.get_current_t_axis_mode() == Guidot_T_Axis_Canvas.TAxisMode.FIXED):
-		self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.SLIDING_WINDOW)
-	else:
-		self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.FIXED)
-
-@onready var _hide_graph_button: Button = Button.new()
-@onready var _hide_graph_icon: Texture2D = load("res://addons/guidot/icons/hide_icon.png")
-
-func _on_hide_graph_pressed() -> void:
-	self.visible = not self.visible
-
-@onready var hotkey_enable: bool = true
-@onready var _toggle_hotkey_button: Button = Button.new()
-@onready var _toggle_hotkey_icon: Texture2D = load("res://addons/guidot/icons/toggle_hotkey_icon.png")
-
 const _sync_data_global_key: String = "sync_data_global"
 const _opacity_key: String = "opacity"
 const _graph_buffer_mode_key: String = "graph_mode"
 
-@onready var _sync_data_global: bool = false
+const _y_axis_setup_key: String = "y_axis_setup"
+const _left_axis_count_key: String = "left_axis_count"
+const _right_axis_count_key: String = "right_axis_count"
 
 @onready var _config_tree: Dictionary = {
 	"graph_node_ref": str(self),
@@ -114,39 +29,14 @@ const _graph_buffer_mode_key: String = "graph_mode"
 		self._opacity_key: _GBS.create_float_edit_type(_GBS.SelectionType.SLIDER, self.get_self_modulate().a, 0.0, 1.0, 0.05),
 		self._graph_buffer_mode_key: _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Common.Graph_Buffer_Mode.FIXED,
 			Guidot_Common.Graph_Buffer_Mode.keys(), Guidot_Common.Graph_Buffer_Mode),
+	},
+	self._y_axis_setup_key: {
+		self._left_axis_count_key: _GBS.create_float_edit_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 1, 1, 6, 1),
+		self._right_axis_count_key: _GBS.create_float_edit_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 0, 1, 6, 1),
 	}
 }
 
-func _on_toggle_hotkey_pressed() -> void:
-	self.hotkey_enable = not self.hotkey_enable
-	self.ui_action_request.emit(Guidot_Common.UI_Action.TOGGLE_HOTKEYS)
-
-@onready var _ui_icons: Array = [
-	self._setting_icon,
-	self._play_icon,
-	self._pause_icon,
-	self._edit_icon,
-	self._cursor_icon,
-	self._toggle_graph_icon,
-	self._hide_graph_icon,
-	self._toggle_hotkey_icon,
-]
-
-@onready var _ui_buttons: Array = [
-	self._setting_button,
-	self._pause_button,
-	self._edit_button,
-	self._cursor_button,
-	self._toggle_graph_button,
-	self._hide_graph_button,
-	self._toggle_hotkey_button,
-]
-
-var _prev_opacity_setting: float
-
-var _initialized: bool = false
-
-func _handle_new_config(branch_name: String):
+func _apply_user_config(branch_name: String):
 	# Only react to relevant config changes. If opacity changed, update modulation;
 	# otherwise just queue a redraw.
 	if branch_name == null:
@@ -199,8 +89,136 @@ func _handle_new_config(branch_name: String):
 					self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.SLIDING_WINDOW)
 			queue_redraw()
 
+		self._left_axis_count_key:
+			var left_axis_count: int = get_key_leaf_value.call()
+			var right_axis_count: int = self._config_tree[self._y_axis_setup_key][self._right_axis_count_key][_GBS.value_key]
+			self._on_y_axis_changes_applied(Vector2(left_axis_count, right_axis_count))
+
+		self._right_axis_count_key:
+			var right_axis_count: int = get_key_leaf_value.call()
+			var left_axis_count: int = self._config_tree[self._y_axis_setup_key][self._left_axis_count_key][_GBS.value_key]
+			self._on_y_axis_changes_applied(Vector2(left_axis_count, right_axis_count))
+
 		_:
 			queue_redraw()
+
+# Note (Khalid): For now, I wish to standardize the font throughout the whole node
+# This may bite me in the future, if for some reason, I wish to have different fonts
+# for different parts of the graph, but I kinda doubt that would happen
+@onready var font_node: SystemFont = SystemFont.new()
+
+# TODO (Khalid): This should only be temporary for prototyping, but the plugin is created
+# I need to find a better way to interface this
+var _guidot_server: Guidot_Data_Server
+var _curr_data_str: String
+var _selected_channels_name: Array
+@onready var _guidot_clock_node: Guidot_Clock = self.get_tree().get_nodes_in_group(Guidot_Common._clock_group_name)[0]
+# TODO: Remove this, since at the moment, without mouse_x being initialized, it breaks
+@onready var _graph_manager: Guidot_Time_Series_Graph_Manager = Guidot_Time_Series_Graph_Manager.new()
+
+@onready var default_window_size: Vector2 = Vector2(620, 360)
+@onready var default_window_color: Color = Guidot_Utils.get_color("gd_black")
+@onready var prev_display_color: Color = default_window_color
+
+# Components used for building the graph 
+@onready var plot_node: Guidot_Plot_Canvas = Guidot_Plot_Canvas.new()
+@onready var t_axis_node: Guidot_T_Axis_Canvas = Guidot_T_Axis_Canvas.new()
+
+@onready var _setting_button: Button = Button.new()
+@onready var _setting_icon: Texture2D = load("res://addons/guidot/icons/gear_icon.png")
+
+@onready var _guidot_wizard: Guidot_Wizard
+
+func _on_setting_pressed() -> void:
+	var graph_manager_pos: Vector2 = Vector2()
+	graph_manager_pos.x = DisplayServer.screen_get_size().x/2 - self._graph_manager.size.x/2
+	graph_manager_pos.y = DisplayServer.screen_get_size().y/2 - self._graph_manager.size.y/2
+	self.log(LOG_DEBUG, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
+	self._graph_manager.show_panel_at_pos(graph_manager_pos)
+
+	# Guidot_Wizard upon ready will insert itself into its own group name
+	# There should only be one guidot wizard, so the first node in this array should be the guidot wizard itself
+	self._guidot_wizard = self.get_tree().get_nodes_in_group(Guidot_Common._wizard_group_name)[0]
+	self._guidot_wizard.config_tree_configured.connect(self._apply_user_config)
+	self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree)
+
+@onready var _pause_button: Button = Button.new()
+@onready var _pause_icon: Texture2D = load("res://addons/guidot/icons/pause_icon.png")
+@onready var _play_icon: Texture2D = load("res://addons/guidot/icons/play_icon.png")
+
+func _on_pause_pressed() -> void:
+	self._is_pause = not self._is_pause
+	if (self._is_pause):
+		self._pause_button.set_button_icon(self._play_icon)
+		self.ui_action_request.emit(Guidot_Common.UI_Action.PAUSE_MODE)
+	else:
+		self._pause_button.set_button_icon(self._pause_icon)
+		self.ui_action_request.emit(Guidot_Common.UI_Action.RESUME_MODE)
+	self.log(LOG_DEBUG, ["Pause pressed"])
+
+@onready var _edit_button: Button = Button.new()
+@onready var _edit_icon: Texture2D = load("res://addons/guidot/icons/edit_icon.png")
+
+func _on_edit_pressed() -> void:
+	self.ui_action_request.emit(Guidot_Common.UI_Action.EDIT_MODE)
+
+@onready var _cursor_button: Button = Button.new()
+@onready var _cursor_icon: Texture2D = load("res://addons/guidot/icons/cursor_icon.png")
+
+func _on_cursor_pressed() -> void:
+	self.ui_action_request.emit(Guidot_Common.UI_Action.CURSOR_MODE)
+
+@onready var _toggle_graph_button: Button = Button.new()
+@onready var _toggle_graph_icon: Texture2D = load("res://addons/guidot/icons/toggle_graph_icon.png")
+
+func _on_toggle_graph_pressed() -> void:
+	self.ui_action_request.emit(Guidot_Common.UI_Action.TOGGLE_GRAPH_MODE)
+	
+	if (self.t_axis_node.get_current_t_axis_mode() == Guidot_T_Axis_Canvas.TAxisMode.FIXED):
+		self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.SLIDING_WINDOW)
+	else:
+		self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.FIXED)
+
+@onready var _hide_graph_button: Button = Button.new()
+@onready var _hide_graph_icon: Texture2D = load("res://addons/guidot/icons/hide_icon.png")
+
+func _on_hide_graph_pressed() -> void:
+	self.visible = not self.visible
+
+@onready var hotkey_enable: bool = true
+@onready var _toggle_hotkey_button: Button = Button.new()
+@onready var _toggle_hotkey_icon: Texture2D = load("res://addons/guidot/icons/toggle_hotkey_icon.png")
+
+@onready var _sync_data_global: bool = false
+
+func _on_toggle_hotkey_pressed() -> void:
+	self.hotkey_enable = not self.hotkey_enable
+	self.ui_action_request.emit(Guidot_Common.UI_Action.TOGGLE_HOTKEYS)
+
+@onready var _ui_icons: Array = [
+	self._setting_icon,
+	self._play_icon,
+	self._pause_icon,
+	self._edit_icon,
+	self._cursor_icon,
+	self._toggle_graph_icon,
+	self._hide_graph_icon,
+	self._toggle_hotkey_icon,
+]
+
+@onready var _ui_buttons: Array = [
+	self._setting_button,
+	self._pause_button,
+	self._edit_button,
+	self._cursor_button,
+	self._toggle_graph_button,
+	self._hide_graph_button,
+	self._toggle_hotkey_button,
+]
+
+var _prev_opacity_setting: float
+
+var _initialized: bool = false
 
 class AxisHandler:
 
