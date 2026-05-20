@@ -16,16 +16,19 @@ const _y_axis_setup_key: String = "y_axis_setup"
 const _left_axis_count_key: String = "left_axis_count"
 const _right_axis_count_key: String = "right_axis_count"
 
+const _t_axis_setup_key: String = "t_axis_setup"
+const _t_axis_range_key: String = "sliding_window_size"
+
 @onready var _config_tree: Dictionary = {
 	"graph_node_ref": str(self),
 	"graph_node_id": str(self.get_instance_id()),
 	"guidot_type": str(self.name),
-	"global": {
+	_GBS.global_key: {
 		# TODO: Sync all graphs configuration
 		self._sync_data_global_key: _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, self._sync_data_global),
 		self._opacity_key: _GBS.create_float_edit_type(_GBS.SelectionType.SLIDER, self.get_self_modulate().a, 0.0, 1.0, 0.05),
 	},
-	"local": {
+	_GBS.local_key: {
 		self._opacity_key: _GBS.create_float_edit_type(_GBS.SelectionType.SLIDER, self.get_self_modulate().a, 0.0, 1.0, 0.05),
 		self._graph_buffer_mode_key: _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Common.Graph_Buffer_Mode.FIXED,
 			Guidot_Common.Graph_Buffer_Mode.keys(), Guidot_Common.Graph_Buffer_Mode),
@@ -33,9 +36,16 @@ const _right_axis_count_key: String = "right_axis_count"
 	self._y_axis_setup_key: {
 		self._left_axis_count_key: _GBS.create_float_edit_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 1, 1, 6, 1),
 		self._right_axis_count_key: _GBS.create_float_edit_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 0, 1, 6, 1),
+	},
+	self._t_axis_setup_key: {
+		"realtime_setup": {
+			self._t_axis_range_key: _GBS.create_float_edit_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 10, 0, 10000, 10),
+		}
 	}
 }
 
+# Handles all the user configuration
+# Communicates through the use of Guidot Wizard
 func _apply_user_config(branch_name: String):
 	# Only react to relevant config changes. If opacity changed, update modulation;
 	# otherwise just queue a redraw.
@@ -98,6 +108,10 @@ func _apply_user_config(branch_name: String):
 			var right_axis_count: int = get_key_leaf_value.call()
 			var left_axis_count: int = self._config_tree[self._y_axis_setup_key][self._left_axis_count_key][_GBS.value_key]
 			self._on_y_axis_changes_applied(Vector2(left_axis_count, right_axis_count))
+
+		self._t_axis_range_key:
+			var range_s: float = get_key_leaf_value.call()
+			self.t_axis_node.set_window_size_s(range_s)
 
 		_:
 			queue_redraw()
@@ -1046,17 +1060,17 @@ func _input(event: InputEvent) -> void:
 				pass
 
 	# For hotkeys
-	if (Input.is_action_just_pressed("nerd_stats")):
-		self._toggle_nerd_stats = !self._toggle_nerd_stats
-		self.log(LOG_DEBUG, ["Toggle for nerd stats:", self._toggle_nerd_stats])
-		self.log(LOG_INFO, ["Displaying nerd stats"])
+	# if (Input.is_action_just_pressed("nerd_stats")):
+	# 	self._toggle_nerd_stats = !self._toggle_nerd_stats
+	# 	self.log(LOG_DEBUG, ["Toggle for nerd stats:", self._toggle_nerd_stats])
+	# 	self.log(LOG_INFO, ["Displaying nerd stats"])
 
-		if (self._toggle_nerd_stats):
-			var curr_mouse_pos: Vector2 = self.get_viewport().get_mouse_position()
-			debug_panel.set_position(curr_mouse_pos)
-			debug_panel.show()
-		else:
-			debug_panel.hide()
+	# 	if (self._toggle_nerd_stats):
+	# 		var curr_mouse_pos: Vector2 = self.get_viewport().get_mouse_position()
+	# 		debug_panel.set_position(curr_mouse_pos)
+	# 		debug_panel.show()
+	# 	else:
+	# 		debug_panel.hide()
 
 	if event is InputEventKey and event.pressed:
 
