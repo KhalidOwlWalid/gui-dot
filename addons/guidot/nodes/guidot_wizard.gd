@@ -10,6 +10,7 @@ signal config_tree_configured(branch_name: String)
 @onready var _menu_tab_cont: TabContainer = TabContainer.new()
 @onready var _graph_config_cont: ScrollContainer = ScrollContainer.new()
 @onready var _data_subscriber_cont: ScrollContainer = ScrollContainer.new()
+@onready var _data_inspector_cont: ScrollContainer = ScrollContainer.new()
 
 # VBox for graph configurator
 @onready var _graph_config_vbox = VBoxContainer.new()
@@ -353,8 +354,6 @@ func _ready() -> void:
 	var base_color: Color = Guidot_Utils.get_guidot_base_color()
 	var base_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(base_color, base_color)
 	self._graph_config_cont.add_theme_stylebox_override("panel", base_stylebox)
-	self._data_subscriber_cont.name = "Data Subscriber"
-	self._data_subscriber_cont.add_theme_stylebox_override("panel", base_stylebox)
 
 	self._graph_config_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	self._graph_config_vbox.add_theme_constant_override("separation", 3)
@@ -362,9 +361,17 @@ func _ready() -> void:
 
 	var _data_sub_vbox = VBoxContainer.new()
 	self._data_subscriber_cont.add_child(_data_sub_vbox)
+	self._data_subscriber_cont.name = "Data Subscriber"
+	self._data_subscriber_cont.add_theme_stylebox_override("panel", base_stylebox)
+
+	var _data_inspector_vbox = VBoxContainer.new()
+	self._data_inspector_cont.add_child(_data_inspector_vbox)
+	self._data_inspector_cont.name = "Data Inspector"
+	self._data_inspector_cont.add_theme_stylebox_override("panel", base_stylebox)
 
 	self._menu_tab_cont.add_child(self._graph_config_cont)
 	self._menu_tab_cont.add_child(self._data_subscriber_cont)
+	self._menu_tab_cont.add_child(self._data_inspector_cont)
 	self._menu_vbox.add_child(_wizard_panel_cont)
 
 	var config_tree: Dictionary = {}

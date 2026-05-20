@@ -33,6 +33,13 @@ func _ready() -> void:
 func change_graph_mode(new_mode: TAxisMode):
 	self._mode = new_mode
 
+func set_window_size_s(time_window_s: float) -> void:
+	if (time_window_s < 0):
+		self.log(LOG_DEBUG, ["Invalid time window of", time_window_s, "s"])
+		return
+	else:
+		window_size_s = time_window_s
+
 # Override so that any user-initiated range change (inline edit, Axis Limit
 # Settings apply) switches the axis to FIXED mode.  The internal sliding-
 # window update bypasses this by calling _advance_window() instead.
