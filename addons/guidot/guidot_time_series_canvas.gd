@@ -143,18 +143,23 @@ var _selected_channels_name: Array
 
 @onready var _guidot_wizard: Guidot_Wizard
 
-func _on_setting_pressed() -> void:
+func _on_setting_pressed(show_settings: bool) -> void:
 	var graph_manager_pos: Vector2 = Vector2()
 	graph_manager_pos.x = DisplayServer.screen_get_size().x/2 - self._graph_manager.size.x/2
 	graph_manager_pos.y = DisplayServer.screen_get_size().y/2 - self._graph_manager.size.y/2
 	self.log(LOG_DEBUG, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
-	self._graph_manager.show_panel_at_pos(graph_manager_pos)
+	# self._graph_manager.show_panel_at_pos(graph_manager_pos)
 
-	# Guidot_Wizard upon ready will insert itself into its own group name
-	# There should only be one guidot wizard, so the first node in this array should be the guidot wizard itself
-	self._guidot_wizard = self.get_tree().get_nodes_in_group(Guidot_Common._wizard_group_name)[0]
-	self._guidot_wizard.config_tree_configured.connect(self._apply_user_config)
-	self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree)
+	if (show_settings):
+		# Guidot_Wizard upon ready will insert itself into its own group name
+		# There should only be one guidot wizard, so the first node in this array should be the guidot wizard itself
+		self._guidot_wizard = self.get_tree().get_nodes_in_group(Guidot_Common._wizard_group_name)[0]
+		self._guidot_wizard.config_tree_configured.connect(self._apply_user_config)
+		self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree)
+		self.ui_action_request.emit(Guidot_Common.UI_Action.FOCUS_MODE)
+	else:
+		self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", {})
+		self.ui_action_request.emit(Guidot_Common.UI_Action.REMOVE_FOCUS)
 
 @onready var _pause_button: Button = Button.new()
 @onready var _pause_icon: Texture2D = load("res://addons/guidot/icons/pause_icon.png")
@@ -1083,6 +1088,9 @@ func _input(event: InputEvent) -> void:
 
 		if (event.keycode == KEY_G):
 			self._on_toggle_graph_pressed()
+
+		if (event.keycode == KEY_ESCAPE):
+			self._on_setting_pressed(false)
 
 func _set_mouse_filter_action():
 	if (self._curr_ui_mode == Guidot_Time_Series_Graph.UI_Mode.EDIT or self._curr_ui_mode == Guidot_Time_Series_Graph.UI_Mode.SELECTED):
