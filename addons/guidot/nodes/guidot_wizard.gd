@@ -10,6 +10,7 @@ signal config_tree_configured(branch_name: String)
 @onready var _menu_tab_cont: TabContainer = TabContainer.new()
 @onready var _graph_config_cont: ScrollContainer = ScrollContainer.new()
 @onready var _data_subscriber_cont: ScrollContainer = ScrollContainer.new()
+@onready var _data_config_cont: ScrollContainer = ScrollContainer.new()
 @onready var _data_inspector_cont: ScrollContainer = ScrollContainer.new()
 
 # VBox for graph configurator
@@ -27,6 +28,16 @@ class _GBS extends Guidot_Base_Setting:
 # Helps with storing the HBoxContainer object of each configuration to allow us to hide/unhide
 # the objects when not needed
 var _internal_config_tree: Dictionary
+
+class DataSubscriber:
+	
+	# Stores the server registry as parent dictionary
+	# Nested then by groups, and then nodes. The hierarchy looks as follows
+	# Server -> Groups -> Nodes
+	var _server_manager: Dictionary = {}
+
+	func append_server(server: Guidot_Data_Server) -> void:
+		self._server_manager[server] = server
 
 func log(log_level: Guidot_Log.Log_Level, msg: Array) -> void:
 	Guidot_Log.gd_log(log_level, self.name, msg)
@@ -364,6 +375,11 @@ func _ready() -> void:
 	self._data_subscriber_cont.name = "Data Subscriber"
 	self._data_subscriber_cont.add_theme_stylebox_override("panel", base_stylebox)
 
+	var _data_config_vbox = VBoxContainer.new()
+	self._data_config_cont.add_child(_data_config_vbox)
+	self._data_config_cont.name = "Data Configuration"
+	self._data_config_cont.add_theme_stylebox_override("panel", base_stylebox)
+
 	var _data_inspector_vbox = VBoxContainer.new()
 	self._data_inspector_cont.add_child(_data_inspector_vbox)
 	self._data_inspector_cont.name = "Data Inspector"
@@ -371,6 +387,7 @@ func _ready() -> void:
 
 	self._menu_tab_cont.add_child(self._graph_config_cont)
 	self._menu_tab_cont.add_child(self._data_subscriber_cont)
+	self._menu_tab_cont.add_child(self._data_config_cont)
 	self._menu_tab_cont.add_child(self._data_inspector_cont)
 	self._menu_vbox.add_child(_wizard_panel_cont)
 

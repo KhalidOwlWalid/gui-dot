@@ -79,7 +79,6 @@ func _ready() -> void:
 	self.mouse_entered.connect(self._on_mouse_entered)
 	self.mouse_exited.connect(self._on_mouse_exited)
 
-
 func _on_ui_action_request(action: Guidot_Common.UI_Action):
 	
 	match (action):
@@ -345,6 +344,7 @@ func _input(event: InputEvent) -> void:
 					self._zoom_start_pos = get_local_mouse_position()
 					self._zoom_curr_pos = _zoom_start_pos
 					self._is_zooming = true
+					self._parent_node._on_setting_pressed(true)
 					queue_redraw()
 				elif not event.pressed and _is_zooming:
 					self._is_zooming = false
@@ -372,7 +372,15 @@ func _input(event: InputEvent) -> void:
 				if _curr_cursor_pos != get_local_mouse_position():
 					_curr_cursor_pos = get_local_mouse_position()
 					queue_redraw()
-			
+
+	elif (self._curr_graph_mode == Graph_Buffer_Mode.REALTIME):
+		if event is InputEventMouseButton:
+			if event.button_index == MOUSE_BUTTON_LEFT:
+				if event.pressed and self._mouse_in:
+					# This needs to be here in the plot node since the plot node will block any form of mouse input onto its parent
+					# due to the set mouse filter
+					self._parent_node._on_setting_pressed(true)
+		
 func _process(delta: float) -> void:
 
 	# If the mode has changed, queue a redraw to ensure that any leftover texts from the previous mode are cleared

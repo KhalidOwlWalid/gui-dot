@@ -39,6 +39,7 @@ enum UI_Mode {
 	PREVIEW,
 	SETTINGS,
 	SELECTED,
+	FOCUS,
 }
 
 enum Resize_Corner {
@@ -166,6 +167,14 @@ func _on_ui_action_request(action: Guidot_Common.UI_Action):
 		Guidot_Common.UI_Action.TOGGLE_HOTKEYS:
 			pass
 
+		Guidot_Common.UI_Action.FOCUS_MODE:
+			self._prev_ui_mode = self._curr_ui_mode
+			self._curr_ui_mode = UI_Mode.FOCUS
+
+		Guidot_Common.UI_Action.REMOVE_FOCUS:
+			self._prev_ui_mode = self._curr_ui_mode
+			self._curr_ui_mode = UI_Mode.DATA_DISPLAY
+
 func _on_mouse_entered() -> void:
 	self._mouse_in = true
 
@@ -243,7 +252,15 @@ func _input(event: InputEvent) -> void:
 		else:
 			pass
 
+	if (event is InputEventMouseButton and event.pressed):
+
+		if (event.button_index == MOUSE_BUTTON_LEFT and not self._mouse_in):
+			pass
+
 	match (self._curr_ui_mode):
+
+		UI_Mode.FOCUS:
+			self.set_stylebox_color(Color.WHITE)
 
 		UI_Mode.DATA_DISPLAY:
 			self.set_stylebox_color(Color(0, 0, 0, 0))
