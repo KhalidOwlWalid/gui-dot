@@ -344,6 +344,8 @@ func _input(event: InputEvent) -> void:
 					self._zoom_start_pos = get_local_mouse_position()
 					self._zoom_curr_pos = _zoom_start_pos
 					self._is_zooming = true
+					
+					# If the user left-click on the plot area, open the wizard menu page
 					self._parent_node._on_setting_pressed(true)
 					queue_redraw()
 				elif not event.pressed and _is_zooming:
