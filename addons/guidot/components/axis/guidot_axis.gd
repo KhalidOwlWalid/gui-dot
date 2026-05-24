@@ -82,6 +82,9 @@ func setup_axis_range(min: float, max: float, trigger_redraw: bool = true) -> vo
 	if (trigger_redraw):
 		queue_redraw()
 
+func set_axis_color(color: Color) -> void:
+	self.color = color
+
 func get_axis_range() -> Vector2:
 	return Vector2(self.min_val, self.max_val)
 
@@ -218,17 +221,10 @@ func _draw() -> void:
 func _process(_delta: float) -> void:
 	if _inline_edit == null or _inline_edit.visible:
 		return
-	# var local_mouse: Vector2 = get_local_mouse_position()
-	# var new_hover_min: bool = _mouse_in and _min_label_rect.has_point(local_mouse)
-	# var new_hover_max: bool = _mouse_in and _max_label_rect.has_point(local_mouse)
-	# if new_hover_min != _hover_min or new_hover_max != _hover_max:
-	# 	_hover_min = new_hover_min
-	# 	_hover_max = new_hover_max
 
 	if self._axis_drag_mode_active:
 		var local_mouse: Vector2 = get_local_mouse_position()
-
-	queue_redraw()
+		queue_redraw()
 
 func _on_mouse_entered() -> void:
 	self.last_box_color = self.color

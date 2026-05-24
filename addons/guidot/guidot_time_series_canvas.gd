@@ -26,16 +26,16 @@ const _t_axis_range_key: String = "sliding_window_size"
 	_GBS.global_key: {
 		# TODO: Sync all graphs configuration
 		self._sync_data_global_key: _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, self._sync_data_global),
-		self._opacity_key: _GBS.create_float_edit_type(_GBS.SelectionType.SLIDER, self.get_self_modulate().a, 0.0, 1.0, 0.05),
+		# self._opacity_key: _GBS.create_float_edit_type(_GBS.SelectionType.SLIDER, self.color.a, 0.0, 1.0, 0.05),
 	},
 	_GBS.local_key: {
-		self._opacity_key: _GBS.create_float_edit_type(_GBS.SelectionType.SLIDER, self.get_self_modulate().a, 0.0, 1.0, 0.05),
+		self._opacity_key: _GBS.create_float_edit_type(_GBS.SelectionType.SLIDER, self.color.a, 0.0, 1.0, 0.05),
 		self._graph_buffer_mode_key: _GBS.create_selection_type(_GBS.SelectionType.DROPDOWN, Guidot_Common.Graph_Buffer_Mode.FIXED,
 			Guidot_Common.Graph_Buffer_Mode.keys(), Guidot_Common.Graph_Buffer_Mode),
 	},
 	self._y_axis_setup_key: {
 		self._left_axis_count_key: _GBS.create_float_edit_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 1, 1, 6, 1),
-		self._right_axis_count_key: _GBS.create_float_edit_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 0, 1, 6, 1),
+		self._right_axis_count_key: _GBS.create_float_edit_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 0, 0, 6, 1),
 	},
 	self._t_axis_setup_key: {
 		"realtime_setup": {
@@ -148,18 +148,9 @@ func _on_setting_pressed(show_settings: bool) -> void:
 	graph_manager_pos.x = DisplayServer.screen_get_size().x/2 - self._graph_manager.size.x/2
 	graph_manager_pos.y = DisplayServer.screen_get_size().y/2 - self._graph_manager.size.y/2
 	self.log(LOG_DEBUG, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
+	
+	self.get_tree().call_group(Guidot_Common._graph_group_name, self._graph_in_focus_callback_name, self.name)
 	# self._graph_manager.show_panel_at_pos(graph_manager_pos)
-
-	if (show_settings):
-		# Guidot_Wizard upon ready will insert itself into its own group name
-		# There should only be one guidot wizard, so the first node in this array should be the guidot wizard itself
-		self._guidot_wizard = self.get_tree().get_nodes_in_group(Guidot_Common._wizard_group_name)[0]
-		self._guidot_wizard.config_tree_configured.connect(self._apply_user_config)
-		self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree)
-		self.ui_action_request.emit(Guidot_Common.UI_Action.FOCUS_MODE)
-	else:
-		self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", {})
-		self.ui_action_request.emit(Guidot_Common.UI_Action.REMOVE_FOCUS)
 
 @onready var _pause_button: Button = Button.new()
 @onready var _pause_icon: Texture2D = load("res://addons/guidot/icons/pause_icon.png")
@@ -258,6 +249,7 @@ class AxisHandler:
 	func init_axis(parent: Node, axis_id: Guidot_Y_Axis_Canvas.AxisPosition, axis_range: Vector2, in_use: bool = false):
 		self._axis_node = Guidot_Y_Axis_Canvas.new()
 		self._axis_node.setup_axis_range(axis_range.x, axis_range.y)
+		self._axis_node
 		self._axis_pos = axis_id
 		self._in_use = in_use
 		self._axis_node.axis_limit_changed.connect(self._on_axis_changed)
@@ -275,7 +267,8 @@ class AxisHandler:
 		self._axis_node.setup_axis_range(new_range.x, new_range.y, trigger_redraw)
 
 	func set_axis_modulation(modulated_color: Color):
-		self._axis_node.set_self_modulate(modulated_color)
+		# self._axis_node.set_self_modulate(modulated_color)
+		self._axis_node.color = modulated_color
 
 	func get_axis_range() -> Vector2:
 		return self._axis_node.get_axis_range()
@@ -639,7 +632,6 @@ func _request_buffer_mode() -> void:
 # TODO (Khalid): Make this more fool proof, add checks, or even potentially allow the user to be able to user their own server
 # Check if any server actually exist
 func init_server() -> void:
-	# _guidot_server = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)[0]
 	pass
 
 func _setup_graph_client() -> void:
@@ -651,6 +643,31 @@ func _setup_graph_client() -> void:
 func _register_graph_client() -> void:
 	self.name = Guidot_Utils.generate_unique_name(self, Guidot_Common._graph_group_name)
 	self.add_to_group(self._graph_group_name)
+
+# Ensure that we can use this with other nodes, so we don't have to hard code the names when used in different places
+const _graph_in_focus_callback_name: String = "which_graph_in_focus"
+func which_graph_in_focus(graph_name: String) -> void:
+	var show_settings: bool = (self.name == graph_name)
+
+	self.log(LOG_DEBUG, ["Settings show status for", self.name, "is", show_settings])
+	if (self.name == graph_name):
+		# self.log(LOG_DEBUG, ["Current graph_name:", graph_name, ", I am ", self.name, "with config tree: ", self._config_tree])
+		# Guidot_Wizard upon ready will insert itself into its own group name
+		# There should only be one guidot wizard, so the first node in this array should be the guidot wizard itself
+		self._guidot_wizard = self.get_tree().get_nodes_in_group(Guidot_Common._wizard_group_name)[0]
+		self._guidot_wizard.config_tree_configured.connect(self._apply_user_config)
+		self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree)
+		self.ui_action_request.emit(Guidot_Common.UI_Action.FOCUS_MODE)
+	elif (self.name != graph_name):
+		# self.log(LOG_DEBUG, ["Current graph_name:", graph_name, ", I am ", self.name, "with config tree: ", self._config_tree["graph_node_ref"]])
+		# self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", {})
+		# self._guidot_wizard.config_tree_configured.disconnect(self._apply_user_config)
+
+		# We need to disconnect the signal since we don't want to continuously add the callback multiple times
+		if (self._guidot_wizard != null):
+			print(self._guidot_wizard.is_connected("config_tree_configured", self._apply_user_config))
+			self._guidot_wizard.config_tree_configured.disconnect(self._apply_user_config)
+		self.ui_action_request.emit(Guidot_Common.UI_Action.REMOVE_FOCUS)
 
 func _get_data() -> PackedVector2Array:
 
@@ -927,18 +944,25 @@ func _on_graph_opacity_changed(alpha: float) -> void:
 	# This allows us to finely control the opacity of our graphs and each of its components
 	var a: float = clamp(alpha, 0.0, 1.0)
 	var modulated_color: Color = Color(1.0, 1.0, 1.0, a)
-	self.set_self_modulate(modulated_color)
+	var current_color = self.color
+	current_color.a = a
+	self.color = current_color
+	# self.set_self_modulate(modulated_color)
 	
 	# For the axis, we still want to see the data being plotted, so at minimum, an alpha of 0.3
 	# would still allow you to see the plots nicely
 	if (self._curr_ui_mode == Guidot_Time_Series_Graph.UI_Mode.DATA_DISPLAY):
 		a = clamp(alpha, 0.3, 1.0)
+	current_color.a = a 
 	modulated_color = Color(1.0, 1.0, 1.0, a)
-	self.plot_node.set_self_modulate(modulated_color)
-	self.t_axis_node.set_self_modulate(modulated_color)
+	# self.plot_node.set_self_modulate(modulated_color)
+	# self.t_axis_node.set_self_modulate(modulated_color)
+	self.color = current_color
+	self.plot_node.color = color
+	self.t_axis_node.color = color
 
 	for ax_handler in self._y_axis_manager.get_available_axis_handler():
-		ax_handler.set_axis_modulation(modulated_color)
+		ax_handler.set_axis_modulation(current_color)
 
 	queue_redraw()
 
@@ -965,7 +989,7 @@ func _on_display_frame_resized() -> void:
 	self._setup_plot_node()
 	self.log(LOG_DEBUG, ["The number of available axis handler is: ", len(self._y_axis_manager.get_available_axis_handler())])
 	for axis_handler in self._y_axis_manager.get_available_axis_handler():
-		self._setup_axis(axis_handler.get_axis_node(), axis_handler.get_axis_id(), "y_axis1", Guidot_Utils.get_color("gd_black"), \
+		self._setup_axis(axis_handler.get_axis_node(), axis_handler.get_axis_id(), "y_axis1", self.color, \
 			axis_handler.get_axis_range()) 
 	# Only reposition the t-axis — do not call setup_axis_range() here because
 	# that would force the axis into FIXED mode, overriding SLIDING_WINDOW mode.
