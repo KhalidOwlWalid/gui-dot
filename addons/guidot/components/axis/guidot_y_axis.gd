@@ -45,6 +45,7 @@ var _plot_frame_node: Node = null
 var _drag_tick_increment_cached: float = 0.0
 
 func _ready() -> void:
+	self.log(LOG_DEBUG, ["Calling this function"])
 	self.line_color = Guidot_Utils.get_color("white")
 	self.last_line_color = self.line_color
 	self.ticks_pos = PackedVector2Array()
