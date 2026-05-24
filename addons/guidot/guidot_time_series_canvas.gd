@@ -46,7 +46,7 @@ const _t_axis_range_key: String = "sliding_window_size"
 
 # Handles all the user configuration
 # Communicates through the use of Guidot Wizard
-func _apply_user_config(branch_name: String):
+func _apply_user_config(branch_name: String, new_config_tree: Dictionary):
 	# Only react to relevant config changes. If opacity changed, update modulation;
 	# otherwise just queue a redraw.
 	if branch_name == null:
@@ -57,7 +57,7 @@ func _apply_user_config(branch_name: String):
 	var leaf_key: String = branch_path[-1]
 
 	var get_key_leaf_value = func() -> Variant:
-		var branch_end: Variant = self._config_tree
+		var branch_end: Variant = new_config_tree
 		var leaf_value: Variant
 
 		for branch in branch_path:
@@ -68,6 +68,7 @@ func _apply_user_config(branch_name: String):
 
 		if (branch_end != null and branch_end is Dictionary and branch_end.has(_GBS.value_key)):
 			leaf_value = branch_end[_GBS.value_key]
+			Guidot_Wizard.set_config_tree_value(self._config_tree, branch_path, leaf_value)
 		else:
 			leaf_value = null
 
@@ -150,6 +151,7 @@ func _on_setting_pressed(show_settings: bool) -> void:
 	self.log(LOG_DEBUG, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
 	
 	self.get_tree().call_group(Guidot_Common._graph_group_name, self._graph_in_focus_callback_name, self.name)
+	self.log(LOG_DEBUG, ["Current opacity value is: ", self._config_tree[_GBS.local_key][self._opacity_key]["value"]])
 	# self._graph_manager.show_panel_at_pos(graph_manager_pos)
 
 @onready var _pause_button: Button = Button.new()
@@ -651,7 +653,6 @@ func which_graph_in_focus(graph_name: String) -> void:
 
 	self.log(LOG_DEBUG, ["Settings show status for", self.name, "is", show_settings])
 	if (self.name == graph_name):
-		# self.log(LOG_DEBUG, ["Current graph_name:", graph_name, ", I am ", self.name, "with config tree: ", self._config_tree])
 		# Guidot_Wizard upon ready will insert itself into its own group name
 		# There should only be one guidot wizard, so the first node in this array should be the guidot wizard itself
 		self._guidot_wizard = self.get_tree().get_nodes_in_group(Guidot_Common._wizard_group_name)[0]
@@ -659,11 +660,8 @@ func which_graph_in_focus(graph_name: String) -> void:
 		self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree)
 		self.ui_action_request.emit(Guidot_Common.UI_Action.FOCUS_MODE)
 	elif (self.name != graph_name):
-		# self.log(LOG_DEBUG, ["Current graph_name:", graph_name, ", I am ", self.name, "with config tree: ", self._config_tree["graph_node_ref"]])
-		# self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", {})
-		# self._guidot_wizard.config_tree_configured.disconnect(self._apply_user_config)
-
-		# We need to disconnect the signal since we don't want to continuously add the callback multiple times
+		# We need to disconnect the signal since we don't want to continuously add the callback multiple times if it were
+		# to be selected again
 		if (self._guidot_wizard != null):
 			print(self._guidot_wizard.is_connected("config_tree_configured", self._apply_user_config))
 			self._guidot_wizard.config_tree_configured.disconnect(self._apply_user_config)

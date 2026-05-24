@@ -23,7 +23,7 @@ class _GBS extends Guidot_Base_Setting:
 
 @onready var SelectionType = _GBS.SelectionType
 
-@onready var config_tree: Dictionary = {}
+@onready var wizard_config_tree: Dictionary = {}
 
 # Helps with storing the HBoxContainer object of each configuration to allow us to hide/unhide
 # the objects when not needed
@@ -161,10 +161,16 @@ func _create_dropdown_selection(def_val: Variant, config_dict: Dictionary):
 
 func _create_slider(def_val: float, min_val: float, max_val: float, step: float = 1) -> HSlider:
 	var slider: HSlider = HSlider.new()
-	slider.value = def_val
+	# NOTE
+	# Do not set the value until you have set all of the properties of the slider
+	# One bug that took awhile to solve was that the slider does not reflect the default value and that is due to the fact that, the slider's
+	# default step is 1, and setting anything that is not of increment of 1, will cause it to round it down (e.g. setting 0.1 will round it down
+	# to 0), hence the bug, will cause the slider to either be 0 or 1
+	# value needs to be set last as to not get overriden by the slider's properties
+	slider.step = step
 	slider.min_value = min_val
 	slider.max_value = max_val
-	slider.step = step
+	slider.value = def_val
 	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var slider_highlight_color: Color = Color.SKY_BLUE
 	var slider_highlight_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(slider_highlight_color,
@@ -222,9 +228,8 @@ func _on_slider_value_changed(value: float, branch_name: String) -> void:
 	# Stupid, I know, dont ask, I could have just duplicate the function itself, but I'm lazy
 	# Unless I see bottlenecks with this method, then this is fine
 	# self._on_line_edit_float_change(str(value), branch_name, config_dict)
-	self._set_config_tree_value(self.config_tree, branch_name.rsplit("."), value) 
-	self.log(LOG_INFO, [branch_name, " value changed to ", value])
-	self.config_tree_configured.emit(branch_name)
+	Guidot_Wizard.set_config_tree_value(self.wizard_config_tree, branch_name.rsplit("."), value) 
+	self.config_tree_configured.emit(branch_name, self.wizard_config_tree)
 
 func _on_config_button_pressed(key_name: String, button: Button, base_branch_name: String) -> void:
 
@@ -247,7 +252,7 @@ func _on_config_button_pressed(key_name: String, button: Button, base_branch_nam
 # path argument expects a valid full key path (nested dictionary) that exist in the dictionary
 # For instance, foo = {"bar": {"new_val": 1}}
 # The full path for new_val would be "bar.new_val" hence, it expects ["bar", "new_val"]
-func _set_config_tree_value(dict: Dictionary, path: Array, value: Variant) -> void:
+static func set_config_tree_value(dict: Dictionary, path: Array, value: Variant) -> void:
 	
 	# Handles config tree value assignment
 	# Iteratively loops to the correct key before assigning the value
@@ -261,9 +266,9 @@ func _set_config_tree_value(dict: Dictionary, path: Array, value: Variant) -> vo
 	current[path[-1]][_GBS.value_key] = value
 
 func _on_checkbox_pressed(cbox: CheckBox, branch_name: String) -> void:
-	self._set_config_tree_value(self.config_tree, branch_name.rsplit("."), cbox.button_pressed)	
-	self.config_tree_configured.emit(branch_name)
-	self.log(LOG_DEBUG, ["Guidot Wizard config:", self.config_tree])
+	Guidot_Wizard.set_config_tree_value(self.wizard_config_tree, branch_name.rsplit("."), cbox.button_pressed)	
+	self.config_tree_configured.emit(branch_name, self.wizard_config_tree)
+	# self.log(LOG_DEBUG, ["Guidot Wizard config:", self.wizard_config_tree])
 
 func _on_line_edit_float_change(new_text: String, branch_name: String, line_edit: LineEdit, config_dict: Dictionary) -> void:
 	
@@ -278,12 +283,12 @@ func _on_line_edit_float_change(new_text: String, branch_name: String, line_edit
 			self.log(LOG_DEBUG, [branch_name, "new value (", value, ") exceeded the min (", min_val, ") and max (", max_val, ")"])
 			line_edit.text = str(value)
 		else:
-			self._set_config_tree_value(self.config_tree, branch_name.rsplit("."), value) 
+			Guidot_Wizard.set_config_tree_value(self.wizard_config_tree, branch_name.rsplit("."), value) 
 			self.log(LOG_INFO, [branch_name, " value changed to ", value])
 	else:
 		self.log(LOG_WARNING, [branch_name, "expects float. Instead", new_text, "received."])
 
-	self.config_tree_configured.emit(branch_name)
+	self.config_tree_configured.emit(branch_name, self.wizard_config_tree)
 
 # enum_ref stores the reference to the actual enumeration so we can keep back reference the actual enumeration value
 # once the index has been selected
@@ -291,8 +296,8 @@ func _on_dropdown_selected(index: int, dropdown: OptionButton, branch_name: Stri
 	var dropdown_selection: String = dropdown.get_item_text(index)
 	var selected_enum: int = enum_ref[dropdown_selection]
 	self.log(LOG_DEBUG, ["Selected enum is", dropdown_selection, "(", selected_enum, ")"])
-	self._set_config_tree_value(self.config_tree, branch_name.rsplit("."), selected_enum)
-	self.config_tree_configured.emit(branch_name)
+	Guidot_Wizard.set_config_tree_value(self.wizard_config_tree, branch_name.rsplit("."), selected_enum)
+	self.config_tree_configured.emit(branch_name, self.wizard_config_tree)
 
 # Currently, the graph config tree builder only supports up to level 1 depth of nesting
 # so adding a nested dictionary inside another level 1 dictionary will simply add it to the same depth level
@@ -337,12 +342,12 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 			self._graph_config_vbox.add_child(label)
 
 func update_config_tree(config_tree: Dictionary) -> void:
-	self.config_tree = config_tree
+	self.wizard_config_tree = config_tree
 
 	for child_node in self._graph_config_vbox.get_children():
 		child_node.queue_free()
 
-	self._update_graph_config_tree(self.config_tree)
+	self._update_graph_config_tree(self.wizard_config_tree)
 	self.visible = true
 
 func _ready() -> void:
@@ -403,11 +408,9 @@ enum SomeRandom  {
 	GOOD_MORNING,
 }
 
-func _process(delta: float) -> void:
-	super._process(delta)
-
+func populate_fake_config_tree_entry() -> void:
 	if (j == 0):
-		config_tree = {
+		wizard_config_tree = {
 			"graph_node_ref": str(self),
 			"graph_node_id": str(self.get_instance_id()),
 			"graph_type": str(self.name),
@@ -432,8 +435,19 @@ func _process(delta: float) -> void:
 			},
 		}
 
-		self._update_graph_config_tree(config_tree)
+		self._update_graph_config_tree(wizard_config_tree)
 		j += 1
+
+func _process(delta: float) -> void:
+	super._process(delta)
+	# self.populate_fake_config_tree_entry()
 
 func _input(event: InputEvent) -> void:
 	super._input(event)
+
+	if (event is InputEventKey and event.pressed):
+
+		if (event.keycode == KEY_ESCAPE):
+			# Pass an empty dictionary to clear the previously populated config tree
+			self.update_config_tree({})
+			
