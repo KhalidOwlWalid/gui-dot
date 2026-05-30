@@ -27,12 +27,18 @@ var _update_rate_hz: float
 @onready var _data_channel_node_ref: Dictionary = {}
 @onready var _data_channel_name_ref: Dictionary = {}
 
+@onready var _client_registered_flag: bool = false
+
+@onready var _warning_update_rate_ms: float = 10000
+@onready var _curr_ms: float = Time.get_ticks_msec()
+@onready var _last_update_ms: float = Time.get_ticks_msec()
+
 func _ready() -> void:
 	self.init_client()
 	self.scan_for_server()
 
 func set_client_name(client_name: String):
-	self.name = client_name
+	self.set_custom_name(client_name)
 	
 func scan_for_server() -> void:
 	var server_nodes: Array[Node] = self.get_all_guidot_server()
@@ -48,11 +54,14 @@ func scan_for_server() -> void:
 		self._server_node = server_nodes[0]
 		self.log(LOG_INFO, ["Connected to server", self._server_node])
 
-		if (self._server_node.register_client(self)):
+		_client_registered_flag = self._server_node.register_client(self)
+
+		if (self._client_registered_flag):
 			self.log(LOG_INFO, ["Successfully registered", self.name, "to", self._server_node.name])
 
 func init_client() -> void:
 	self.name = Guidot_Utils.generate_unique_name(self, Guidot_Common._client_group_name)
+	self.set_type(Guidot_Common._client_group_name)
 	self.add_to_group(Guidot_Common._client_group_name)
 
 func _on_server_connected() -> void:
@@ -106,3 +115,15 @@ func register_data_channel(data_channel: Guidot_Data) -> void:
 func update_server() -> void:
 	# Ensure that we update server if we have added a new data channel
 	self._server_node.update_channel_manager(self)
+
+func _process(delta: float) -> void:
+	super._process(delta)
+
+	self._curr_ms = Time.get_ticks_msec()
+	var _update_warning: bool = (self._curr_ms - self._last_update_ms > self._warning_update_rate_ms)
+	if (not self._client_registered_flag and _update_warning):
+		# TODO: Improve warning message, this is not user friendly and not helpful at all
+		self.log(LOG_WARNING, [self.name, "has not been registered to any server"])
+		self.log(LOG_WARNING, ["Please register the client: ", self.name, "by calling <server>.register_client()"])
+		self._last_update_ms = self._curr_ms
+

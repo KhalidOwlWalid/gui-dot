@@ -12,6 +12,8 @@ const LOG_WARNING = Guidot_Log.Log_Level.WARNING
 const LOG_INFO = Guidot_Log.Log_Level.INFO
 const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 
+@export var _custom_server_name: String = ""
+
 # Stores the respective client name to its instance id for easy access
 @onready var _client_id_manager: Dictionary = {}
 
@@ -32,6 +34,8 @@ var _graph_buffer_mode: Graph_Buffer_Mode = Graph_Buffer_Mode.REALTIME
 
 func _ready() -> void:
 	self.name = Guidot_Utils.generate_unique_name(self, Guidot_Common._server_group_name)
+	self.set_custom_name(self._custom_server_name)
+	self.set_type(Guidot_Common._server_group_name)
 	self.add_to_group(Guidot_Common._server_group_name)
 
 	# TODO (Khalid): Error handling, if the node does not exist in the group, then server should be responsible in creating one
@@ -47,6 +51,9 @@ func get_graph_buffer_mode() -> Graph_Buffer_Mode:
 
 func get_all_registered_clients() -> Dictionary:
 	return self._client_id_manager
+
+func get_custom_name() -> String:
+	return self._metadata["custom_name"]
 
 # TODO (Khalid): Error handling to check if it is a duplicate
 func register_client(node: Guidot_Data_Client) -> bool:
@@ -78,6 +85,8 @@ func query_data_with_node_id(data_node: Guidot_Data) -> void:
 func get_node_id_with_channel_name(channel_name: String) -> Guidot_Data:
 	return self._data_channel_id_manager[channel_name] 
 
+# TODO: This needs to be refactored to utilize the client properly
+# What I am doing now is simply storing all of the information on the server side completely?
 func update_channel_manager(node: Guidot_Data_Client) -> bool:
 	for data_node_id in node.get_all_data_channels().keys():
 		var data_channel_name: String = node.get_data_channel_name(data_node_id)
