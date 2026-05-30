@@ -7,6 +7,7 @@ signal focus_escaped
 # WARNING: This should not be changed by the user
 static var _server_group_name: String = "Guidot_Server"
 static var _client_group_name: String = "Guidot_Client"
+static var _data_node_name: String = "Guidot_Data"
 static var _clock_group_name: String = "Guidot_Clock"
 static var _graph_group_name: String = "Guidot_Time_Series_Graph"
 static var _wizard_group_name: String = "Guidot_Wizard"
