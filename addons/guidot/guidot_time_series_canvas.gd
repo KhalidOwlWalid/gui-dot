@@ -46,7 +46,7 @@ const _t_axis_range_key: String = "sliding_window_size"
 
 # Handles all the user configuration
 # Communicates through the use of Guidot Wizard
-func _apply_user_config(branch_name: String, new_config_tree: Dictionary):
+func _apply_user_config(branch_name: String, new_value: Variant):
 	# Only react to relevant config changes. If opacity changed, update modulation;
 	# otherwise just queue a redraw.
 	if branch_name == null:
@@ -56,24 +56,25 @@ func _apply_user_config(branch_name: String, new_config_tree: Dictionary):
 	var branch_path: Array = branch_name.rsplit(".")
 	var leaf_key: String = branch_path[-1]
 
-	var get_key_leaf_value = func() -> Variant:
-		var branch_end: Variant = new_config_tree
-		var leaf_value: Variant
+	# var get_key_leaf_value = func() -> Variant:
+	# 	var branch_end: Variant = new_config_tree
+	# 	var leaf_value: Variant
 
-		for branch in branch_path:
-			if branch_end is Dictionary and branch_end.has(branch):
-				branch_end = branch_end[branch]
-			else:
-				branch_end = null
+	# 	for branch in branch_path:
+	# 		if branch_end is Dictionary and branch_end.has(branch):
+	# 			branch_end = branch_end[branch]
+	# 		else:
+	# 			branch_end = null
 
-		if (branch_end != null and branch_end is Dictionary and branch_end.has(_GBS.value_key)):
-			leaf_value = branch_end[_GBS.value_key]
-			Guidot_Wizard.set_config_tree_value(self._config_tree, branch_path, leaf_value)
-		else:
-			leaf_value = null
+	# 	if (branch_end != null and branch_end is Dictionary and branch_end.has(_GBS.value_key)):
+	# 		leaf_value = branch_end[_GBS.value_key]
+	# 		Guidot_Wizard.set_config_tree_value(self._config_tree, branch_path, leaf_value)
+	# 	else:
+	# 		leaf_value = null
 
-		return leaf_value
+	# 	return leaf_value
 
+	Guidot_Wizard.set_config_tree_value(self._config_tree, branch_path, new_value)
 
 	# If opacity changed, read the value from the config tree and apply it.
 	# if key == self._opacity_key:
@@ -81,7 +82,7 @@ func _apply_user_config(branch_name: String, new_config_tree: Dictionary):
 
 		self._opacity_key:
 
-			var alpha: float = get_key_leaf_value.call()
+			var alpha: float = new_value
 			alpha = clamp(alpha, 0.0, 1.0)
 			# Only apply when the value actually changed to avoid unnecessary redraws
 			if alpha != self.get_self_modulate().a:
@@ -89,7 +90,7 @@ func _apply_user_config(branch_name: String, new_config_tree: Dictionary):
 		
 		self._graph_buffer_mode_key:
 			# self.t_axis_node.change_graph_mode(
-			var selected_mode: Graph_Buffer_Mode = get_key_leaf_value.call()
+			var selected_mode: Graph_Buffer_Mode = new_value
 
 			match (selected_mode):
 				Graph_Buffer_Mode.FIXED:
@@ -101,17 +102,17 @@ func _apply_user_config(branch_name: String, new_config_tree: Dictionary):
 			queue_redraw()
 
 		self._left_axis_count_key:
-			var left_axis_count: int = get_key_leaf_value.call()
+			var left_axis_count: int = new_value
 			var right_axis_count: int = self._config_tree[self._y_axis_setup_key][self._right_axis_count_key][_GBS.value_key]
 			self._on_y_axis_changes_applied(Vector2(left_axis_count, right_axis_count))
 
 		self._right_axis_count_key:
-			var right_axis_count: int = get_key_leaf_value.call()
+			var right_axis_count: int = new_value
 			var left_axis_count: int = self._config_tree[self._y_axis_setup_key][self._left_axis_count_key][_GBS.value_key]
 			self._on_y_axis_changes_applied(Vector2(left_axis_count, right_axis_count))
 
 		self._t_axis_range_key:
-			var range_s: float = get_key_leaf_value.call()
+			var range_s: float = new_value
 			self.t_axis_node.set_window_size_s(range_s)
 
 		_:
@@ -152,7 +153,7 @@ func _on_setting_pressed(show_settings: bool) -> void:
 	
 	self.get_tree().call_group(Guidot_Common._graph_group_name, self._graph_in_focus_callback_name, self.name)
 	self.log(LOG_DEBUG, ["Current opacity value is: ", self._config_tree[_GBS.local_key][self._opacity_key]["value"]])
-	# self._graph_manager.show_panel_at_pos(graph_manager_pos)
+	self._graph_manager.show_panel_at_pos(graph_manager_pos)
 
 @onready var _pause_button: Button = Button.new()
 @onready var _pause_icon: Texture2D = load("res://addons/guidot/icons/pause_icon.png")
@@ -646,6 +647,14 @@ func _register_graph_client() -> void:
 	self.name = Guidot_Utils.generate_unique_name(self, Guidot_Common._graph_group_name)
 	self.add_to_group(self._graph_group_name)
 
+func _subscribe_to_data(subscribe: bool, channel_name: String) -> void:
+
+	self.log(LOG_DEBUG, [subscribe, " and ", channel_name])
+	
+	if (subscribe):
+		self._selected_channels_name.append(channel_name)
+		queue_redraw()
+
 # Ensure that we can use this with other nodes, so we don't have to hard code the names when used in different places
 const _graph_in_focus_callback_name: String = "which_graph_in_focus"
 func which_graph_in_focus(graph_name: String) -> void:
@@ -657,6 +666,7 @@ func which_graph_in_focus(graph_name: String) -> void:
 		# There should only be one guidot wizard, so the first node in this array should be the guidot wizard itself
 		self._guidot_wizard = self.get_tree().get_nodes_in_group(Guidot_Common._wizard_group_name)[0]
 		self._guidot_wizard.config_tree_configured.connect(self._apply_user_config)
+		self._guidot_wizard.subscribe_to_data.connect(self._subscribe_to_data)
 		self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree)
 		self.ui_action_request.emit(Guidot_Common.UI_Action.FOCUS_MODE)
 	elif (self.name != graph_name):
@@ -970,6 +980,8 @@ func _draw():
 
 func plot_realtime_data() -> void:
 	
+	self._guidot_server = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)[0]
+
 	if (self._guidot_server != null):
 
 		var selected_gd_data: Dictionary = {}
@@ -979,7 +991,6 @@ func plot_realtime_data() -> void:
 			var channel_data_points: PackedVector2Array = self._guidot_server.query_data_with_channel_name(channel_name)
 			selected_gd_data[gd_data] = channel_data_points
 
-		var test = self._y_axis_manager.get_data_to_axis_map()
 		self.plot_node.plot_multiple_data(selected_gd_data, self._y_axis_manager, Vector2(t_axis_min, t_axis_max))
 
 func _on_display_frame_resized() -> void:

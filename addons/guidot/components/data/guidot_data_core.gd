@@ -6,11 +6,16 @@ extends Node
 @onready var description: String = ""
 
 var _metadata: Dictionary = {
+	# Unique names are internally used by the backend to determine the correct use of node
+	# along with its unique ID
 	"unique_name": "",
 	"unique_id": self.get_instance_id(),
 	"description": "",
 	"unit": "",
-	"data_name": "",
+	# Customized name are metadata for the user of the user to get more personalized naming
+	# options that make sense to them
+	"custom_name": "",
+	"type": "",
 }
 
 enum ClockSourceType {
@@ -27,6 +32,15 @@ func get_metadata() -> Dictionary:
 func set_unique_name(unique_name: String) -> void:
 	self.name = unique_name
 	self._metadata["unique_name"] = unique_name
+
+func set_type(type: String) -> void:
+	self._metadata["type"] = type
+
+func set_custom_name(new_name: String) -> void:
+	self._metadata["custom_name"] = new_name
+
+func get_custom_name() -> String:
+	return self._metadata["custom_name"]
 
 func get_unique_name() -> String:
 	return self._metadata["unique_name"]
@@ -66,3 +80,6 @@ func get_all_guidot_clients() -> Array[Node]:
 
 func get_all_guidot_server() -> Array[Node]:
 	return self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)
+
+func _process(delta: float) -> void:
+	pass

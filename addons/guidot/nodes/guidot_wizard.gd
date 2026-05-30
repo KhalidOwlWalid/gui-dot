@@ -3,6 +3,7 @@ class_name Guidot_Wizard
 extends Guidot_Movable_Panel
 
 signal config_tree_configured(branch_name: String)
+signal subscribe_to_data(subscribe: bool, channel_name: String)
 
 @onready var _menu_vbox: VBoxContainer = VBoxContainer.new()
 @onready var _filter_prop_line_edit: LineEdit = LineEdit.new()
@@ -10,11 +11,12 @@ signal config_tree_configured(branch_name: String)
 @onready var _menu_tab_cont: TabContainer = TabContainer.new()
 @onready var _graph_config_cont: ScrollContainer = ScrollContainer.new()
 @onready var _data_subscriber_cont: ScrollContainer = ScrollContainer.new()
-@onready var _data_config_cont: ScrollContainer = ScrollContainer.new()
+@onready var _axis_manager_cont: ScrollContainer = ScrollContainer.new()
 @onready var _data_inspector_cont: ScrollContainer = ScrollContainer.new()
 
 # VBox for graph configurator
 @onready var _graph_config_vbox = VBoxContainer.new()
+@onready var _data_sub_vbox = VBoxContainer.new()
 
 # Alias for Guidot_Base_Setting
 # Not to be used for overriding any base class Guidot_Base_Setting provides
@@ -28,6 +30,7 @@ class _GBS extends Guidot_Base_Setting:
 # Helps with storing the HBoxContainer object of each configuration to allow us to hide/unhide
 # the objects when not needed
 var _internal_config_tree: Dictionary
+var _data_index_tree: Dictionary
 
 class DataSubscriber:
 	
@@ -95,9 +98,9 @@ func _create_label(config_header: String, center_text: bool = false, color: Colo
 	label1.add_theme_stylebox_override("normal", label_stylebox)
 	return label1
 
-func _create_checkbox_button(def_val: bool) -> CheckBox:
+func _create_checkbox_button(def_val: bool, text: String = "") -> CheckBox:
 	var checkbox: CheckBox = CheckBox.new()
-	checkbox.text = "On"
+	checkbox.text = text
 	checkbox.button_pressed = def_val
 	checkbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var checkbox_color: Color = Guidot_Utils.get_guidot_base_color()
@@ -107,6 +110,8 @@ func _create_checkbox_button(def_val: bool) -> CheckBox:
 
 	var empty_stylebox: StyleBoxEmpty = StyleBoxEmpty.new()
 	checkbox.add_theme_stylebox_override("focus", empty_stylebox)
+	checkbox.add_theme_stylebox_override("hover", empty_stylebox)
+	checkbox.add_theme_stylebox_override("hover_pressed", empty_stylebox)
 
 	return checkbox
 
@@ -192,7 +197,7 @@ func _create_config_row(config_name: String, full_key_name: String, config_dict:
 	match (selection_type):
 
 		_GBS.SelectionType.CHECKBOX:
-			var checkbox: CheckBox = self._create_checkbox_button(def_val)
+			var checkbox: CheckBox = self._create_checkbox_button(def_val, "On")
 			checkbox.pressed.connect(self._on_checkbox_pressed.bind(checkbox, full_key_name))
 			config_hbox.add_child(checkbox)
 
@@ -229,7 +234,7 @@ func _on_slider_value_changed(value: float, branch_name: String) -> void:
 	# Unless I see bottlenecks with this method, then this is fine
 	# self._on_line_edit_float_change(str(value), branch_name, config_dict)
 	Guidot_Wizard.set_config_tree_value(self.wizard_config_tree, branch_name.rsplit("."), value) 
-	self.config_tree_configured.emit(branch_name, self.wizard_config_tree)
+	self.config_tree_configured.emit(branch_name, value)
 
 func _on_config_button_pressed(key_name: String, button: Button, base_branch_name: String) -> void:
 
@@ -267,7 +272,7 @@ static func set_config_tree_value(dict: Dictionary, path: Array, value: Variant)
 
 func _on_checkbox_pressed(cbox: CheckBox, branch_name: String) -> void:
 	Guidot_Wizard.set_config_tree_value(self.wizard_config_tree, branch_name.rsplit("."), cbox.button_pressed)	
-	self.config_tree_configured.emit(branch_name, self.wizard_config_tree)
+	self.config_tree_configured.emit(branch_name, cbox.button_pressed)
 	# self.log(LOG_DEBUG, ["Guidot Wizard config:", self.wizard_config_tree])
 
 func _on_line_edit_float_change(new_text: String, branch_name: String, line_edit: LineEdit, config_dict: Dictionary) -> void:
@@ -284,11 +289,10 @@ func _on_line_edit_float_change(new_text: String, branch_name: String, line_edit
 			line_edit.text = str(value)
 		else:
 			Guidot_Wizard.set_config_tree_value(self.wizard_config_tree, branch_name.rsplit("."), value) 
+			self.config_tree_configured.emit(branch_name, value)
 			self.log(LOG_INFO, [branch_name, " value changed to ", value])
 	else:
 		self.log(LOG_WARNING, [branch_name, "expects float. Instead", new_text, "received."])
-
-	self.config_tree_configured.emit(branch_name, self.wizard_config_tree)
 
 # enum_ref stores the reference to the actual enumeration so we can keep back reference the actual enumeration value
 # once the index has been selected
@@ -297,7 +301,39 @@ func _on_dropdown_selected(index: int, dropdown: OptionButton, branch_name: Stri
 	var selected_enum: int = enum_ref[dropdown_selection]
 	self.log(LOG_DEBUG, ["Selected enum is", dropdown_selection, "(", selected_enum, ")"])
 	Guidot_Wizard.set_config_tree_value(self.wizard_config_tree, branch_name.rsplit("."), selected_enum)
-	self.config_tree_configured.emit(branch_name, self.wizard_config_tree)
+	self.config_tree_configured.emit(branch_name, selected_enum)
+
+func _on_data_sub_cbox_pressed(cbox: CheckBox, channel_name: String) -> void:
+	self.subscribe_to_data.emit(cbox.button_pressed, channel_name)
+
+func query_server_information() -> void:
+	
+	self._data_index_tree.clear()
+
+	var i: int = 0
+	var test = self._data_sub_vbox.get_children()
+	for child_node in self._data_sub_vbox.get_children():
+		# Skip the refresh button, since we know that it is the 0th child in the vbox
+		if (i == 0):
+			pass
+		else:
+			child_node.queue_free()
+		i += 1
+
+	var gd_servers: Array[Node] = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)
+
+	# TODO: Implement caching to avoid having to redraw all of the nodes again
+	for server in gd_servers:
+		self._data_index_tree[server] = {}
+		for client in server.get_all_registered_clients().values():
+			self.log(LOG_DEBUG, ["Server:", server.get_custom_name(), "has", client.get_custom_name()])	
+			var client_button: Button = self._create_config_button(client.get_custom_name())
+			self._data_sub_vbox.add_child(client_button)
+
+			for data_chan_node in client.get_all_data_channels():
+				var channel_cbox: CheckBox = self._create_checkbox_button(false, data_chan_node.get_name())
+				channel_cbox.pressed.connect(self._on_data_sub_cbox_pressed.bind(channel_cbox, data_chan_node.get_name()))
+				self._data_sub_vbox.add_child(channel_cbox)
 
 # Currently, the graph config tree builder only supports up to level 1 depth of nesting
 # so adding a nested dictionary inside another level 1 dictionary will simply add it to the same depth level
@@ -375,15 +411,18 @@ func _ready() -> void:
 	self._graph_config_vbox.add_theme_constant_override("separation", 3)
 	self._graph_config_cont.add_child(self._graph_config_vbox)
 
-	var _data_sub_vbox = VBoxContainer.new()
-	self._data_subscriber_cont.add_child(_data_sub_vbox)
+	var refresh_button: Button = self._create_config_button("Refresh")
+	self._data_sub_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	self._data_sub_vbox.add_child(refresh_button)
+	refresh_button.pressed.connect(self.query_server_information)
+	self._data_subscriber_cont.add_child(self._data_sub_vbox)
 	self._data_subscriber_cont.name = "Data Subscriber"
 	self._data_subscriber_cont.add_theme_stylebox_override("panel", base_stylebox)
 
-	var _data_config_vbox = VBoxContainer.new()
-	self._data_config_cont.add_child(_data_config_vbox)
-	self._data_config_cont.name = "Data Configuration"
-	self._data_config_cont.add_theme_stylebox_override("panel", base_stylebox)
+	var _axis_manager_vbox = VBoxContainer.new()
+	self._axis_manager_cont.add_child(_axis_manager_vbox)
+	self._axis_manager_cont.name = "Axis Manager"
+	self._axis_manager_cont.add_theme_stylebox_override("panel", base_stylebox)
 
 	var _data_inspector_vbox = VBoxContainer.new()
 	self._data_inspector_cont.add_child(_data_inspector_vbox)
@@ -392,7 +431,7 @@ func _ready() -> void:
 
 	self._menu_tab_cont.add_child(self._graph_config_cont)
 	self._menu_tab_cont.add_child(self._data_subscriber_cont)
-	self._menu_tab_cont.add_child(self._data_config_cont)
+	self._menu_tab_cont.add_child(self._axis_manager_cont)
 	self._menu_tab_cont.add_child(self._data_inspector_cont)
 	self._menu_vbox.add_child(_wizard_panel_cont)
 

@@ -35,7 +35,6 @@ func _counter() -> void:
 	pass
 
 func _ready() -> void:
-	print("Mavlink node is now ready")
 
 	mutex = Mutex.new()
 	thread = Thread.new()
@@ -46,14 +45,17 @@ func _ready() -> void:
 	self.add_child(self._godot_performance)
 	self.add_child(self._custom_data)
 
-	Guidot_Utils.setup_data_client_util(self._dc_mouse_cursor, self._mouse_x, "mouse_x", "None", "Example", 0, 2000, 60, "white")
-	Guidot_Utils.setup_data_client_util(self._dc_mouse_cursor, self._mouse_y, "mouse_y", "None", "Example", 0, 1100, 60, "red")
-
+	self._godot_performance.set_custom_name("Godot Performance")
 	Guidot_Utils.setup_data_client_util(self._godot_performance, self._fps, "fps", "fps", "Guidot FPS performance", 0, 150, 30, "yellow")
 	Guidot_Utils.setup_data_client_util(self._godot_performance, self._physics_frame, "physics_frame", "fps", "Guidot FPS performance", 0, 150, 30, "yellow")
 
+	self._custom_data.set_custom_name("Custom Data")
 	Guidot_Utils.setup_data_client_util(self._custom_data, self._sin, "sin", "m", "Sinusoidal wave", -1.1, 1.1, 30, "magenta")
 	Guidot_Utils.setup_data_client_util(self._custom_data, self._cos, "cos", "m", "Cosine wave", -1.1, 1.1, 30, "cyan")
+
+	self._dc_mouse_cursor.set_custom_name("DC Mouse Cursor")
+	Guidot_Utils.setup_data_client_util(self._dc_mouse_cursor, self._mouse_x, "mouse_x", "None", "Example", 0, 2000, 60, "white")
+	Guidot_Utils.setup_data_client_util(self._dc_mouse_cursor, self._mouse_y, "mouse_y", "None", "Example", 0, 1100, 60, "red")
 	
 func _mouse_cursor_data() -> void:
 	var curr_ms: int = Time.get_ticks_msec()

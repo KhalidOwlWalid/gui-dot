@@ -156,7 +156,6 @@ static func _create_checkbox_with_label(label: String, flag: bool) -> HBoxContai
 
 	return l_hbox1
 
-
 static func setup_data_client_util(client_node: Guidot_Data_Client, data_node: Guidot_Data, name: String, unit: String, \
 	 description: String, min: float, max: float, exp_freq: float, color: String = "red") -> void:
 	data_node.setup_properties(name, unit, description, min, max, exp_freq, color)
@@ -168,3 +167,7 @@ static func profiler(func_to_profile: Callable) -> float:
 	func_to_profile.call()
 	var etime: int = Time.get_ticks_usec()
 	return float(etime - stime)/1e6
+
+static func clear_vbox(vbox: VBoxContainer) -> void:
+	for child_node in vbox.get_children():
+		child_node.queue_free()

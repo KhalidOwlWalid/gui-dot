@@ -39,6 +39,7 @@ var _metadata: Dictionary = {
 	# "axis_pos": self._axis_pos,
 	"axis_n": self._axis_n,
 	"axis_id": self._axis_id,
+	"type": Guidot_Common._data_node_name,
 }
 
 # Setters
