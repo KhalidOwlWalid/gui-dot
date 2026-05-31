@@ -79,8 +79,9 @@ func query_data_line_color(channel_name: String) -> Color:
 	var channel_id: Guidot_Data = self._data_channel_id_manager[channel_name]
 	return channel_id.get_line_color()
 
-func query_data_with_node_id(data_node: Guidot_Data) -> void:
-	var data_channel: Guidot_Data = self._data_channel_manager[data_node]
+func query_data_with_node_id(data_node: Guidot_Data) -> PackedVector2Array:
+	var data_channel: PackedVector2Array = self._data_channel_manager[data_node]
+	return data_channel
 
 func get_node_id_with_channel_name(channel_name: String) -> Guidot_Data:
 	return self._data_channel_id_manager[channel_name] 
@@ -88,10 +89,10 @@ func get_node_id_with_channel_name(channel_name: String) -> Guidot_Data:
 # TODO: This needs to be refactored to utilize the client properly
 # What I am doing now is simply storing all of the information on the server side completely?
 func update_channel_manager(node: Guidot_Data_Client) -> bool:
-	for data_node_id in node.get_all_data_channels().keys():
-		var data_channel_name: String = node.get_data_channel_name(data_node_id)
-		self._data_channel_manager[data_node_id] = PackedVector2Array()
-		self._data_channel_id_manager[data_channel_name] = data_node_id
+	for data_node_ptr in node.get_all_data_channels().keys():
+		var data_channel_name: String = node.get_data_channel_name(data_node_ptr)
+		self._data_channel_manager[data_node_ptr] = PackedVector2Array()
+		self._data_channel_id_manager[data_channel_name] = data_node_ptr
 	return true
 
 func add_data_point(data_channel_node: Guidot_Data, data_point: float) -> void:

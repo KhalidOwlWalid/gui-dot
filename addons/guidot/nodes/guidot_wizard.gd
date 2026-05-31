@@ -26,6 +26,7 @@ class _GBS extends Guidot_Base_Setting:
 @onready var SelectionType = _GBS.SelectionType
 
 @onready var wizard_config_tree: Dictionary = {}
+@onready var wizard_subscribed_data = []
 
 # Helps with storing the HBoxContainer object of each configuration to allow us to hide/unhide
 # the objects when not needed
@@ -331,7 +332,10 @@ func query_server_information() -> void:
 			self._data_sub_vbox.add_child(client_button)
 
 			for data_chan_node in client.get_all_data_channels():
-				var channel_cbox: CheckBox = self._create_checkbox_button(false, data_chan_node.get_name())
+				var cbox_state: bool = false
+				if (data_chan_node.get_name() in self.wizard_subscribed_data):
+					cbox_state = true
+				var channel_cbox: CheckBox = self._create_checkbox_button(cbox_state, data_chan_node.get_name())
 				channel_cbox.pressed.connect(self._on_data_sub_cbox_pressed.bind(channel_cbox, data_chan_node.get_name()))
 				self._data_sub_vbox.add_child(channel_cbox)
 
@@ -377,13 +381,19 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 			var label = self._create_label(config_tree[key], true)
 			self._graph_config_vbox.add_child(label)
 
-func update_config_tree(config_tree: Dictionary) -> void:
+func update_config_tree(config_tree: Dictionary, subscribed_data: Array) -> void:
 	self.wizard_config_tree = config_tree
+	self.wizard_subscribed_data = subscribed_data
+
+	self.log(LOG_DEBUG, [self.wizard_config_tree, self.wizard_subscribed_data])
 
 	for child_node in self._graph_config_vbox.get_children():
 		child_node.queue_free()
 
+	# self.log(LOG_DEBUG, ["Received arguments of", subscribed_data])
+
 	self._update_graph_config_tree(self.wizard_config_tree)
+	self.query_server_information()
 	self.visible = true
 
 func _ready() -> void:
@@ -415,6 +425,7 @@ func _ready() -> void:
 	self._data_sub_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	self._data_sub_vbox.add_child(refresh_button)
 	refresh_button.pressed.connect(self.query_server_information)
+	self.query_server_information()
 	self._data_subscriber_cont.add_child(self._data_sub_vbox)
 	self._data_subscriber_cont.name = "Data Subscriber"
 	self._data_subscriber_cont.add_theme_stylebox_override("panel", base_stylebox)
@@ -488,5 +499,9 @@ func _input(event: InputEvent) -> void:
 
 		if (event.keycode == KEY_ESCAPE):
 			# Pass an empty dictionary to clear the previously populated config tree
-			self.update_config_tree({})
+			self.log(LOG_INFO, ["Escape key pressed"])
+			self.wizard_config_tree = {}
+			self.wizard_subscribed_data = []
+			self.update_config_tree(self.wizard_config_tree, self.wizard_subscribed_data)
+			self.log(LOG_INFO, ["After update config tree"])
 			
