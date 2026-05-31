@@ -127,7 +127,7 @@ func _apply_user_config(branch_name: String, new_value: Variant):
 # I need to find a better way to interface this
 var _guidot_server: Guidot_Data_Server
 var _curr_data_str: String
-var _selected_channels_name: Array
+@onready var _selected_channels_name: Array = []
 @onready var _guidot_clock_node: Guidot_Clock = self.get_tree().get_nodes_in_group(Guidot_Common._clock_group_name)[0]
 # TODO: Remove this, since at the moment, without mouse_x being initialized, it breaks
 @onready var _graph_manager: Guidot_Time_Series_Graph_Manager = Guidot_Time_Series_Graph_Manager.new()
@@ -151,9 +151,13 @@ func _on_setting_pressed(show_settings: bool) -> void:
 	graph_manager_pos.y = DisplayServer.screen_get_size().y/2 - self._graph_manager.size.y/2
 	self.log(LOG_DEBUG, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
 	
-	self.get_tree().call_group(Guidot_Common._graph_group_name, self._graph_in_focus_callback_name, self.name)
+	var graph_in_focus_name: String = ""
+
+	if (show_settings):
+		graph_in_focus_name = self.name
+	self.get_tree().call_group(Guidot_Common._graph_group_name, self._graph_in_focus_callback_name, graph_in_focus_name)
 	self.log(LOG_DEBUG, ["Current opacity value is: ", self._config_tree[_GBS.local_key][self._opacity_key]["value"]])
-	self._graph_manager.show_panel_at_pos(graph_manager_pos)
+	# self._graph_manager.show_panel_at_pos(graph_manager_pos)
 
 @onready var _pause_button: Button = Button.new()
 @onready var _pause_icon: Texture2D = load("res://addons/guidot/icons/pause_icon.png")
@@ -647,13 +651,24 @@ func _register_graph_client() -> void:
 	self.name = Guidot_Utils.generate_unique_name(self, Guidot_Common._graph_group_name)
 	self.add_to_group(self._graph_group_name)
 
-func _subscribe_to_data(subscribe: bool, channel_name: String) -> void:
+func _on_data_subscribed(subscribe: bool, channel_name: String) -> void:
 
 	self.log(LOG_DEBUG, [subscribe, " and ", channel_name])
 	
 	if (subscribe):
 		self._selected_channels_name.append(channel_name)
-		queue_redraw()
+		self.log(LOG_DEBUG, [self._selected_channels_name])
+		# Populate selected labels
+		var ax_id_str: String
+		var curr_axis_to_data_map: Dictionary = self._y_axis_manager.get_data_to_axis_map()
+
+		ax_id_str = "PRIMARY_LEFT"
+		self._y_axis_manager.set_data_to_axis(self._guidot_server, channel_name, ax_id_str)
+	else:
+		if (channel_name in self._selected_channels_name):
+			self._selected_channels_name.erase(channel_name)
+
+	self.plot_realtime_data()
 
 # Ensure that we can use this with other nodes, so we don't have to hard code the names when used in different places
 const _graph_in_focus_callback_name: String = "which_graph_in_focus"
@@ -666,8 +681,8 @@ func which_graph_in_focus(graph_name: String) -> void:
 		# There should only be one guidot wizard, so the first node in this array should be the guidot wizard itself
 		self._guidot_wizard = self.get_tree().get_nodes_in_group(Guidot_Common._wizard_group_name)[0]
 		self._guidot_wizard.config_tree_configured.connect(self._apply_user_config)
-		self._guidot_wizard.subscribe_to_data.connect(self._subscribe_to_data)
-		self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree)
+		self._guidot_wizard.subscribe_to_data.connect(self._on_data_subscribed)
+		self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree, self._selected_channels_name)
 		self.ui_action_request.emit(Guidot_Common.UI_Action.FOCUS_MODE)
 	elif (self.name != graph_name):
 		# We need to disconnect the signal since we don't want to continuously add the callback multiple times if it were
@@ -675,6 +690,7 @@ func which_graph_in_focus(graph_name: String) -> void:
 		if (self._guidot_wizard != null):
 			print(self._guidot_wizard.is_connected("config_tree_configured", self._apply_user_config))
 			self._guidot_wizard.config_tree_configured.disconnect(self._apply_user_config)
+			self._guidot_wizard.subscribe_to_data.disconnect(self._on_data_subscribed)
 		self.ui_action_request.emit(Guidot_Common.UI_Action.REMOVE_FOCUS)
 
 func _get_data() -> PackedVector2Array:

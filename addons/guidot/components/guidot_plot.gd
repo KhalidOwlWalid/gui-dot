@@ -56,7 +56,11 @@ func update_debug_info() -> void:
 	self.debug_signals_to_trace = {
 		"drag plot mode active": self._drag_plot_mode_active,
 		"mouse cursor delta": self._tmp_debug,
-	}
+}
+
+class PlotRenderingServer:
+	var pixel_data_points: Dictionary
+	pass
 
 func _ready() -> void:
 	self.name = "plot_frame"
@@ -214,6 +218,9 @@ func _draw_plots() -> void:
 			for i in range(1, data_points.size()):
 				draw_line(data_points[i - 1], data_points[i], gd_data.get_line_color(), 0.5, true)
 				draw_circle(data_points[i], 2.0, gd_data.get_line_color(), -1, true)
+
+func _draw_plots_new() -> void:
+	pass
 	
 func _draw_cursor(cursor_pos: Vector2, color: Color):
 	draw_line(Vector2(cursor_pos.x, self.top_left().y), Vector2(cursor_pos.x, self.bottom_left().y), color, -1, true)
