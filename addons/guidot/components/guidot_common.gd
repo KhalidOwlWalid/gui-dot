@@ -17,9 +17,9 @@ class _GBS extends Guidot_Base_Setting:
 
 enum Graph_Buffer_Mode {
 	FIXED,      # If user wants to display a set window span. User will have to manually reset the time axes
-	SNAPSHOT,   # Alias of fixed (thats the plan for now)
+	# SNAPSHOT,   # Alias of fixed (thats the plan for now)
 	REALTIME,  # Usually use for real-time DAQ. (aka sliding window). Will use a lot of memory since new data will be pushed back.
-	MOVING_PAGE, # Opens up a new "page" everytime the data passes the max axis limit
+	# MOVING_PAGE, # Opens up a new "page" everytime the data passes the max axis limit
 	PAUSE,
 }
 
