@@ -366,7 +366,6 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 				var final_key: String = nested_key
 				var hbox_obj: HBoxContainer = self._create_config_row(key, final_key, config_tree[key])
 				self._internal_config_tree[final_key] = hbox_obj
-
 			else:
 				# This is a nested group node (not configurable directly, but contains sub-items)
 				if (depth > 0):
