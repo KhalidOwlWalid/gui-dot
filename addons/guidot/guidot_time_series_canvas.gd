@@ -670,6 +670,10 @@ func _on_data_subscribed(subscribe: bool, channel_name: String) -> void:
 
 	self.plot_realtime_data()
 
+func _on_wizard_axis_assignment(channel_name: String, axis_name_str: String) -> void:
+	if self._y_axis_manager:
+		self._y_axis_manager.set_data_to_axis(self._guidot_server, channel_name, axis_name_str)
+
 # Ensure that we can use this with other nodes, so we don't have to hard code the names when used in different places
 const _graph_in_focus_callback_name: String = "which_graph_in_focus"
 func which_graph_in_focus(graph_name: String) -> void:
@@ -682,6 +686,7 @@ func which_graph_in_focus(graph_name: String) -> void:
 		self._guidot_wizard = self.get_tree().get_nodes_in_group(Guidot_Common._wizard_group_name)[0]
 		self._guidot_wizard.config_tree_configured.connect(self._apply_user_config)
 		self._guidot_wizard.subscribe_to_data.connect(self._on_data_subscribed)
+		self._guidot_wizard.axis_assignment_changed.connect(self._on_wizard_axis_assignment)
 		self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree, self._selected_channels_name)
 		self.ui_action_request.emit(Guidot_Common.UI_Action.FOCUS_MODE)
 	elif (self.name != graph_name):
@@ -691,6 +696,7 @@ func which_graph_in_focus(graph_name: String) -> void:
 			print(self._guidot_wizard.is_connected("config_tree_configured", self._apply_user_config))
 			self._guidot_wizard.config_tree_configured.disconnect(self._apply_user_config)
 			self._guidot_wizard.subscribe_to_data.disconnect(self._on_data_subscribed)
+			self._guidot_wizard.axis_assignment_changed.disconnect(self._on_wizard_axis_assignment)
 		self.ui_action_request.emit(Guidot_Common.UI_Action.REMOVE_FOCUS)
 
 func _get_data() -> PackedVector2Array:
