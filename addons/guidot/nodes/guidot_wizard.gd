@@ -4,6 +4,7 @@ extends Guidot_Movable_Panel
 
 signal config_tree_configured(branch_name: String)
 signal subscribe_to_data(subscribe: bool, channel_name: String)
+signal axis_assignment_changed(channel_name: String, axis_name: String)
 
 @onready var _menu_vbox: VBoxContainer = VBoxContainer.new()
 @onready var _filter_prop_line_edit: LineEdit = LineEdit.new()
@@ -32,6 +33,11 @@ class _GBS extends Guidot_Base_Setting:
 # the objects when not needed
 var _internal_config_tree: Dictionary
 var _data_index_tree: Dictionary
+
+@onready var _axis_manager_vbox: VBoxContainer = VBoxContainer.new()
+
+# map channel_name -> axis value (Guidot_Y_Axis_Canvas.AxisPosition)
+var _axis_assignments: Dictionary = {}
 
 class DataSubscriber:
 	
@@ -305,7 +311,64 @@ func _on_dropdown_selected(index: int, dropdown: OptionButton, branch_name: Stri
 	self.config_tree_configured.emit(branch_name, selected_enum)
 
 func _on_data_sub_cbox_pressed(cbox: CheckBox, channel_name: String) -> void:
-	self.subscribe_to_data.emit(cbox.button_pressed, channel_name)
+	# Update local subscribed list and emit subscription change
+	var subscribed: bool = cbox.button_pressed
+	if subscribed:
+		if channel_name not in self.wizard_subscribed_data:
+			self.wizard_subscribed_data.append(channel_name)
+	else:
+		self.wizard_subscribed_data.erase(channel_name)
+	self.subscribe_to_data.emit(subscribed, channel_name)
+	self._update_axis_manager_ui()
+
+func _update_axis_manager_ui() -> void:
+	# Ensure vbox exists
+	if not self._axis_manager_vbox:
+		return
+	# Clear existing entries
+	for child in self._axis_manager_vbox.get_children():
+		self._axis_manager_vbox.remove_child(child)
+		child.queue_free()
+
+	# Populate entries for each subscribed channel
+	self.log(LOG_INFO, [self.wizard_subscribed_data])
+	for channel_name in self.wizard_subscribed_data:
+		var row: HBoxContainer = HBoxContainer.new()
+		row.add_theme_constant_override("separation", 8)
+
+		var label: Label = Label.new()
+		label.text = channel_name
+		label.custom_minimum_size = Vector2(160, 0)
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		row.add_child(label)
+
+		var dropdown: OptionButton = OptionButton.new()
+		dropdown.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		# populate with axis positions
+		for axis_name in Guidot_Y_Axis_Canvas.AxisPosition.keys():
+			var axis_val: int = Guidot_Y_Axis_Canvas.AxisPosition[axis_name]
+			dropdown.add_item(axis_name, axis_val)
+
+		# select current assignment if present
+		var assigned: int = Guidot_Y_Axis_Canvas.AxisPosition.AXIS_UNKNOWN
+		if channel_name in self._axis_assignments:
+			assigned = int(self._axis_assignments[channel_name])
+		# find index for assigned id
+		for i in range(dropdown.get_item_count()):
+			if dropdown.get_item_id(i) == assigned:
+				dropdown.select(i)
+				break
+
+		dropdown.item_selected.connect(self._on_axis_dropdown_selected.bind(dropdown, channel_name))
+		row.add_child(dropdown)
+		self._axis_manager_vbox.add_child(row)
+
+func _on_axis_dropdown_selected(index: int, dropdown: OptionButton, channel_name: String) -> void:
+	var axis_id: int = dropdown.get_item_id(index)
+	var axis_name_str: String = Guidot_Y_Axis_Canvas.get_axis_id_str_from_value(axis_id)
+	self._axis_assignments[channel_name] = axis_id
+	self.log(LOG_INFO, ["Axis assignment:", channel_name, "->", axis_name_str])
+	self.axis_assignment_changed.emit(channel_name, axis_name_str)
 
 func query_server_information() -> void:
 	
@@ -382,7 +445,12 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 
 func update_config_tree(config_tree: Dictionary, subscribed_data: Array) -> void:
 	self.wizard_config_tree = config_tree
-	self.wizard_subscribed_data = subscribed_data
+	# Ensure no duplicates in subscribed_data
+	var unique_data: Array = []
+	for item in subscribed_data:
+		if item not in unique_data:
+			unique_data.append(item)
+	self.wizard_subscribed_data = unique_data
 
 	self.log(LOG_DEBUG, [self.wizard_config_tree, self.wizard_subscribed_data])
 
@@ -393,10 +461,15 @@ func update_config_tree(config_tree: Dictionary, subscribed_data: Array) -> void
 
 	self._update_graph_config_tree(self.wizard_config_tree)
 	self.query_server_information()
+	# Refresh axis manager UI to reflect subscribed channels
+	self._update_axis_manager_ui()
 	self.visible = true
 
 func _ready() -> void:
 	super._ready()
+	# initialize internal structures
+	self._internal_config_tree = {}
+	self._data_index_tree = {}
 	self.name = "Guidot Wizard"
 	self.set_title_name(self.name)
 	self.global_position = DisplayServer.screen_get_size()/2 - Vector2i(self.size/2)
@@ -429,8 +502,7 @@ func _ready() -> void:
 	self._data_subscriber_cont.name = "Data Subscriber"
 	self._data_subscriber_cont.add_theme_stylebox_override("panel", base_stylebox)
 
-	var _axis_manager_vbox = VBoxContainer.new()
-	self._axis_manager_cont.add_child(_axis_manager_vbox)
+	self._axis_manager_cont.add_child(self._axis_manager_vbox)
 	self._axis_manager_cont.name = "Axis Manager"
 	self._axis_manager_cont.add_theme_stylebox_override("panel", base_stylebox)
 
