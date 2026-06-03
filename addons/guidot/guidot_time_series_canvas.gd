@@ -7,6 +7,7 @@ var window_color: Color
 
 signal ui_action_request
 signal parent_focus_requested
+signal axis_configured(available_axis: Array)
 
 const _sync_data_global_key: String = "sync_data_global"
 const _opacity_key: String = "opacity"
@@ -56,24 +57,6 @@ func _apply_user_config(branch_name: String, new_value: Variant):
 	var branch_path: Array = branch_name.rsplit(".")
 	var leaf_key: String = branch_path[-1]
 
-	# var get_key_leaf_value = func() -> Variant:
-	# 	var branch_end: Variant = new_config_tree
-	# 	var leaf_value: Variant
-
-	# 	for branch in branch_path:
-	# 		if branch_end is Dictionary and branch_end.has(branch):
-	# 			branch_end = branch_end[branch]
-	# 		else:
-	# 			branch_end = null
-
-	# 	if (branch_end != null and branch_end is Dictionary and branch_end.has(_GBS.value_key)):
-	# 		leaf_value = branch_end[_GBS.value_key]
-	# 		Guidot_Wizard.set_config_tree_value(self._config_tree, branch_path, leaf_value)
-	# 	else:
-	# 		leaf_value = null
-
-	# 	return leaf_value
-
 	Guidot_Wizard.set_config_tree_value(self._config_tree, branch_path, new_value)
 
 	# If opacity changed, read the value from the config tree and apply it.
@@ -105,18 +88,22 @@ func _apply_user_config(branch_name: String, new_value: Variant):
 			var left_axis_count: int = new_value
 			var right_axis_count: int = self._config_tree[self._y_axis_setup_key][self._right_axis_count_key][_GBS.value_key]
 			self._on_y_axis_changes_applied(Vector2(left_axis_count, right_axis_count))
+			self._update_axis_selection()
 
 		self._right_axis_count_key:
 			var right_axis_count: int = new_value
 			var left_axis_count: int = self._config_tree[self._y_axis_setup_key][self._left_axis_count_key][_GBS.value_key]
 			self._on_y_axis_changes_applied(Vector2(left_axis_count, right_axis_count))
+			self._update_axis_selection()
 
 		self._t_axis_range_key:
 			var range_s: float = new_value
 			self.t_axis_node.set_window_size_s(range_s)
 
-		_:
 			queue_redraw()
+
+func _update_axis_selection():
+	self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_available_axes", self._y_axis_manager.get_available_axis_pos())
 
 # Note (Khalid): For now, I wish to standardize the font throughout the whole node
 # This may bite me in the future, if for some reason, I wish to have different fonts
@@ -144,6 +131,7 @@ var _curr_data_str: String
 @onready var _setting_icon: Texture2D = load("res://addons/guidot/icons/gear_icon.png")
 
 @onready var _guidot_wizard: Guidot_Wizard
+@onready var _graph_selected: bool = false
 
 func _on_setting_pressed(show_settings: bool) -> void:
 	var graph_manager_pos: Vector2 = Vector2()
@@ -444,8 +432,8 @@ class AxisManager:
 		# If this step is not done, if we remove the resource - clearing the dictionary consisting of the AxisHandler (RefCounted object)
 		# prior to deleting the node, the y-axis node will remain in the axis
 		# node anymore.
-		for ax_handler in self._axis_manager.keys():
-			self._axis_manager[ax_handler].get_axis_node().queue_free()
+		for ax_pos in self._axis_manager.keys():
+			self._axis_manager[ax_pos].get_axis_node().queue_free()
 		self._axis_manager.clear()
 		return true
 
@@ -455,6 +443,14 @@ class AxisManager:
 	# The keys hold the axis ID which can easily help us identify which axis already exist
 	func get_available_axis_handler() -> Array:
 		return self._axis_manager.values()
+
+	# Returns Array[Guidot_Y_Axis_Canvas.AxisPosition]
+	func get_available_axis_pos() -> Array[int]:
+		# Extract available axis positions from the axis manager
+		var available_axes: Array[int] = []
+		for axis_handler in self.get_available_axis_handler():
+			available_axes.append(axis_handler.get_axis_id())
+		return available_axes
 
 	# Returns null if the requested axis handler does not exist	
 	func get_axis_handler(ax_pos: Guidot_Y_Axis_Canvas.AxisPosition) -> AxisHandler:
@@ -673,6 +669,15 @@ func _on_data_subscribed(subscribe: bool, channel_name: String) -> void:
 func _on_wizard_axis_assignment(channel_name: String, axis_name_str: String) -> void:
 	if self._y_axis_manager:
 		self._y_axis_manager.set_data_to_axis(self._guidot_server, channel_name, axis_name_str)
+		# Ensure axis labels update immediately (avoid needing to hover to trigger redraw)
+		for ax_handler in self._y_axis_manager.get_available_axis_handler():
+			var ax_node: Guidot_Y_Axis_Canvas = ax_handler.get_axis_node()
+			if ax_node != null:
+				ax_node.queue_redraw()
+		# Also refresh plot and overall display
+		if plot_node != null:
+			plot_node.queue_redraw()
+		self.queue_redraw()
 
 # Ensure that we can use this with other nodes, so we don't have to hard code the names when used in different places
 const _graph_in_focus_callback_name: String = "which_graph_in_focus"
@@ -681,6 +686,7 @@ func which_graph_in_focus(graph_name: String) -> void:
 
 	self.log(LOG_DEBUG, ["Settings show status for", self.name, "is", show_settings])
 	if (self.name == graph_name):
+		self._graph_selected = true
 		# Guidot_Wizard upon ready will insert itself into its own group name
 		# There should only be one guidot wizard, so the first node in this array should be the guidot wizard itself
 		self._guidot_wizard = self.get_tree().get_nodes_in_group(Guidot_Common._wizard_group_name)[0]
@@ -688,10 +694,12 @@ func which_graph_in_focus(graph_name: String) -> void:
 		self._guidot_wizard.subscribe_to_data.connect(self._on_data_subscribed)
 		self._guidot_wizard.axis_assignment_changed.connect(self._on_wizard_axis_assignment)
 		self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree, self._selected_channels_name)
+		self._update_axis_selection()
 		self.ui_action_request.emit(Guidot_Common.UI_Action.FOCUS_MODE)
 	elif (self.name != graph_name):
 		# We need to disconnect the signal since we don't want to continuously add the callback multiple times if it were
 		# to be selected again
+		self._graph_selected = false
 		if (self._guidot_wizard != null):
 			print(self._guidot_wizard.is_connected("config_tree_configured", self._apply_user_config))
 			self._guidot_wizard.config_tree_configured.disconnect(self._apply_user_config)

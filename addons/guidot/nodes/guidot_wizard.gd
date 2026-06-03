@@ -39,6 +39,9 @@ var _data_index_tree: Dictionary
 # map channel_name -> axis value (Guidot_Y_Axis_Canvas.AxisPosition)
 var _axis_assignments: Dictionary = {}
 
+# Array of available axis positions from the focused graph
+var _available_axis_positions: Array = []
+
 class DataSubscriber:
 	
 	# Stores the server registry as parent dictionary
@@ -297,6 +300,7 @@ func _on_line_edit_float_change(new_text: String, branch_name: String, line_edit
 		else:
 			Guidot_Wizard.set_config_tree_value(self.wizard_config_tree, branch_name.rsplit("."), value) 
 			self.config_tree_configured.emit(branch_name, value)
+			self._update_axis_manager_ui()
 			self.log(LOG_INFO, [branch_name, " value changed to ", value])
 	else:
 		self.log(LOG_WARNING, [branch_name, "expects float. Instead", new_text, "received."])
@@ -344,13 +348,21 @@ func _update_axis_manager_ui() -> void:
 
 		var dropdown: OptionButton = OptionButton.new()
 		dropdown.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		# populate with axis positions
-		for axis_name in Guidot_Y_Axis_Canvas.AxisPosition.keys():
-			var axis_val: int = Guidot_Y_Axis_Canvas.AxisPosition[axis_name]
-			dropdown.add_item(axis_name, axis_val)
+		# populate with only available axis positions from the graph
+		if self._available_axis_positions.is_empty():
+			# Fallback: show all axes if none specified
+			var axis_pos: int = Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_LEFT
+			for axis_name in Guidot_Y_Axis_Canvas.AxisPosition.keys():
+				var axis_val: int = Guidot_Y_Axis_Canvas.AxisPosition[axis_name]
+				dropdown.add_item(str(axis_pos))
+		else:
+			# Show only available axes
+			for axis_pos in self._available_axis_positions:
+				var axis_name_str: String = Guidot_Y_Axis_Canvas.get_axis_id_str_from_value(axis_pos)
+				dropdown.add_item(str(axis_pos))
 
 		# select current assignment if present
-		var assigned: int = Guidot_Y_Axis_Canvas.AxisPosition.AXIS_UNKNOWN
+		var assigned: int = Guidot_Y_Axis_Canvas.AxisPosition.PRIMARY_LEFT
 		if channel_name in self._axis_assignments:
 			assigned = int(self._axis_assignments[channel_name])
 		# find index for assigned id
@@ -364,11 +376,11 @@ func _update_axis_manager_ui() -> void:
 		self._axis_manager_vbox.add_child(row)
 
 func _on_axis_dropdown_selected(index: int, dropdown: OptionButton, channel_name: String) -> void:
-	var axis_id: int = dropdown.get_item_id(index)
-	var axis_name_str: String = Guidot_Y_Axis_Canvas.get_axis_id_str_from_value(axis_id)
-	self._axis_assignments[channel_name] = axis_id
-	self.log(LOG_INFO, ["Axis assignment:", channel_name, "->", axis_name_str])
-	self.axis_assignment_changed.emit(channel_name, axis_name_str)
+	var axis_id_str: String = dropdown.get_item_text(index)
+	var axis_id_enum_str: String = Guidot_Y_Axis_Canvas.get_axis_id_str_from_value(int(axis_id_str))
+	self._axis_assignments[channel_name] = int(axis_id_str)
+	self.log(LOG_INFO, ["Axis assignment:", channel_name, "->", axis_id_enum_str])
+	self.axis_assignment_changed.emit(channel_name, axis_id_enum_str)
 
 func query_server_information() -> void:
 	
@@ -443,6 +455,10 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 			var label = self._create_label(config_tree[key], true)
 			self._graph_config_vbox.add_child(label)
 
+func update_available_axes(available_axes: Array):
+	self._available_axis_positions = available_axes
+	self._update_axis_manager_ui()
+
 func update_config_tree(config_tree: Dictionary, subscribed_data: Array) -> void:
 	self.wizard_config_tree = config_tree
 	# Ensure no duplicates in subscribed_data
@@ -451,6 +467,7 @@ func update_config_tree(config_tree: Dictionary, subscribed_data: Array) -> void
 		if item not in unique_data:
 			unique_data.append(item)
 	self.wizard_subscribed_data = unique_data
+	# Store available axes for dropdown population
 
 	self.log(LOG_DEBUG, [self.wizard_config_tree, self.wizard_subscribed_data])
 
