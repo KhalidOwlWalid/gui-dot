@@ -116,8 +116,6 @@ var _guidot_server: Guidot_Data_Server
 var _curr_data_str: String
 @onready var _selected_channels_name: Array = []
 @onready var _guidot_clock_node: Guidot_Clock = self.get_tree().get_nodes_in_group(Guidot_Common._clock_group_name)[0]
-# TODO: Remove this, since at the moment, without mouse_x being initialized, it breaks
-@onready var _graph_manager: Guidot_Time_Series_Graph_Manager = Guidot_Time_Series_Graph_Manager.new()
 
 @onready var default_window_size: Vector2 = Vector2(620, 360)
 @onready var default_window_color: Color = Guidot_Utils.get_color("gd_black")
@@ -134,18 +132,12 @@ var _curr_data_str: String
 @onready var _graph_selected: bool = false
 
 func _on_setting_pressed(show_settings: bool) -> void:
-	var graph_manager_pos: Vector2 = Vector2()
-	graph_manager_pos.x = DisplayServer.screen_get_size().x/2 - self._graph_manager.size.x/2
-	graph_manager_pos.y = DisplayServer.screen_get_size().y/2 - self._graph_manager.size.y/2
-	self.log(LOG_DEBUG, ["Guidot graph manager position: ", self._graph_manager.position, graph_manager_pos])
-	
 	var graph_in_focus_name: String = ""
 
 	if (show_settings):
 		graph_in_focus_name = self.name
 	self.get_tree().call_group(Guidot_Common._graph_group_name, self._graph_in_focus_callback_name, graph_in_focus_name)
 	self.log(LOG_DEBUG, ["Current opacity value is: ", self._config_tree[_GBS.local_key][self._opacity_key]["value"]])
-	# self._graph_manager.show_panel_at_pos(graph_manager_pos)
 
 @onready var _pause_button: Button = Button.new()
 @onready var _pause_icon: Texture2D = load("res://addons/guidot/icons/pause_icon.png")
@@ -672,6 +664,11 @@ func refresh_y_axis() -> void:
 		var ax_node: Guidot_Y_Axis_Canvas = ax_handler.get_axis_node()
 		if ax_node != null:
 			ax_node.queue_redraw()
+	# Also refresh plot and overall display
+	self.plot_realtime_data()
+	if plot_node != null:
+		plot_node.queue_redraw()
+	self.queue_redraw()
 
 
 func _on_wizard_axis_assignment(channel_name: String, axis_name_str: String) -> void:
@@ -679,10 +676,6 @@ func _on_wizard_axis_assignment(channel_name: String, axis_name_str: String) -> 
 		self._y_axis_manager.set_data_to_axis(self._guidot_server, channel_name, axis_name_str)
 		# Ensure axis labels update immediately (avoid needing to hover to trigger redraw)
 		self.refresh_y_axis()
-		# Also refresh plot and overall display
-		if plot_node != null:
-			plot_node.queue_redraw()
-		self.queue_redraw()
 
 # Ensure that we can use this with other nodes, so we don't have to hard code the names when used in different places
 const _graph_in_focus_callback_name: String = "which_graph_in_focus"
@@ -931,10 +924,6 @@ func _ready() -> void:
 
 	self._setup_all_ui_button()
 
-	# call_deferred is required as the parent is actually busy handling the child node (self, in particular)
-	# will need to be deferred
-	self.get_node("/root").add_child.call_deferred(self._graph_manager)
-
 	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
 
 	##########################
@@ -961,15 +950,6 @@ func _ready() -> void:
 	# This needs to be overriden after the debug panel is added as a child to the graph
 	self._update_final_debug_trace()
 	debug_panel.override_guidot_debug_info(self.final_debug_trace_signals)
-
-	self._graph_manager.changes_applied.connect(self._on_changes_applied)
-	self._graph_manager.y_axis_changes_applied.connect(self._on_y_axis_changes_applied)
-	self._graph_manager.register_axis_manager(self._y_axis_manager)
-
-	self._graph_manager.opacity_changed.connect(self._on_graph_opacity_changed)
-
-	# Ensure that the graph manager is always on top of the display graph
-	self._graph_manager.z_index = self.z_index + 1
 
 	self._initialized = true
 	self._on_graph_opacity_changed(1.0)

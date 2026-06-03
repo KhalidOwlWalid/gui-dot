@@ -139,7 +139,6 @@ func _ready() -> void:
 
 	# Signals connection
 	_guidot_ts_canvas.parent_focus_requested.connect(_on_parent_focused)
-	_guidot_ts_canvas._graph_manager.opacity_changed.connect(self.set_graph_opacity)
 	_guidot_ts_canvas.ui_action_request.connect(self._on_ui_action_request)
 	self.mouse_entered.connect(_on_mouse_entered)
 	self.mouse_exited.connect(_on_mouse_exited)
