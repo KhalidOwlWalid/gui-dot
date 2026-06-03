@@ -660,20 +660,25 @@ func _on_data_subscribed(subscribe: bool, channel_name: String) -> void:
 
 		ax_id_str = "PRIMARY_LEFT"
 		self._y_axis_manager.set_data_to_axis(self._guidot_server, channel_name, ax_id_str)
+		self.refresh_y_axis()
 	else:
 		if (channel_name in self._selected_channels_name):
 			self._selected_channels_name.erase(channel_name)
 
 	self.plot_realtime_data()
 
+func refresh_y_axis() -> void:
+	for ax_handler in self._y_axis_manager.get_available_axis_handler():
+		var ax_node: Guidot_Y_Axis_Canvas = ax_handler.get_axis_node()
+		if ax_node != null:
+			ax_node.queue_redraw()
+
+
 func _on_wizard_axis_assignment(channel_name: String, axis_name_str: String) -> void:
 	if self._y_axis_manager:
 		self._y_axis_manager.set_data_to_axis(self._guidot_server, channel_name, axis_name_str)
 		# Ensure axis labels update immediately (avoid needing to hover to trigger redraw)
-		for ax_handler in self._y_axis_manager.get_available_axis_handler():
-			var ax_node: Guidot_Y_Axis_Canvas = ax_handler.get_axis_node()
-			if ax_node != null:
-				ax_node.queue_redraw()
+		self.refresh_y_axis()
 		# Also refresh plot and overall display
 		if plot_node != null:
 			plot_node.queue_redraw()
