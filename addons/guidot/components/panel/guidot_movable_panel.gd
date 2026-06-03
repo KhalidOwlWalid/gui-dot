@@ -185,6 +185,7 @@ func disable_header() -> void:
 func _ready() -> void:
 	self.name = "Guidot_Movable_Panel"
 	self.size = self._panel_default_size
+	self.z_index = 1
 	self.custom_minimum_size = Vector2(200, 200)
 
 	# Sets the base color of the panel to fit the theme
