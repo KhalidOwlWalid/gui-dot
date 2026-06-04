@@ -406,9 +406,13 @@ func _on_color_pick_pressed(channel_node: Guidot_Data) -> void:
 		self._guidot_color_picker.visible = true
 
 	var color_picker_cb: Callable = self._guidot_color_picker.get_callback()
-	self._guidot_color_picker.node().color_changed.disconnect(color_picker_cb)
-
-	color_picker_cb = Callable(self, "_on_color_changed").bind(channel_node.get_name())
+	if (color_picker_cb == null):
+		color_picker_cb = Callable(self, "_on_color_changed").bind(channel_node.get_name())
+		self._guidot_color_picker.set_callback(color_picker_cb)
+	else:
+		self._guidot_color_picker.node().color_changed.disconnect(self._on_color_changed)
+		color_picker_cb = Callable(self, "_on_color_changed").bind(channel_node.get_name())
+		self._guidot_color_picker.set_callback(color_picker_cb)
 	
 	# TODO: Hardcoding the first server that we see, since I have not refactor the way that server and data works
 	self._guidot_color_picker.set_color(channel_node.get_line_color())
