@@ -5,6 +5,7 @@ extends Guidot_Movable_Panel
 signal config_tree_configured(branch_name: String)
 signal subscribe_to_data(subscribe: bool, channel_name: String)
 signal axis_assignment_changed(channel_name: String, axis_name: String)
+signal line_color_changed
 
 @onready var _menu_vbox: VBoxContainer = VBoxContainer.new()
 @onready var _filter_prop_line_edit: LineEdit = LineEdit.new()
@@ -395,8 +396,9 @@ func _update_axis_manager_ui() -> void:
 		row.add_child(color_button)
 		self._axis_manager_vbox.add_child(row)
 
-func _on_color_changed(selected_color: Color, channel_node: String) -> void:
-	print("channel_node: ", channel_node, " with color ", selected_color)
+func _on_color_changed(selected_color: Color, channel_node: Guidot_Data) -> void:
+	channel_node.set_line_color_rgba(selected_color)
+	self.line_color_changed.emit()
 	 
 func _on_color_pick_pressed(channel_node: Guidot_Data) -> void:
 	# Globally, there should only be one color picker
@@ -407,17 +409,16 @@ func _on_color_pick_pressed(channel_node: Guidot_Data) -> void:
 
 	var color_picker_cb: Callable = self._guidot_color_picker.get_callback()
 	if (color_picker_cb == null):
-		color_picker_cb = Callable(self, "_on_color_changed").bind(channel_node.get_name())
+		color_picker_cb = Callable(self, "_on_color_changed").bind(channel_node)
 		self._guidot_color_picker.set_callback(color_picker_cb)
 	else:
 		self._guidot_color_picker.node().color_changed.disconnect(self._on_color_changed)
-		color_picker_cb = Callable(self, "_on_color_changed").bind(channel_node.get_name())
+		color_picker_cb = Callable(self, "_on_color_changed").bind(channel_node)
 		self._guidot_color_picker.set_callback(color_picker_cb)
 	
 	# TODO: Hardcoding the first server that we see, since I have not refactor the way that server and data works
 	self._guidot_color_picker.set_color(channel_node.get_line_color())
 	self._guidot_color_picker.node().color_changed.connect(color_picker_cb)
-
 
 func _on_axis_dropdown_selected(index: int, dropdown: OptionButton, channel_name: String) -> void:
 	var axis_id_str: String = dropdown.get_item_text(index)
