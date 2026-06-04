@@ -102,6 +102,9 @@ func _on_move_pressed() -> void:
 	self._curr_ui_mode = UI_Mode.SELECTED
 	self.queue_redraw()
 
+func add_child_into_panel_space(child: Node) -> void:
+	self._panel_space.add_child(child)
+
 enum UI_Mode {
 	NORMAL,
 	HOVER,

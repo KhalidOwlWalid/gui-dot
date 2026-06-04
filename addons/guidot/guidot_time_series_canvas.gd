@@ -975,7 +975,7 @@ func _on_graph_opacity_changed(alpha: float) -> void:
 	# For the axis, we still want to see the data being plotted, so at minimum, an alpha of 0.3
 	# would still allow you to see the plots nicely
 	if (self._curr_ui_mode == Guidot_Time_Series_Graph.UI_Mode.DATA_DISPLAY):
-		a = clamp(alpha, 0.3, 1.0)
+		a = clamp(alpha, 0.1, 1.0)
 	current_color.a = a 
 	modulated_color = Color(1.0, 1.0, 1.0, a)
 	# self.plot_node.set_self_modulate(modulated_color)
