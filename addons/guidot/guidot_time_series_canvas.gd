@@ -677,6 +677,9 @@ func _on_wizard_axis_assignment(channel_name: String, axis_name_str: String) -> 
 		# Ensure axis labels update immediately (avoid needing to hover to trigger redraw)
 		self.refresh_y_axis()
 
+func _on_line_color_changed() -> void:
+	self.plot_realtime_data()
+
 # Ensure that we can use this with other nodes, so we don't have to hard code the names when used in different places
 const _graph_in_focus_callback_name: String = "which_graph_in_focus"
 func which_graph_in_focus(graph_name: String) -> void:
@@ -691,6 +694,7 @@ func which_graph_in_focus(graph_name: String) -> void:
 		self._guidot_wizard.config_tree_configured.connect(self._apply_user_config)
 		self._guidot_wizard.subscribe_to_data.connect(self._on_data_subscribed)
 		self._guidot_wizard.axis_assignment_changed.connect(self._on_wizard_axis_assignment)
+		self._guidot_wizard.line_color_changed.connect(self._on_line_color_changed)
 		self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_config_tree", self._config_tree, self._selected_channels_name)
 		self._update_axis_selection()
 		self.ui_action_request.emit(Guidot_Common.UI_Action.FOCUS_MODE)
@@ -703,6 +707,7 @@ func which_graph_in_focus(graph_name: String) -> void:
 			self._guidot_wizard.config_tree_configured.disconnect(self._apply_user_config)
 			self._guidot_wizard.subscribe_to_data.disconnect(self._on_data_subscribed)
 			self._guidot_wizard.axis_assignment_changed.disconnect(self._on_wizard_axis_assignment)
+			self._guidot_wizard.line_color_changed.disconnect(self._on_line_color_changed)
 		self.ui_action_request.emit(Guidot_Common.UI_Action.REMOVE_FOCUS)
 
 func _get_data() -> PackedVector2Array:

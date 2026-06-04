@@ -46,6 +46,9 @@ var _metadata: Dictionary = {
 func set_line_color(line_color_str: String) -> void:
 	self._line_color = Guidot_Utils.get_color(line_color_str)
 
+func set_line_color_rgba(color: Color) -> void:
+	self._line_color = color
+
 func set_min(min_val: float) -> void:
 	self._min = min_val
 	self._metadata["min"] = self._min
