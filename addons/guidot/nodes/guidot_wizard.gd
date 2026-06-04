@@ -390,17 +390,25 @@ func _update_axis_manager_ui() -> void:
 			[2, 2, 2, 2], [0, 0, 0, 0])
 		color_button.add_theme_stylebox_override("normal", normal_stylebox)
 		color_button.add_theme_stylebox_override("hover", hover_stylebox)
-		color_button.pressed.connect(self._on_color_pick_pressed.bind(channel_node))
+		color_button.pressed.connect(self._on_color_pick_pressed.bind(channel_node, color_button))
 
 		row.add_child(dropdown)
 		row.add_child(color_button)
 		self._axis_manager_vbox.add_child(row)
 
-func _on_color_changed(selected_color: Color, channel_node: Guidot_Data) -> void:
+func _on_color_changed(selected_color: Color, channel_node: Guidot_Data, color_button: Button) -> void:
 	channel_node.set_line_color_rgba(selected_color)
+
+	var curr_chan_node_color: Color = channel_node.get_line_color()
+	var normal_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(curr_chan_node_color, Color.WHITE)
+	var hover_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(curr_chan_node_color, Color.WHITE, [-1, -1, -1, -1],
+		[2, 2, 2, 2], [0, 0, 0, 0])
+	color_button.add_theme_stylebox_override("normal", normal_stylebox)
+	color_button.add_theme_stylebox_override("hover", hover_stylebox)
+
 	self.line_color_changed.emit()
 	 
-func _on_color_pick_pressed(channel_node: Guidot_Data) -> void:
+func _on_color_pick_pressed(channel_node: Guidot_Data, color_button: Button) -> void:
 	# Globally, there should only be one color picker
 	self._guidot_color_picker = self.get_tree().get_nodes_in_group(Guidot_Common._color_picker_name)[0]
 	
@@ -409,11 +417,11 @@ func _on_color_pick_pressed(channel_node: Guidot_Data) -> void:
 
 	var color_picker_cb: Callable = self._guidot_color_picker.get_callback()
 	if (color_picker_cb == null):
-		color_picker_cb = Callable(self, "_on_color_changed").bind(channel_node)
+		color_picker_cb = Callable(self, "_on_color_changed").bind(channel_node, color_button)
 		self._guidot_color_picker.set_callback(color_picker_cb)
 	else:
 		self._guidot_color_picker.node().color_changed.disconnect(self._on_color_changed)
-		color_picker_cb = Callable(self, "_on_color_changed").bind(channel_node)
+		color_picker_cb = Callable(self, "_on_color_changed").bind(channel_node, color_button)
 		self._guidot_color_picker.set_callback(color_picker_cb)
 	
 	# TODO: Hardcoding the first server that we see, since I have not refactor the way that server and data works
