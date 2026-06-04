@@ -11,6 +11,7 @@ static var _data_node_name: String = "Guidot_Data"
 static var _clock_group_name: String = "Guidot_Clock"
 static var _graph_group_name: String = "Guidot_Time_Series_Graph"
 static var _wizard_group_name: String = "Guidot_Wizard"
+static var _color_picker_name: String = "Guidot_Color_Picker"
 
 class _GBS extends Guidot_Base_Setting:
 	pass

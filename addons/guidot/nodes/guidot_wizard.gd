@@ -19,6 +19,8 @@ signal axis_assignment_changed(channel_name: String, axis_name: String)
 @onready var _graph_config_vbox = VBoxContainer.new()
 @onready var _data_sub_vbox = VBoxContainer.new()
 
+@onready var _guidot_color_picker: Guidot_Color_Picker = Guidot_Color_Picker.new()
+
 # Alias for Guidot_Base_Setting
 # Not to be used for overriding any base class Guidot_Base_Setting provides
 class _GBS extends Guidot_Base_Setting:
@@ -372,8 +374,46 @@ func _update_axis_manager_ui() -> void:
 				break
 
 		dropdown.item_selected.connect(self._on_axis_dropdown_selected.bind(dropdown, channel_name))
+
+		# TODO: Hardcoding the first server that we see, since I have not refactor the way that server and data works
+		var selected_server: Guidot_Data_Server = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)[0]
+		var channel_node: Guidot_Data = selected_server.get_node_id_with_channel_name(channel_name)
+		var curr_chan_node_color: Color = channel_node.get_line_color()
+
+		var color_button: Button = Button.new()
+		color_button.text = ""
+		color_button.custom_minimum_size = Vector2(30, 0)
+
+		var normal_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(curr_chan_node_color, Color.WHITE)
+		var hover_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(curr_chan_node_color, Color.WHITE, [-1, -1, -1, -1],
+			[2, 2, 2, 2], [0, 0, 0, 0])
+		color_button.add_theme_stylebox_override("normal", normal_stylebox)
+		color_button.add_theme_stylebox_override("hover", hover_stylebox)
+		color_button.pressed.connect(self._on_color_pick_pressed.bind(channel_node))
+
 		row.add_child(dropdown)
+		row.add_child(color_button)
 		self._axis_manager_vbox.add_child(row)
+
+func _on_color_changed(selected_color: Color, channel_node: String) -> void:
+	print("channel_node: ", channel_node, " with color ", selected_color)
+	 
+func _on_color_pick_pressed(channel_node: Guidot_Data) -> void:
+	# Globally, there should only be one color picker
+	self._guidot_color_picker = self.get_tree().get_nodes_in_group(Guidot_Common._color_picker_name)[0]
+	
+	if (not self._guidot_color_picker.visible):
+		self._guidot_color_picker.visible = true
+
+	var color_picker_cb: Callable = self._guidot_color_picker.get_callback()
+	self._guidot_color_picker.node().color_changed.disconnect(color_picker_cb)
+
+	color_picker_cb = Callable(self, "_on_color_changed").bind(channel_node.get_name())
+	
+	# TODO: Hardcoding the first server that we see, since I have not refactor the way that server and data works
+	self._guidot_color_picker.set_color(channel_node.get_line_color())
+	self._guidot_color_picker.node().color_changed.connect(color_picker_cb)
+
 
 func _on_axis_dropdown_selected(index: int, dropdown: OptionButton, channel_name: String) -> void:
 	var axis_id_str: String = dropdown.get_item_text(index)
@@ -468,13 +508,8 @@ func update_config_tree(config_tree: Dictionary, subscribed_data: Array) -> void
 			unique_data.append(item)
 	self.wizard_subscribed_data = unique_data
 	# Store available axes for dropdown population
-
-	self.log(LOG_DEBUG, [self.wizard_config_tree, self.wizard_subscribed_data])
-
 	for child_node in self._graph_config_vbox.get_children():
 		child_node.queue_free()
-
-	# self.log(LOG_DEBUG, ["Received arguments of", subscribed_data])
 
 	self._update_graph_config_tree(self.wizard_config_tree)
 	self.query_server_information()
@@ -536,15 +571,12 @@ func _ready() -> void:
 
 	var config_tree: Dictionary = {}
 
-	_panel_space.add_child(_menu_vbox)
+	# _panel_space.add_child(_menu_vbox)
+	self.add_child_into_panel_space(self._menu_vbox)
 
 	self.add_to_group(Guidot_Common._wizard_group_name)
 
 var j: int = 0
-enum SomeRandom  {
-	HELLO = -1,
-	GOOD_MORNING,
-}
 
 func populate_fake_config_tree_entry() -> void:
 	if (j == 0):
@@ -592,4 +624,4 @@ func _input(event: InputEvent) -> void:
 			self.wizard_subscribed_data = []
 			self.update_config_tree(self.wizard_config_tree, self.wizard_subscribed_data)
 			self.log(LOG_INFO, ["After update config tree"])
-			
+	
