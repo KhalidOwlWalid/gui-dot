@@ -13,7 +13,7 @@ signal line_color_changed
 @onready var _menu_tab_cont: TabContainer = TabContainer.new()
 @onready var _graph_config_cont: ScrollContainer = ScrollContainer.new()
 @onready var _data_subscriber_cont: ScrollContainer = ScrollContainer.new()
-@onready var _axis_manager_cont: ScrollContainer = ScrollContainer.new()
+@onready var _axis_assignment_cont: ScrollContainer = ScrollContainer.new()
 @onready var _data_inspector_cont: ScrollContainer = ScrollContainer.new()
 
 # VBox for graph configurator
@@ -37,7 +37,7 @@ class _GBS extends Guidot_Base_Setting:
 var _internal_config_tree: Dictionary
 var _data_index_tree: Dictionary
 
-@onready var _axis_manager_vbox: VBoxContainer = VBoxContainer.new()
+@onready var _axis_assignment_vbox: VBoxContainer = VBoxContainer.new()
 
 # map channel_name -> axis value (Guidot_Y_Axis_Canvas.AxisPosition)
 var _axis_assignments: Dictionary = {}
@@ -303,7 +303,7 @@ func _on_line_edit_float_change(new_text: String, branch_name: String, line_edit
 		else:
 			Guidot_Wizard.set_config_tree_value(self.wizard_config_tree, branch_name.rsplit("."), value) 
 			self.config_tree_configured.emit(branch_name, value)
-			self._update_axis_manager_ui()
+			self._update_axis_assignment_ui()
 			self.log(LOG_INFO, [branch_name, " value changed to ", value])
 	else:
 		self.log(LOG_WARNING, [branch_name, "expects float. Instead", new_text, "received."])
@@ -326,27 +326,34 @@ func _on_data_sub_cbox_pressed(cbox: CheckBox, channel_name: String) -> void:
 	else:
 		self.wizard_subscribed_data.erase(channel_name)
 	self.subscribe_to_data.emit(subscribed, channel_name)
-	self._update_axis_manager_ui()
+	self._update_axis_assignment_ui()
 
-func _update_axis_manager_ui() -> void:
+func _update_axis_assignment_ui() -> void:
 	# Ensure vbox exists
-	if not self._axis_manager_vbox:
+	if not self._axis_assignment_vbox:
 		return
 	# Clear existing entries
-	for child in self._axis_manager_vbox.get_children():
-		self._axis_manager_vbox.remove_child(child)
+	for child in self._axis_assignment_vbox.get_children():
+		self._axis_assignment_vbox.remove_child(child)
 		child.queue_free()
+	self._axis_assignment_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	# Populate entries for each subscribed channel
 	self.log(LOG_INFO, [self.wizard_subscribed_data])
 	for channel_name in self.wizard_subscribed_data:
 		var row: HBoxContainer = HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var horizontal_spacer_label: Label = Label.new()
+		horizontal_spacer_label.text = "       "
+		row.add_child(horizontal_spacer_label)
 
 		var label: Label = Label.new()
 		label.text = channel_name
 		label.custom_minimum_size = Vector2(160, 0)
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(label)
 
 		var dropdown: OptionButton = OptionButton.new()
@@ -394,7 +401,7 @@ func _update_axis_manager_ui() -> void:
 
 		row.add_child(dropdown)
 		row.add_child(color_button)
-		self._axis_manager_vbox.add_child(row)
+		self._axis_assignment_vbox.add_child(row)
 
 func _on_color_changed(selected_color: Color, channel_node: Guidot_Data, color_button: Button) -> void:
 	channel_node.set_line_color_rgba(selected_color)
@@ -510,7 +517,7 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 
 func update_available_axes(available_axes: Array):
 	self._available_axis_positions = available_axes
-	self._update_axis_manager_ui()
+	self._update_axis_assignment_ui()
 
 func update_config_tree(config_tree: Dictionary, subscribed_data: Array) -> void:
 	self.wizard_config_tree = config_tree
@@ -527,7 +534,7 @@ func update_config_tree(config_tree: Dictionary, subscribed_data: Array) -> void
 	self._update_graph_config_tree(self.wizard_config_tree)
 	self.query_server_information()
 	# Refresh axis manager UI to reflect subscribed channels
-	self._update_axis_manager_ui()
+	self._update_axis_assignment_ui()
 	self.visible = true
 
 func _ready() -> void:
@@ -567,9 +574,9 @@ func _ready() -> void:
 	self._data_subscriber_cont.name = "Data Subscriber"
 	self._data_subscriber_cont.add_theme_stylebox_override("panel", base_stylebox)
 
-	self._axis_manager_cont.add_child(self._axis_manager_vbox)
-	self._axis_manager_cont.name = "Axis Manager"
-	self._axis_manager_cont.add_theme_stylebox_override("panel", base_stylebox)
+	self._axis_assignment_cont.add_child(self._axis_assignment_vbox)
+	self._axis_assignment_cont.name = "Axis Assignment"
+	self._axis_assignment_cont.add_theme_stylebox_override("panel", base_stylebox)
 
 	var _data_inspector_vbox = VBoxContainer.new()
 	self._data_inspector_cont.add_child(_data_inspector_vbox)
@@ -578,7 +585,7 @@ func _ready() -> void:
 
 	self._menu_tab_cont.add_child(self._graph_config_cont)
 	self._menu_tab_cont.add_child(self._data_subscriber_cont)
-	self._menu_tab_cont.add_child(self._axis_manager_cont)
+	self._menu_tab_cont.add_child(self._axis_assignment_cont)
 	self._menu_tab_cont.add_child(self._data_inspector_cont)
 	self._menu_vbox.add_child(_wizard_panel_cont)
 
