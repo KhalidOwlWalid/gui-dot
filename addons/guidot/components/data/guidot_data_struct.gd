@@ -83,18 +83,6 @@ func set_axis_id(ax_id: Guidot_Y_Axis_Canvas.AxisPosition) -> void:
 	self._axis_id = ax_id
 	self._metadata["axis_id"] = self._axis_id
 
-# func set_axis_pos(ax_pos: Guidot_Y_Axis_Canvas.AxisPosition) -> void:
-# 	self._axis_pos = ax_pos
-# 	self._metadata["axis_pos"] = self._axis_pos
-# 	# For now, I am making the assumption that this will correctly cast it to an existing enum
-# 	self._axis_id = self._axis_pos * self._axis_n
-
-# func set_axis_number(ax_n: int) -> void:
-# 	self._axis_n = ax_n
-# 	self._metadata["axis_n"] = self._axis_n
-# 	# For now, I am making the assumption that this will correctly cast it to an existing enum
-# 	self._axis_id = self._axis_pos * self._axis_n
-
 func line_color_options() -> Dictionary:
 	return self._color_options
 

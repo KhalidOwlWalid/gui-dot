@@ -19,6 +19,7 @@ signal line_color_changed
 # VBox for graph configurator
 @onready var _graph_config_vbox = VBoxContainer.new()
 @onready var _data_sub_vbox = VBoxContainer.new()
+@onready var _data_inspector_vbox = VBoxContainer.new()
 
 @onready var _guidot_color_picker: Guidot_Color_Picker = Guidot_Color_Picker.new()
 
@@ -328,6 +329,37 @@ func _on_data_sub_cbox_pressed(cbox: CheckBox, channel_name: String) -> void:
 	self.subscribe_to_data.emit(subscribed, channel_name)
 	self._update_axis_assignment_ui()
 
+func update_data_inspector_ui(cursor_info: Dictionary) -> void:
+	if not self._data_inspector_vbox:
+		return
+	# Clear existing entries
+	for child in self._data_inspector_vbox.get_children():
+		self._data_inspector_vbox.remove_child(child)
+		child.queue_free()
+	self._data_inspector_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	self.log(LOG_DEBUG, ["Cursor info: ", cursor_info])
+
+	for channel_name in cursor_info.keys():
+		var row: HBoxContainer = HBoxContainer.new()
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var horizontal_spacer_label: Label = Label.new()
+		horizontal_spacer_label.text = "       "
+		row.add_child(horizontal_spacer_label)
+
+		var channel_label: Label = Label.new()
+		channel_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		channel_label.text = channel_name
+		row.add_child(channel_label)
+
+		var cursor_value_label: Label = Label.new()
+		cursor_value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cursor_value_label.text = str(cursor_info[channel_name])
+		row.add_child(cursor_value_label)
+
+		self._data_inspector_vbox.add_child(row)
+
 func _update_axis_assignment_ui() -> void:
 	# Ensure vbox exists
 	if not self._axis_assignment_vbox:
@@ -339,7 +371,6 @@ func _update_axis_assignment_ui() -> void:
 	self._axis_assignment_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	# Populate entries for each subscribed channel
-	self.log(LOG_INFO, [self.wizard_subscribed_data])
 	for channel_name in self.wizard_subscribed_data:
 		var row: HBoxContainer = HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
@@ -578,8 +609,7 @@ func _ready() -> void:
 	self._axis_assignment_cont.name = "Axis Assignment"
 	self._axis_assignment_cont.add_theme_stylebox_override("panel", base_stylebox)
 
-	var _data_inspector_vbox = VBoxContainer.new()
-	self._data_inspector_cont.add_child(_data_inspector_vbox)
+	self._data_inspector_cont.add_child(self._data_inspector_vbox)
 	self._data_inspector_cont.name = "Data Inspector"
 	self._data_inspector_cont.add_theme_stylebox_override("panel", base_stylebox)
 

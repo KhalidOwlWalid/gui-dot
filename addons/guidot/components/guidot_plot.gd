@@ -1,6 +1,8 @@
 class_name Guidot_Plot_Canvas
 extends Guidot_Common
 
+signal cursor_info(channel_name: String, data_pts: Vector2)
+
 @onready var default_color = Color(0.17, 0.17, 0.17, 1)
 # Normalized size of the plot with respect to the node frame
 @onready var default_norm_size: int = 0.8
@@ -229,6 +231,8 @@ func _draw_cursor_values(cursor_pos: Vector2):
 	var mouse_x: float = cursor_pos.x
 	var font: Font = get_theme_default_font()
 
+	var data_inspector_info: Dictionary = {}
+
 	for gd_data in self._cached_data_channel.keys():
 		var pixel_pts: PackedVector2Array = self._data_channel_pixel_pos[gd_data]
 		var data_pts: PackedVector2Array = self._cached_data_channel[gd_data]
@@ -263,6 +267,7 @@ func _draw_cursor_values(cursor_pos: Vector2):
 		var label_size: Vector2 = font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, label_font_size)
 		var box_pos: Vector2 = interp_pixel + Vector2(10, -label_font_size)
 		var str_box: Rect2 = Rect2(box_pos, Vector2(label_size.x + 12, label_size.y + 5))
+		data_inspector_info[gd_data.get_name()] = interp_data
 		# TODO: Leaving the box drawing here, just in case I need it
 		# draw_rect(str_box, Color.WHITE, true)
 		
@@ -273,6 +278,8 @@ func _draw_cursor_values(cursor_pos: Vector2):
 			str_draw_pix_pos = interp_pixel - Vector2(label_size.x + 15, -label_font_size/2)
 
 		draw_string(font, str_draw_pix_pos, label, 0, -1, label_font_size, gd_data.get_line_color())
+	
+	self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_data_inspector_ui", data_inspector_info)
 
 func _draw_zoom_box() -> void:
 	var rect: Rect2 = Rect2(self._zoom_start_pos, self._zoom_curr_pos - self._zoom_start_pos).abs()
