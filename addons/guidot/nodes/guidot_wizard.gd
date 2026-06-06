@@ -338,15 +338,27 @@ func update_data_inspector_ui(cursor_info: Dictionary) -> void:
 		child.queue_free()
 	self._data_inspector_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
-	self.log(LOG_DEBUG, ["Cursor info: ", cursor_info])
+	var header_row: HBoxContainer = HBoxContainer.new()
+	header_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var horizontal_spacer_label: Label = Label.new()
+	horizontal_spacer_label.text = "   "
+	var channel_header_label: Label = self._create_label("Data Channel Name", true, Guidot_Utils.get_color("graph_settings_label"), false)
+	var channel_value_label: Label = self._create_label("Cursor Value", true, Guidot_Utils.get_color("graph_settings_label"), false)
+
+	header_row.add_child(horizontal_spacer_label)
+	header_row.add_child(channel_header_label)
+	header_row.add_child(channel_value_label)
+	self._data_inspector_vbox.add_child(header_row)
 
 	for channel_name in cursor_info.keys():
 		var row: HBoxContainer = HBoxContainer.new()
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_theme_constant_override("separation", 8)
 
-		var horizontal_spacer_label: Label = Label.new()
-		horizontal_spacer_label.text = "       "
-		row.add_child(horizontal_spacer_label)
+		var hor_spacer_label1: Label = Label.new()
+		hor_spacer_label1.text = "   "
+
+		row.add_child(hor_spacer_label1)
 
 		var channel_label: Label = Label.new()
 		channel_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -355,10 +367,13 @@ func update_data_inspector_ui(cursor_info: Dictionary) -> void:
 
 		var cursor_value_label: Label = Label.new()
 		cursor_value_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cursor_value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		cursor_value_label.text = str(cursor_info[channel_name])
 		row.add_child(cursor_value_label)
 
 		self._data_inspector_vbox.add_child(row)
+
+
 
 func _update_axis_assignment_ui() -> void:
 	# Ensure vbox exists
@@ -462,7 +477,7 @@ func _on_color_pick_pressed(channel_node: Guidot_Data, color_button: Button) -> 
 		color_picker_cb = Callable(self, "_on_color_changed").bind(channel_node, color_button)
 		self._guidot_color_picker.set_callback(color_picker_cb)
 	
-	# TODO: Hardcoding the first server that we see, since I have not refactor the way that server and data works
+	# REFACTOR: Hardcoding the first server that we see, since I have not refactor the way that server and data works. FIX
 	self._guidot_color_picker.set_color(channel_node.get_line_color())
 	self._guidot_color_picker.node().color_changed.connect(color_picker_cb)
 
