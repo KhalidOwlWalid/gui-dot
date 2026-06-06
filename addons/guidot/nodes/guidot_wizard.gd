@@ -373,8 +373,6 @@ func update_data_inspector_ui(cursor_info: Dictionary) -> void:
 
 		self._data_inspector_vbox.add_child(row)
 
-
-
 func _update_axis_assignment_ui() -> void:
 	# Ensure vbox exists
 	if not self._axis_assignment_vbox:
