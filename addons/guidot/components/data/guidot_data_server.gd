@@ -38,10 +38,6 @@ func _ready() -> void:
 	self.set_type(Guidot_Common._server_group_name)
 	self.add_to_group(Guidot_Common._server_group_name)
 
-	# TODO (Khalid): Error handling, if the node does not exist in the group, then server should be responsible in creating one
-	var clock_nodes: Array[Node] = self.get_tree().get_nodes_in_group(Guidot_Common._clock_group_name)
-	self._clock_node = clock_nodes[0]
-
 func set_graph_buffer_mode(buf_mode: Graph_Buffer_Mode) -> void:
 	_graph_buffer_mode = buf_mode
 	graph_buffer_mode_changed.emit()
@@ -96,7 +92,7 @@ func update_channel_manager(node: Guidot_Data_Client) -> bool:
 	return true
 
 func add_data_point(data_channel_node: Guidot_Data, data_point: float) -> void:
-	self._data_channel_manager[data_channel_node].append(Vector2(self._clock_node.get_current_time_s(), data_point))
+	self._data_channel_manager[data_channel_node].append(Vector2(Guidot_Clock.get_current_time_s(), data_point))
 	self.new_data_received.emit()
 
 func _physics_process(delta: float) -> void:

@@ -8,8 +8,8 @@ func _ready() -> void:
 func get_current_time_ms() -> int:
 	return Time.get_ticks_msec()
 
-func get_current_time_s() -> float:
+static func get_current_time_s() -> float:
 	return float(Time.get_ticks_msec())/1000
 
-func get_current_time_us() -> int:
+static func get_current_time_us() -> int:
 	return Time.get_ticks_usec()

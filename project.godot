@@ -16,11 +16,6 @@ run/main_scene="res://demo/dev/client_dev.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 config/icon="res://icon.svg"
 
-[autoload]
-
-DebugMenu="*res://addons/debug_menu/debug_menu.tscn"
-GuidotClock="*res://addons/guidot/components/data/guidot_clock.gd"
-
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/debug_menu/plugin.cfg", "res://addons/guidot/plugin.cfg", "res://addons/zylann.editor_debugger/plugin.cfg")

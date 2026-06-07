@@ -23,7 +23,6 @@ enum ClockSourceType {
 	EXTERNAL_CLOCK,
 }
 
-var _clock_node: Node
 @onready var _clock_src_type: ClockSourceType = ClockSourceType.GUIDOT_CLOCK
 
 func get_metadata() -> Dictionary:
