@@ -204,9 +204,13 @@ func _create_slider(def_val: float, min_val: float, max_val: float, step: float 
 
 func _create_config_row(config_name: String, full_key_name: String, config_dict: Dictionary) -> HBoxContainer:
 	var config_hbox: HBoxContainer = HBoxContainer.new()
+	# Add space to show emphasis on the config being the leaf of the branch
+	var spacer_label: Label = Label.new()
+	spacer_label.text = "   "
 	var config_label: Label = self._create_label(config_name, false, Guidot_Utils.get_color("gd_black"), true)
 	# config_label.text = config_name
 	config_hbox.add_theme_constant_override("separation", -1)
+	config_hbox.add_child(spacer_label)
 	config_hbox.add_child(config_label)
 
 	var def_val = config_dict[_GBS.value_key]
@@ -546,9 +550,9 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 
 			if (config_tree[key].has_all(Guidot_Base_Setting.common_keys)):
 				# This is a leaf node (user-configurable item)
-				var final_key: String = nested_key
-				var hbox_obj: HBoxContainer = self._create_config_row(key, final_key, config_tree[key])
-				self._internal_config_tree[final_key] = hbox_obj
+				var full_path_key: String = nested_key
+				var hbox_obj: HBoxContainer = self._create_config_row(key, full_path_key, config_tree[key])
+				self._internal_config_tree[full_path_key] = hbox_obj
 			else:
 				# This is a nested group node (not configurable directly, but contains sub-items)
 				if (depth > 0):
@@ -560,6 +564,7 @@ func _update_graph_config_tree(config_tree: Dictionary, depth: int = 0, curr_key
 				self._update_graph_config_tree(config_tree[key], depth + 1, nested_key)
 
 		elif (key_type == TYPE_STRING):
+			var depth_spacer: String = "   "
 			var label = self._create_label(config_tree[key], true)
 			self._graph_config_vbox.add_child(label)
 

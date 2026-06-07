@@ -30,6 +30,10 @@ const _t_axis_max_key: String = "max"
 
 @onready var _show_cursor_values: bool = true
 
+# Note: At the moment, the config tree builder only supports a depth of up to 2, eg
+# Main label -> Sub-main label -> Config key / Main label -> Config key
+# Adding another level of depth would break the config tree, so please respect this rule for now
+# There are some level of refactoring that needs to be done still, but this is good enough for what I need at the moment
 @onready var _config_tree: Dictionary = {
 	"graph_node_ref": str(self),
 	"graph_node_id": str(self.get_instance_id()),
