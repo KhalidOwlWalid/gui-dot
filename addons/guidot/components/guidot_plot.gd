@@ -363,7 +363,7 @@ func _input(event: InputEvent) -> void:
 					self._is_zooming = true
 					
 					# If the user left-click on the plot area, open the wizard menu page
-					self._parent_node._on_setting_pressed(true)
+					self._parent_node.show_wizard(true)
 					queue_redraw()
 				elif not event.pressed and _is_zooming:
 					self._is_zooming = false
@@ -398,7 +398,7 @@ func _input(event: InputEvent) -> void:
 				if event.pressed and self._mouse_in:
 					# This needs to be here in the plot node since the plot node will block any form of mouse input onto its parent
 					# due to the set mouse filter
-					self._parent_node._on_setting_pressed(true)
+					self._parent_node.show_wizard(true)
 		
 func _process(delta: float) -> void:
 
