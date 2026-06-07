@@ -158,7 +158,6 @@ func _update_axis_selection():
 var _guidot_server: Guidot_Data_Server
 var _curr_data_str: String
 @onready var _selected_channels_name: Array = []
-@onready var _guidot_clock_node: Guidot_Clock = self.get_tree().get_nodes_in_group(Guidot_Common._clock_group_name)[0]
 
 @onready var default_window_size: Vector2 = Vector2(620, 360)
 @onready var default_window_color: Color = Guidot_Utils.get_color("gd_black")
@@ -1267,7 +1266,7 @@ func _process(delta: float) -> void:
 									# their data in realtime, they will have to use Time.get_ticks_msec() function to have the correct
 									# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
 									# simply an increasing integer, or absolute or relative time etc.
-									var curr_s: float = self._guidot_clock_node.get_current_time_s()
+									var curr_s: float = Guidot_Clock.get_current_time_s()
 									_t_axis_node.update_to_latest(curr_s)
 									self.plot_realtime_data()
 									queue_redraw()
