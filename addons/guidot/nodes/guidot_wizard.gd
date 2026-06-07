@@ -23,7 +23,9 @@ signal line_color_changed
 @onready var _data_inspector_vbox = VBoxContainer.new()
 @onready var _debugger_vbox = VBoxContainer.new()
 
+# Wizard helper node
 @onready var _guidot_color_picker: Guidot_Color_Picker = Guidot_Color_Picker.new()
+@onready var _guidot_error_popup: Guidot_Error_Popup = Guidot_Error_Popup.new()
 
 # Alias for Guidot_Base_Setting
 # Not to be used for overriding any base class Guidot_Base_Setting provides
@@ -586,6 +588,10 @@ func update_config_tree(config_tree: Dictionary, subscribed_data: Array) -> void
 func update_debugger_tree() -> void:
 	pass
 
+func show_error_popup(gd_error: Guidot_Error) -> void:
+	self._guidot_error_popup.generate_popup(gd_error)
+	self._guidot_error_popup.visible = true
+
 func _ready() -> void:
 	super._ready()
 	# initialize internal structures
@@ -650,6 +656,7 @@ func _ready() -> void:
 	# this node itself. If this is added as a child to this node, it will open within the domain of this node, and will
 	# not be able to move around freely
 	self.get_tree().root.add_child.call_deferred(self._guidot_color_picker)
+	self.get_tree().root.add_child.call_deferred(self._guidot_error_popup)
 
 	self.add_to_group(Guidot_Common._wizard_group_name)
 

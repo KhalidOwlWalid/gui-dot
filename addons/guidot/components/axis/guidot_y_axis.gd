@@ -148,10 +148,13 @@ func calculate_offset_from_plot_frame(display_frame_node: Node, plot_frame_node:
 	self.offset_bottom = plot_frame_node.offset_bottom
 
 # Override so that changing limits also resizes and repositions the axis.
-func setup_axis_range(min: float, max: float, trigger_redraw: bool = true) -> void:
-	super.setup_axis_range(min, max, trigger_redraw)
+func setup_axis_range(min: float, max: float, trigger_redraw: bool = true) -> Guidot_Error:
+	var gd_error: Guidot_Error = super.setup_axis_range(min, max, trigger_redraw)
+
 	if _display_frame_node != null and _plot_frame_node != null:
 		calculate_offset_from_plot_frame(_display_frame_node, _plot_frame_node)
+
+	return gd_error
 
 func _draw_ticks() -> void:
 	self.ticks_pos.clear()

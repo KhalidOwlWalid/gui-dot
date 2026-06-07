@@ -23,6 +23,10 @@ const _t_axis_range_key: String = "sliding_window_size"
 const _cursor_settings_key: String = "cursor_settings"
 const _show_values_key: String = "show_values"
 
+const _t_fixed_setup_key: String = "fixed_setup"
+const _t_axis_min_key: String = "min"
+const _t_axis_max_key: String = "max"
+
 @onready var _show_cursor_values: bool = true
 
 @onready var _config_tree: Dictionary = {
@@ -46,6 +50,10 @@ const _show_values_key: String = "show_values"
 	self._t_axis_setup_key: {
 		"realtime_setup": {
 			self._t_axis_range_key: _GBS.create_float_edit_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 10, 0, 10000, 10),
+		},
+		self._t_fixed_setup_key: {
+			self._t_axis_min_key: _GBS.create_float_edit_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 0, 0, INF, 1),
+			self._t_axis_max_key: _GBS.create_float_edit_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 30, 0, INF, 1),
 		}
 	},
 	self._cursor_settings_key: {
@@ -80,16 +88,16 @@ func _apply_user_config(branch_name: String, new_value: Variant):
 				self._on_graph_opacity_changed(alpha)
 		
 		self._graph_buffer_mode_key:
-			# self.t_axis_node.change_graph_mode(
+			# self._t_axis_node.change_graph_mode(
 			var selected_mode: Graph_Buffer_Mode = new_value
 
 			match (selected_mode):
 				Graph_Buffer_Mode.FIXED:
-					self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.FIXED)
+					self._t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.FIXED)
 				Graph_Buffer_Mode.REALTIME:
-					self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.SLIDING_WINDOW)
+					self._t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.SLIDING_WINDOW)
 				_:
-					self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.SLIDING_WINDOW)
+					self._t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.SLIDING_WINDOW)
 			queue_redraw()
 
 		self._left_axis_count_key:
@@ -106,13 +114,31 @@ func _apply_user_config(branch_name: String, new_value: Variant):
 
 		self._t_axis_range_key:
 			var range_s: float = new_value
-			self.t_axis_node.set_window_size_s(range_s)
+			self._t_axis_node.set_window_size_s(range_s)
 
 			queue_redraw()
 
 		self._show_values_key:
 			var show_value_flag: bool = new_value
 			self.plot_node._show_cursor_values = new_value
+
+		self._t_axis_min_key:
+			var t_axis_min: float = new_value
+			var t_axis_max: float = self._config_tree[self._t_axis_setup_key][self._t_fixed_setup_key][self._t_axis_max_key][_GBS.value_key]
+			var gd_error: Guidot_Error = self._t_axis_node.setup_axis_range(t_axis_min, t_axis_max)
+
+			if (gd_error.error_type != Error.OK):
+				# We can assume since we are configuring this current graph with wizard, self._guidot_wizard should not be null
+				self._guidot_wizard.show_error_popup(gd_error)
+
+		self._t_axis_max_key:
+			var t_axis_max: float = new_value
+			var t_axis_min: float = self._config_tree[self._t_axis_setup_key][self._t_fixed_setup_key][self._t_axis_min_key][_GBS.value_key]
+			var gd_error: Guidot_Error = self._t_axis_node.setup_axis_range(t_axis_min, t_axis_max)
+
+			if (gd_error.error_type != Error.OK):
+				# We can assume since we are configuring this current graph with wizard, self._guidot_wizard should not be null
+				self._guidot_wizard.show_error_popup(gd_error)
 
 func _update_axis_selection():
 	self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_available_axes", self._y_axis_manager.get_available_axis_pos())
@@ -135,7 +161,7 @@ var _curr_data_str: String
 
 # Components used for building the graph 
 @onready var plot_node: Guidot_Plot_Canvas = Guidot_Plot_Canvas.new()
-@onready var t_axis_node: Guidot_T_Axis_Canvas = Guidot_T_Axis_Canvas.new()
+@onready var _t_axis_node: Guidot_T_Axis_Canvas = Guidot_T_Axis_Canvas.new()
 
 @onready var _setting_button: Button = Button.new()
 @onready var _setting_icon: Texture2D = load("res://addons/guidot/icons/gear_icon.png")
@@ -185,10 +211,10 @@ func _on_cursor_pressed() -> void:
 func _on_toggle_graph_pressed() -> void:
 	self.ui_action_request.emit(Guidot_Common.UI_Action.TOGGLE_GRAPH_MODE)
 	
-	if (self.t_axis_node.get_current_t_axis_mode() == Guidot_T_Axis_Canvas.TAxisMode.FIXED):
-		self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.SLIDING_WINDOW)
+	if (self._t_axis_node.get_current_t_axis_mode() == Guidot_T_Axis_Canvas.TAxisMode.FIXED):
+		self._t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.SLIDING_WINDOW)
 	else:
-		self.t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.FIXED)
+		self._t_axis_node.change_graph_mode(Guidot_T_Axis_Canvas.TAxisMode.FIXED)
 
 @onready var _hide_graph_button: Button = Button.new()
 @onready var _hide_graph_icon: Texture2D = load("res://addons/guidot/icons/hide_icon.png")
@@ -529,12 +555,12 @@ func update_debug_info() -> void:
 func _update_final_debug_trace() -> void:
 	self.update_debug_info()
 	plot_node.update_debug_info()
-	t_axis_node.update_debug_info()
+	_t_axis_node.update_debug_info()
 	self.final_debug_trace_signals.clear()
 
 	# TODO (Khalid): At the moment, I am leaving this hard-coded because this isn't really a user feature
 	# Only developer should be using this
-	var child_array: Array[Guidot_Common] = [self, plot_node, t_axis_node] 
+	var child_array: Array[Guidot_Common] = [self, plot_node, _t_axis_node] 
 
 	for child in child_array:
 		for debug_signal in child.debug_signals_to_trace:
@@ -596,7 +622,7 @@ func _setup_plot_node() -> void:
 		var right_ax_width = n_right_yax_comp * y_axis_width
 		right_offset = self.size.x - right_ax_width - right_padding
 	var top_offset: int = int(header_margin * self.size.y)
-	var bottom_offset: int = int(self.size.y - t_axis_node.norm_comp_size.y * self.size.y)
+	var bottom_offset: int = int(self.size.y - _t_axis_node.norm_comp_size.y * self.size.y)
 
 	plot_node.init_plot(Guidot_Utils.get_color("gd_black"))
 	plot_node.setup_plot_frame_offset(left_offset, right_offset, top_offset, bottom_offset)
@@ -616,8 +642,8 @@ func _init_axis(axis_node: Guidot_Axis_Canvas, axis_name: String, axis_color: Co
 	axis_node.setup_axis_range(axis_range.x, axis_range.y)
 
 func _init_t_axis_node():
-	self._init_axis(t_axis_node, "t_axis", Guidot_Utils.get_color("gd_black"), Vector2(t_axis_min, t_axis_max))
-	self.add_child(t_axis_node)
+	self._init_axis(_t_axis_node, "t_axis", Guidot_Utils.get_color("gd_black"), Vector2(t_axis_min, t_axis_max))
+	self.add_child(_t_axis_node)
 
 func setup_font() -> void:
 	pass
@@ -837,12 +863,12 @@ func _on_plot_drag_requested(delta_pos: Vector2):
 		var new_y_range: Vector2 = Vector2(y_axis_range.x + y_increment, y_axis_range.y + y_increment)
 		ax_handler.set_axis_range(new_y_range, false)
 
-	var delta_t: float = self.t_axis_node.axis_diff()
+	var delta_t: float = self._t_axis_node.axis_diff()
 	var t_increment: float = pix_motion_ratio.x * delta_t
-	var t_axis_range: Vector2 = self.t_axis_node.get_axis_range()
+	var t_axis_range: Vector2 = self._t_axis_node.get_axis_range()
 	# This needs to be substracted since the delta pixel would produce positive result when going to the right, and if
 	# user wants to drag right, the time axis would move backwards
-	self.t_axis_node.setup_axis_range(self.t_axis_node.min_val - t_increment, self.t_axis_node.max_val - t_increment, true)
+	self._t_axis_node.setup_axis_range(self._t_axis_node.min_val - t_increment, self._t_axis_node.max_val - t_increment, true)
 
 func _on_mouse_wheel_zoom_requested(mouse_button: MouseButton, mouse_ratio_pos: Vector2):
 	
@@ -873,15 +899,15 @@ func _on_mouse_wheel_zoom_requested(mouse_button: MouseButton, mouse_ratio_pos: 
 			calc_zoom_range = Vector2(y_axis_range.x - new_y_range * bottom_weight * tuned_ratio, y_axis_range.y + new_y_range * top_weight * tuned_ratio)
 			ax_handler.set_axis_range(calc_zoom_range, false)
 
-	var t_axis_range: Vector2 = self.t_axis_node.get_axis_range()
+	var t_axis_range: Vector2 = self._t_axis_node.get_axis_range()
 	var t_axis_centre: float = abs(t_axis_range.x + t_axis_range.y) / 2.0
 
 	if (mouse_button == MouseButton.MOUSE_BUTTON_WHEEL_UP):
 		var new_range: float = abs(t_axis_range.y - t_axis_range.x) / zoom_factor
-		t_axis_node.setup_axis_range(t_axis_range.x + new_range * left_weight * tuned_ratio, t_axis_range.y - new_range * right_weight * tuned_ratio)
+		_t_axis_node.setup_axis_range(t_axis_range.x + new_range * left_weight * tuned_ratio, t_axis_range.y - new_range * right_weight * tuned_ratio)
 	elif (mouse_button == MouseButton.MOUSE_BUTTON_WHEEL_DOWN):
 		var new_range: float = abs(t_axis_range.y - t_axis_range.x) * zoom_factor
-		t_axis_node.setup_axis_range(t_axis_range.x - new_range * left_weight * tuned_ratio, t_axis_range.y + new_range * right_weight * tuned_ratio)
+		_t_axis_node.setup_axis_range(t_axis_range.x - new_range * left_weight * tuned_ratio, t_axis_range.y + new_range * right_weight * tuned_ratio)
 
 func resize_button_icon(button_icon: Texture2D) -> Texture2D:
 	var resized_img: Image = button_icon.get_image()
@@ -943,14 +969,14 @@ func _ready() -> void:
 
 	self._setup_all_ui_button()
 
-	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
+	plot_node.update_x_ticks_properties(_t_axis_node.n_steps, _t_axis_node.ticks_pos)
 
 	##########################
 	#         SIGNAL         #
 	##########################
 
 	# Axis node signal
-	t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
+	_t_axis_node.axis_limit_changed.connect(_on_t_axis_changed)
 
 	plot_node.focus_requested.connect(_on_focus_requested)
 	
@@ -998,10 +1024,10 @@ func _on_graph_opacity_changed(alpha: float) -> void:
 	current_color.a = a 
 	modulated_color = Color(1.0, 1.0, 1.0, a)
 	# self.plot_node.set_self_modulate(modulated_color)
-	# self.t_axis_node.set_self_modulate(modulated_color)
+	# self._t_axis_node.set_self_modulate(modulated_color)
 	self.color = current_color
 	self.plot_node.color = color
-	self.t_axis_node.color = color
+	self._t_axis_node.color = color
 
 	for ax_handler in self._y_axis_manager.get_available_axis_handler():
 		ax_handler.set_axis_modulation(current_color)
@@ -1010,7 +1036,7 @@ func _on_graph_opacity_changed(alpha: float) -> void:
 
 func _draw():
 	# Data line drawing is handled inside the _draw function of plot_node
-	t_axis_node.draw_axis()
+	_t_axis_node.draw_axis()
 
 func plot_realtime_data() -> void:
 	
@@ -1036,7 +1062,7 @@ func _on_display_frame_resized() -> void:
 			axis_handler.get_axis_range()) 
 	# Only reposition the t-axis — do not call setup_axis_range() here because
 	# that would force the axis into FIXED mode, overriding SLIDING_WINDOW mode.
-	t_axis_node.calculate_offset_from_plot_frame(self, plot_node)
+	_t_axis_node.calculate_offset_from_plot_frame(self, plot_node)
 	
 	# Ensure the UI buttons are always at the top right during resizing
 	var i: int = 0
@@ -1052,8 +1078,8 @@ func _on_display_frame_resized() -> void:
 func _on_data_received() -> void:
 	if (not self._is_pause):
 		self.data_received_signal += 1
-		t_axis_min = t_axis_node.min_val
-		t_axis_max = t_axis_node.max_val
+		t_axis_min = _t_axis_node.min_val
+		t_axis_max = _t_axis_node.max_val
 		# REALTIME mode: _process drives redraws at plot_update_rate_hz — don't
 		# redraw here or every incoming sample bypasses the rate cap.
 		# FIXED mode: redraw immediately so a static window reflects new data.
@@ -1073,7 +1099,7 @@ func _on_zoom_requested(pixel_rect: Rect2) -> void:
 	var new_t_min := remap(pixel_rect.position.x, 0, comp_size.x, old_t_min, old_t_max)
 	var new_t_max := remap(pixel_rect.end.x, 0, comp_size.x, old_t_min, old_t_max)
 	# Drive through setup_axis_range so axis_limit_changed fires and ticks recalculate
-	t_axis_node.setup_axis_range(new_t_min, new_t_max)
+	_t_axis_node.setup_axis_range(new_t_min, new_t_max)
 
 	for axis_handler in self._y_axis_manager.get_available_axis_handler():
 		var curr_range: Vector2 = axis_handler.get_axis_range()
@@ -1084,9 +1110,9 @@ func _on_zoom_requested(pixel_rect: Rect2) -> void:
 
 func _on_t_axis_changed() -> void:
 	self.t_axis_lim_signal += 1
-	t_axis_min = t_axis_node.min_val
-	t_axis_max = t_axis_node.max_val
-	plot_node.update_x_ticks_properties(t_axis_node.n_steps, t_axis_node.ticks_pos)
+	t_axis_min = _t_axis_node.min_val
+	t_axis_max = _t_axis_node.max_val
+	plot_node.update_x_ticks_properties(_t_axis_node.n_steps, _t_axis_node.ticks_pos)
 	self.plot_realtime_data()
 
 func update_ui_mode_state(ui_mode: Guidot_Time_Series_Graph.UI_Mode):
@@ -1185,10 +1211,10 @@ func _process(delta: float) -> void:
 
 	# This may seem to be a duplicate to the switch that comes after, but I'd rather have the graph node itself being the "master"
 	# to pass what current state it is rather than using the output directly from the time axis node (Just my preference)
-	match (self.t_axis_node.get_current_t_axis_mode()):
-		self.t_axis_node.TAxisMode.FIXED:
+	match (self._t_axis_node.get_current_t_axis_mode()):
+		self._t_axis_node.TAxisMode.FIXED:
 			self._update_buffer_mode(Graph_Buffer_Mode.FIXED)
-		self.t_axis_node.TAxisMode.SLIDING_WINDOW:
+		self._t_axis_node.TAxisMode.SLIDING_WINDOW:
 			self._update_buffer_mode(Graph_Buffer_Mode.REALTIME)
 
 	match (self._curr_ui_mode):
@@ -1237,7 +1263,7 @@ func _process(delta: float) -> void:
 									# scale. The external clock source would allow the time axis to be a lot more flexble in a sense that it can be
 									# simply an increasing integer, or absolute or relative time etc.
 									var curr_s: float = self._guidot_clock_node.get_current_time_s()
-									t_axis_node.update_to_latest(curr_s)
+									_t_axis_node.update_to_latest(curr_s)
 									self.plot_realtime_data()
 									queue_redraw()
 

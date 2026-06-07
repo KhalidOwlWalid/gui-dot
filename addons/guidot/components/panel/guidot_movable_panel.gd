@@ -189,7 +189,7 @@ func _ready() -> void:
 	self.name = "Guidot_Movable_Panel"
 	self.size = self._panel_default_size
 	self.z_index = 1
-	self.custom_minimum_size = Vector2(200, 200)
+	self.custom_minimum_size = Vector2(100, 100)
 
 	# Sets the base color of the panel to fit the theme
 	_guidot_stylebox.bg_color = Guidot_Utils.get_guidot_base_color()
@@ -281,7 +281,7 @@ func set_margin_size(stylebox: StyleBoxFlat, val: int) -> void:
 	stylebox.content_margin_top = val
 
 func set_panel_size(new_size: Vector2) -> void:
-	pass
+	self.size = new_size
 
 func _is_point_near(from: Vector2, target: Vector2, margin: int) -> bool:
 	return from.distance_to(target) <= margin
