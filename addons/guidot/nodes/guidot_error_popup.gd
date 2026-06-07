@@ -9,6 +9,11 @@ func _ready() -> void:
 	self.set_title_name(self.name)
 	self.set_panel_size(Vector2(500, 160))
 	self.add_child_into_panel_space(self._popup_vbox)
+	self.hide_popup()
+
+func set_popup_to_center() -> void:
+	var center_pos: Vector2
+	self.position = DisplayServer.screen_get_size()/2 - Vector2i(self.size/2)
 
 # When OK is pressed, then clear the error popup panel space, and close the popup
 func _on_ok_pressed() -> void:
@@ -50,12 +55,15 @@ func generate_popup(gd_error: Guidot_Error) -> void:
 	self._popup_vbox.add_child(error_src_label)
 	self._popup_vbox.add_child(ok_button)
 
+	self.set_popup_to_center()
+
 	self.queue_redraw()
 
 func hide_popup() -> void:
 	self.visible = false
 
 func show_popup() -> void:
+	self.set_popup_to_center()
 	self.visible = true
 
 func _draw() -> void:
