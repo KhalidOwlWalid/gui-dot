@@ -21,7 +21,8 @@ const _t_axis_setup_key: String = "t_axis_setup"
 const _t_axis_range_key: String = "sliding_window_size"
 
 const _cursor_settings_key: String = "cursor_settings"
-const _show_values_key: String = "show_values"
+const _show_cursor_key: String = "show_cursor"
+const _show_cursor_values_key: String = "show_values"
 
 const _t_fixed_setup_key: String = "fixed_setup"
 const _t_axis_min_key: String = "min"
@@ -57,7 +58,8 @@ const _t_axis_max_key: String = "max"
 		}
 	},
 	self._cursor_settings_key: {
-		self._show_values_key: _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, self._show_cursor_values),
+		self._show_cursor_key: _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, true),
+		self._show_cursor_values_key: _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, self._show_cursor_values),
 	}
 }
 
@@ -118,7 +120,10 @@ func _apply_user_config(branch_name: String, new_value: Variant):
 
 			queue_redraw()
 
-		self._show_values_key:
+		self._show_cursor_key:
+			self._on_cursor_pressed()
+
+		self._show_cursor_values_key:
 			var show_value_flag: bool = new_value
 			self.plot_node._show_cursor_values = new_value
 

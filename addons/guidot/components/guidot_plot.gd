@@ -17,7 +17,7 @@ signal cursor_info(channel_name: String, data_pts: Vector2)
 var _y_axis_ranges: Dictionary = {}
 
 var _curr_cursor_pos: Vector2 = Vector2(0, 0)
-var _draw_cursor_flag: bool = false
+var _draw_cursor_flag: bool = true
 var _mouse_inside: bool = false
 var _curr_graph_mode: Graph_Buffer_Mode
 
