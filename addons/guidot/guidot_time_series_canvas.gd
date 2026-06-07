@@ -143,14 +143,14 @@ var _curr_data_str: String
 @onready var _guidot_wizard: Guidot_Wizard
 @onready var _graph_selected: bool = false
 
-func _on_setting_pressed(show_settings: bool) -> void:
+func _on_setting_pressed() -> void:
+	self.show_wizard(true)
+
+func show_wizard(show_settings: bool) -> void:
+	self.log(LOG_DEBUG, ["Show Guidot_Wizard: ", show_settings])
 	var graph_in_focus_name: String = ""
-
-	self.log(LOG_DEBUG, ["Show settings: ", show_settings])
-
 	if (show_settings):
 		graph_in_focus_name = self.name
-
 	self.get_tree().call_group(Guidot_Common._graph_group_name, self._graph_in_focus_callback_name, graph_in_focus_name)
 
 @onready var _pause_button: Button = Button.new()
@@ -1157,7 +1157,7 @@ func _input(event: InputEvent) -> void:
 			self._on_toggle_graph_pressed()
 
 		if (event.keycode == KEY_ESCAPE):
-			self._on_setting_pressed(false)
+			self.show_wizard(false)
 
 func _set_mouse_filter_action():
 	if (self._curr_ui_mode == Guidot_Time_Series_Graph.UI_Mode.EDIT or self._curr_ui_mode == Guidot_Time_Series_Graph.UI_Mode.SELECTED):
