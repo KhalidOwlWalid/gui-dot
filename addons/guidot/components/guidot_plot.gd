@@ -23,6 +23,8 @@ var _curr_graph_mode: Graph_Buffer_Mode
 
 var _is_pause: bool = false
 
+var _show_cursor_values: bool = true
+
 signal mouse_wheel_zoom_requested(mouse_button: MouseButton)
 
 # Zoom-by-drag state
@@ -277,7 +279,8 @@ func _draw_cursor_values(cursor_pos: Vector2):
 		else:
 			str_draw_pix_pos = interp_pixel - Vector2(label_size.x + 15, -label_font_size/2)
 
-		draw_string(font, str_draw_pix_pos, label, 0, -1, label_font_size, gd_data.get_line_color())
+		if (self._show_cursor_values):
+			draw_string(font, str_draw_pix_pos, label, 0, -1, label_font_size, gd_data.get_line_color())
 	
 	self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_data_inspector_ui", data_inspector_info)
 

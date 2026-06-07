@@ -20,6 +20,11 @@ const _right_axis_count_key: String = "right_axis_count"
 const _t_axis_setup_key: String = "t_axis_setup"
 const _t_axis_range_key: String = "sliding_window_size"
 
+const _cursor_settings_key: String = "cursor_settings"
+const _show_values_key: String = "show_values"
+
+@onready var _show_cursor_values: bool = true
+
 @onready var _config_tree: Dictionary = {
 	"graph_node_ref": str(self),
 	"graph_node_id": str(self.get_instance_id()),
@@ -42,6 +47,9 @@ const _t_axis_range_key: String = "sliding_window_size"
 		"realtime_setup": {
 			self._t_axis_range_key: _GBS.create_float_edit_type(_GBS.SelectionType.LINE_EDIT_FLOAT, 10, 0, 10000, 10),
 		}
+	},
+	self._cursor_settings_key: {
+		self._show_values_key: _GBS.create_selection_type(_GBS.SelectionType.CHECKBOX, self._show_cursor_values),
 	}
 }
 
@@ -102,6 +110,10 @@ func _apply_user_config(branch_name: String, new_value: Variant):
 
 			queue_redraw()
 
+		self._show_values_key:
+			var show_value_flag: bool = new_value
+			self.plot_node._show_cursor_values = new_value
+
 func _update_axis_selection():
 	self.get_tree().call_group(Guidot_Common._wizard_group_name, "update_available_axes", self._y_axis_manager.get_available_axis_pos())
 
@@ -134,10 +146,12 @@ var _curr_data_str: String
 func _on_setting_pressed(show_settings: bool) -> void:
 	var graph_in_focus_name: String = ""
 
+	self.log(LOG_DEBUG, ["Show settings: ", show_settings])
+
 	if (show_settings):
 		graph_in_focus_name = self.name
+
 	self.get_tree().call_group(Guidot_Common._graph_group_name, self._graph_in_focus_callback_name, graph_in_focus_name)
-	self.log(LOG_DEBUG, ["Current opacity value is: ", self._config_tree[_GBS.local_key][self._opacity_key]["value"]])
 
 @onready var _pause_button: Button = Button.new()
 @onready var _pause_icon: Texture2D = load("res://addons/guidot/icons/pause_icon.png")

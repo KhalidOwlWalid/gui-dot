@@ -15,11 +15,13 @@ signal line_color_changed
 @onready var _data_subscriber_cont: ScrollContainer = ScrollContainer.new()
 @onready var _axis_assignment_cont: ScrollContainer = ScrollContainer.new()
 @onready var _data_inspector_cont: ScrollContainer = ScrollContainer.new()
+@onready var _debugger_cont: ScrollContainer = ScrollContainer.new()
 
 # VBox for graph configurator
 @onready var _graph_config_vbox = VBoxContainer.new()
 @onready var _data_sub_vbox = VBoxContainer.new()
 @onready var _data_inspector_vbox = VBoxContainer.new()
+@onready var _debugger_vbox = VBoxContainer.new()
 
 @onready var _guidot_color_picker: Guidot_Color_Picker = Guidot_Color_Picker.new()
 
@@ -581,6 +583,9 @@ func update_config_tree(config_tree: Dictionary, subscribed_data: Array) -> void
 	self._update_axis_assignment_ui()
 	self.visible = true
 
+func update_debugger_tree() -> void:
+	pass
+
 func _ready() -> void:
 	super._ready()
 	# initialize internal structures
@@ -626,15 +631,19 @@ func _ready() -> void:
 	self._data_inspector_cont.name = "Data Inspector"
 	self._data_inspector_cont.add_theme_stylebox_override("panel", base_stylebox)
 
+	self._debugger_cont.add_child(self._debugger_vbox)
+	self._debugger_cont.name = "Debugger"
+	self._debugger_cont.add_theme_stylebox_override("panel", base_stylebox)
+
 	self._menu_tab_cont.add_child(self._graph_config_cont)
 	self._menu_tab_cont.add_child(self._data_subscriber_cont)
 	self._menu_tab_cont.add_child(self._axis_assignment_cont)
 	self._menu_tab_cont.add_child(self._data_inspector_cont)
+	self._menu_tab_cont.add_child(self._debugger_cont)
 	self._menu_vbox.add_child(_wizard_panel_cont)
 
 	var config_tree: Dictionary = {}
 
-	# _panel_space.add_child(_menu_vbox)
 	self.add_child_into_panel_space(self._menu_vbox)
 
 	self.add_to_group(Guidot_Common._wizard_group_name)
