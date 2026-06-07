@@ -463,7 +463,7 @@ func _on_color_changed(selected_color: Color, channel_node: Guidot_Data, color_b
 	 
 func _on_color_pick_pressed(channel_node: Guidot_Data, color_button: Button) -> void:
 	# Globally, there should only be one color picker
-	self._guidot_color_picker = self.get_tree().get_nodes_in_group(Guidot_Common._color_picker_name)[0]
+	# self._guidot_color_picker = self.get_tree().get_nodes_in_group(Guidot_Common._color_picker_name)[0]
 	
 	if (not self._guidot_color_picker.visible):
 		self._guidot_color_picker.visible = true
@@ -645,6 +645,11 @@ func _ready() -> void:
 	var config_tree: Dictionary = {}
 
 	self.add_child_into_panel_space(self._menu_vbox)
+	
+	# This needs to be added on the root as we want to have this as a floating panel rather than it being constricted to
+	# this node itself. If this is added as a child to this node, it will open within the domain of this node, and will
+	# not be able to move around freely
+	self.get_tree().root.add_child.call_deferred(self._guidot_color_picker)
 
 	self.add_to_group(Guidot_Common._wizard_group_name)
 
