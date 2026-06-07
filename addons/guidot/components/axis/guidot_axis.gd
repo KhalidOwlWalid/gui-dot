@@ -74,13 +74,30 @@ func setup_axis_node(name: String, color: Color) -> void:
 	self.color = color
 	self.init_event_handler()
 
-func setup_axis_range(min: float, max: float, trigger_redraw: bool = true) -> void:
+func setup_axis_range(min: float, max: float, trigger_redraw: bool = true) -> Guidot_Error:
+	var gd_error: Guidot_Error = Guidot_Error.ok()
+
+	if (min > max):
+		var msg: String = "Time minimum (" + str(min) + ") is larger than maximum (" + str(max) + ")"
+		var src_node: String = str(self)
+		var src_func: String = "setup_axis_range"
+		gd_error = Guidot_Error.generate_error(Error.ERR_INVALID_PARAMETER, msg, src_node, src_func)
+		return gd_error
+	elif (max < min):
+		var msg: String = "Time maximum (" + str(max) + ") is smaller than minimum (" + str(min) + ")"
+		var src_node: String = str(self)
+		var src_func: String = "setup_axis_range"
+		gd_error = Guidot_Error.generate_error(Error.ERR_INVALID_PARAMETER, msg, src_node, src_func)
+		return gd_error
+
 	self.min_val = min
 	self.max_val = max
 	axis_limit_changed.emit()
 	
 	if (trigger_redraw):
 		queue_redraw()
+
+	return gd_error
 
 func set_axis_color(color: Color) -> void:
 	self.color = color
