@@ -26,6 +26,7 @@ const LOG_ERROR = Guidot_Log.Log_Level.ERROR
 # Stores the unique name as key and Guidot_Data node as value for ease of reference
 # e.g. {"data_channel1": Guidot_Data<unique_id>}
 @onready var _data_channel_id_manager: Dictionary = {}
+@onready var _guidot_error_popup: Guidot_Error_Popup = Guidot_Error_Popup.new()
 
 const Graph_Buffer_Mode = Guidot_Common.Graph_Buffer_Mode
 var _graph_buffer_mode: Graph_Buffer_Mode = Graph_Buffer_Mode.REALTIME
@@ -37,6 +38,8 @@ func _ready() -> void:
 	self.set_custom_name(self._custom_server_name)
 	self.set_type(Guidot_Common._server_group_name)
 	self.add_to_group(Guidot_Common._server_group_name)
+
+	self.get_tree().root.add_child.call_deferred(self._guidot_error_popup)
 
 func set_graph_buffer_mode(buf_mode: Graph_Buffer_Mode) -> void:
 	_graph_buffer_mode = buf_mode
@@ -67,8 +70,11 @@ func query_data_with_channel_name(channel_name: String) -> PackedVector2Array:
 	if (has_key):
 		return self._data_channel_manager[self.get_channel_id(channel_name)]
 	else:
-		# TODO (Khalid): Popup and inform the user about the error
-		self.log(LOG_WARNING, ["The chosen channel name, [", channel_name, "] does not exist. Returning empty dataset."])
+		var gd_error: Guidot_Error = Guidot_Error.new()
+		var error_msg: String = "The chosen channel name, [" + channel_name + "] does not exist. Returning empty dataset."
+		gd_error.generate_error(Error.ERR_DOES_NOT_EXIST, error_msg, str(self), "query_data_with_channel_name")
+		self._guidot_error_popup.generate_popup(gd_error)
+		self.log(LOG_WARNING, [error_msg])
 	return PackedVector2Array()
 
 func query_data_line_color(channel_name: String) -> Color:

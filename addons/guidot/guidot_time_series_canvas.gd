@@ -298,8 +298,8 @@ class AxisHandler:
 		# TODO (Khalid): Check if the y-axis ID is valid or not
 		self._axis_pos = id
 
-	func set_axis_range(new_range: Vector2, trigger_redraw: bool = true) -> void:
-		self._axis_node.setup_axis_range(new_range.x, new_range.y, trigger_redraw)
+	func setup_axis_range(min: float, max: float, trigger_redraw: bool = true) -> void:
+		self._axis_node.setup_axis_range(min, max, trigger_redraw)
 
 	func set_axis_modulation(modulated_color: Color):
 		# self._axis_node.set_self_modulate(modulated_color)
@@ -768,34 +768,6 @@ func _get_data() -> PackedVector2Array:
 func _get_line_color() -> Color:
 	return self._guidot_server.query_data_line_color(self._curr_data_str)
 
-func _on_changes_applied(server_config_array: Array[Guidot_Server_Config]):
-
-	if (server_config_array.is_empty()):
-		self.log(LOG_WARNING, ["No server has been selected. Please use the Add Server button to subscribe to any available server."])
-	else:
-		
-		# TODO (Khalid): At the moment, I am only using the first server that is selected
-		for i in len(server_config_array):
-			self._guidot_server = server_config_array[0].get_selected_server()
-			self._request_buffer_mode()
-
-	
-			if (server_config_array[0].get_selected_data().is_empty()):
-				self.log(LOG_WARNING, ["Please select data that you wish to subscribe to: ", server_config_array[0].get_all_data_options()])
-				self._selected_channels_name = []
-				# Pass an empty array to remove all of the channels from the axis
-				self._y_axis_manager.remove_data_from_axis([])
-			else:
-				self._selected_channels_name = server_config_array[0].get_selected_data()
-
-				var gd_node_array: Array[Guidot_Data] = []
-				for chan_name in self._selected_channels_name:
-					gd_node_array.append(self._guidot_server.get_node_id_with_channel_name(chan_name))
-
-				self._y_axis_manager.remove_data_from_axis(gd_node_array)
-
-	self.resized.emit()
-
 func _on_y_axis_changes_applied(n_axis) -> void:
 	var n_left: int = n_axis[0]
 	var n_right: int = n_axis[1]
@@ -838,7 +810,7 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 
 	# This might be redundant as the one above, but fuck it, I am tired. This is an easy fix to make sure I dont fuck up when the number
 	# of axis decreases
-	# Please note that since this function also calls, set_axis_range(), it will inherently trigger axis_limit_changed signal which will
+	# Please note that since this function also calls, setup_axis_range(), it will inherently trigger axis_limit_changed signal which will
 	# then queue a redraw (this is not optimal, but I will fix this if I see any form of bottleneck due to this implementation). Since
 	# I am assuming the user would rarely trigger any sort of change in the number of axis, this should be fine and would not cost any sort
 	# of performance.
@@ -848,7 +820,9 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 			self._y_axis_manager.get_data_to_axis_map()[data_node] = "PRIMARY_LEFT"
 		else:
 			var axis_node: AxisHandler = self._y_axis_manager.get_axis_manager_dict()[Guidot_Y_Axis_Canvas.AxisPosition[curr_ax_id_str]]
-			axis_node.set_axis_range(data_node.get_min_max())
+			# Annoyingly write it twice like this as an argument because I want to standardize the function naming convention so I can
+			# call the same function name
+			axis_node.setup_axis_range(data_node.get_min_max().x, data_node.get_min_max().y)
 	
 	# Trigger the resized signal so that we redraw the newly configured axis
 	self.resized.emit()
@@ -869,7 +843,7 @@ func _on_plot_drag_requested(delta_pos: Vector2):
 		var y_increment: float = pix_motion_ratio.y * delta_y
 		var y_axis_range: Vector2 = ax_handler.get_axis_range()
 		var new_y_range: Vector2 = Vector2(y_axis_range.x + y_increment, y_axis_range.y + y_increment)
-		ax_handler.set_axis_range(new_y_range, false)
+		ax_handler.setup_axis_range(new_y_range.x, new_y_range.y, false)
 
 	var delta_t: float = self._t_axis_node.axis_diff()
 	var t_increment: float = pix_motion_ratio.x * delta_t
@@ -901,11 +875,11 @@ func _on_mouse_wheel_zoom_requested(mouse_button: MouseButton, mouse_ratio_pos: 
 		if (mouse_button == MouseButton.MOUSE_BUTTON_WHEEL_UP):
 			new_y_range = abs(y_axis_range.y - y_axis_range.x) / zoom_factor
 			calc_zoom_range = Vector2(y_axis_range.x + new_y_range * bottom_weight * tuned_ratio, y_axis_range.y - new_y_range * top_weight * tuned_ratio)
-			ax_handler.set_axis_range(calc_zoom_range, false)
+			ax_handler.setup_axis_range(calc_zoom_range.x, calc_zoom_range.y, false)
 		if (mouse_button == MouseButton.MOUSE_BUTTON_WHEEL_DOWN):
 			new_y_range = abs(y_axis_range.y - y_axis_range.x) * zoom_factor
 			calc_zoom_range = Vector2(y_axis_range.x - new_y_range * bottom_weight * tuned_ratio, y_axis_range.y + new_y_range * top_weight * tuned_ratio)
-			ax_handler.set_axis_range(calc_zoom_range, false)
+			ax_handler.setup_axis_range(calc_zoom_range.x, calc_zoom_range.y, false)
 
 	var t_axis_range: Vector2 = self._t_axis_node.get_axis_range()
 	var t_axis_centre: float = abs(t_axis_range.x + t_axis_range.y) / 2.0
@@ -1100,21 +1074,34 @@ func _on_focus_requested() -> void:
 	self.parent_focus_requested.emit()
 
 func _on_zoom_requested(pixel_rect: Rect2) -> void:
+
+	var idx: int
+	if (self.plot_node.get_zoom_history().is_empty()):
+		idx = 0
+	else:
+		var last_idx: int = self.plot_node.get_zoom_history().keys()[-1]
+		idx = last_idx + 1
+
 	var comp_size: Vector2 = plot_node.get_component_size()
 
 	var old_t_min := t_axis_min
 	var old_t_max := t_axis_max
 	var new_t_min := remap(pixel_rect.position.x, 0, comp_size.x, old_t_min, old_t_max)
 	var new_t_max := remap(pixel_rect.end.x, 0, comp_size.x, old_t_min, old_t_max)
+
+	self.plot_node.update_zoom_history(idx, {self._t_axis_node: self._t_axis_node.get_axis_range()})
 	# Drive through setup_axis_range so axis_limit_changed fires and ticks recalculate
 	_t_axis_node.setup_axis_range(new_t_min, new_t_max)
 
 	for axis_handler in self._y_axis_manager.get_available_axis_handler():
 		var curr_range: Vector2 = axis_handler.get_axis_range()
+		self.plot_node.update_zoom_history(idx, {axis_handler: curr_range})
 		# y pixel is inverted: 0=top=data max, comp_size.y=bottom=data min
 		var new_y_min := remap(pixel_rect.end.y, comp_size.y, 0, curr_range.x, curr_range.y)
 		var new_y_max := remap(pixel_rect.position.y, comp_size.y, 0, curr_range.x, curr_range.y)
-		axis_handler.set_axis_range(Vector2(new_y_min, new_y_max))
+		axis_handler.setup_axis_range(new_y_min, new_y_max)
+
+	self.log(LOG_DEBUG, ["Zoom History: ", self.plot_node.get_zoom_history()])	
 
 func _on_t_axis_changed() -> void:
 	self.t_axis_lim_signal += 1
