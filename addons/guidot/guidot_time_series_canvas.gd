@@ -734,7 +734,7 @@ func which_graph_in_focus(graph_name: String) -> void:
 	var show_settings: bool = (self.name == graph_name)
 
 	self.log(LOG_DEBUG, ["Settings show status for", self.name, "is", show_settings])
-	if (self.name == graph_name):
+	if (self.name == graph_name and not self._graph_selected):
 		self._graph_selected = true
 		# Guidot_Wizard upon ready will insert itself into its own group name
 		# There should only be one guidot wizard, so the first node in this array should be the guidot wizard itself
@@ -782,6 +782,9 @@ func _on_y_axis_changes_applied(n_axis) -> void:
 	# user, simply delete all y-axis, and create new instances of it. This is not too computationally expensive as this operation
 	# should only occur only when the user wishes to add more y-axis
 	self._y_axis_manager.remove_all_axis_handler()
+	
+	# Clear zoom history as this will hold reference to a freed RefCounted resource
+	self.plot_node.clear_zoom_history()
 
 	for i in range(1, n_left + 1):
 		self._y_axis_manager.add_axis_handler(-i)
