@@ -13,6 +13,10 @@ signal cursor_info(channel_name: String, data_pts: Vector2)
 @onready var _cached_data_channel: Dictionary = {}
 @onready var _cached_x_range: Vector2 = Vector2(0, 0)
 @onready var _cached_y_range: Vector2 = Vector2(0, 0)
+
+# Contains array of old pixel location to undo a zoom action
+@onready var _zoom_history: Dictionary = Dictionary()
+
 # Per-channel y axis range, needed to map interpolated value back to pixel y for label drawing
 var _y_axis_ranges: Dictionary = {}
 
@@ -198,6 +202,16 @@ func update_y_ticks_properties(n_ticks: int, ticks_pos: PackedVector2Array) -> v
 	_y_ticks_pos = ticks_pos
 	_n_y_ticks = n_ticks
 
+func get_zoom_history() -> Dictionary:
+	return self._zoom_history
+
+# idx = Shows the chronological order of the zoom history, the higher the value, the more recent the zoom is
+# zoom_map = {<Axis_Node_Object>: <Axis_Range>(Vector2)}
+func update_zoom_history(idx: int, zoom_map: Dictionary):
+	if (not self._zoom_history.has(idx)):
+		self._zoom_history[idx] = {}
+	self._zoom_history[idx].merge(zoom_map)
+
 func _draw_vertical_grids(n_ticks: int, ticks_pos: PackedVector2Array, grid_color: Color) -> void:
 	for i in range(ticks_pos.size()):
 		draw_line(Vector2(ticks_pos[i].x, self.bottom_right().y), Vector2(ticks_pos[i].x, self.top_right().y), grid_color, -1, true)
@@ -352,8 +366,20 @@ func _input(event: InputEvent) -> void:
 
 			self._is_dragging_plot = false
 
-			if event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-				self.log(LOG_INFO, ["Right button pressed"])
+			if event.button_index == MOUSE_BUTTON_LEFT and event.double_click:
+				self.log(LOG_DEBUG, ["Double click event occured"])
+				
+				if (not self._zoom_history.is_empty()):
+					var last_idx: int = self._zoom_history.keys()[-1]
+
+					for axis_node in self._zoom_history[last_idx].keys():
+						var min_max: Vector2 = self._zoom_history[last_idx][axis_node]
+						axis_node.setup_axis_range(min_max.x, min_max.y)
+
+					self._zoom_history.erase(last_idx)
+
+				else:
+					self.log(LOG_DEBUG, ["No zoom history"])
 
 			if event.button_index == MOUSE_BUTTON_LEFT:
 				
