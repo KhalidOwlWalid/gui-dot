@@ -212,6 +212,9 @@ func update_zoom_history(idx: int, zoom_map: Dictionary):
 		self._zoom_history[idx] = {}
 	self._zoom_history[idx].merge(zoom_map)
 
+func clear_zoom_history():
+	self._zoom_history.clear()
+
 func _draw_vertical_grids(n_ticks: int, ticks_pos: PackedVector2Array, grid_color: Color) -> void:
 	for i in range(ticks_pos.size()):
 		draw_line(Vector2(ticks_pos[i].x, self.bottom_right().y), Vector2(ticks_pos[i].x, self.top_right().y), grid_color, -1, true)
