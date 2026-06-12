@@ -89,6 +89,28 @@ func _create_config_label(config_label: String, center_text: bool = false, capit
 		label1.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	return label1
 
+func _create_refresh_button() -> Button:
+	var button: Button = Button.new()
+	button.text = "↺  Refresh"
+	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var normal_color: Color = Guidot_Utils.get_color("graph_settings_button")
+	var hover_color: Color = Guidot_Utils.get_color("graph_settings_label")
+	var normal_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(
+		normal_color, normal_color, [8, 8, 5, 5], [0, 0, 0, 0], [4, 4, 4, 4]
+	)
+	var hover_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(
+		hover_color, hover_color, [8, 8, 5, 5], [0, 0, 0, 0], [4, 4, 4, 4]
+	)
+	var empty_stylebox: StyleBoxEmpty = StyleBoxEmpty.new()
+	button.add_theme_stylebox_override("normal", normal_stylebox)
+	button.add_theme_stylebox_override("hover", hover_stylebox)
+	button.add_theme_stylebox_override("pressed", hover_stylebox)
+	button.add_theme_stylebox_override("hover_pressed", hover_stylebox)
+	button.add_theme_stylebox_override("focus", empty_stylebox)
+	return button
+
 func _create_config_button(config_label: String) -> Button:
 	var button1: Button = Button.new()
 	button1.text = "⇓" + self.capitalize_words(config_label)
@@ -693,7 +715,7 @@ func _ready() -> void:
 	self._graph_config_vbox.add_theme_constant_override("separation", 3)
 	self._graph_config_cont.add_child(self._graph_config_vbox)
 
-	var refresh_button: Button = self._create_config_button("Refresh")
+	var refresh_button: Button = self._create_refresh_button()
 	self._data_sub_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	self._data_sub_vbox.add_child(refresh_button)
 	refresh_button.pressed.connect(self.query_server_information)
