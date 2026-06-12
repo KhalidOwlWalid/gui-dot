@@ -8,7 +8,7 @@ during the scene, and this will cause the user to lose the logged data, unless d
 data, the client would have to handle node destruction by saving the previously logged data onto the server
 '''
 
-class_name Guidot_Data_Client
+class_name Guidot_Data_Source
 extends Guidot_Data_Core
 
 const LOG_DEBUG = Guidot_Log.Log_Level.DEBUG
@@ -26,6 +26,8 @@ var _update_rate_hz: float
 
 @onready var _data_channel_node_ref: Dictionary = {}
 @onready var _data_channel_name_ref: Dictionary = {}
+
+var _data_groups: Array[Guidot_Data_Group] = []
 
 @onready var _client_registered_flag: bool = false
 
@@ -105,9 +107,28 @@ func get_all_data_channel_name() -> Array[String]:
 		channel_name_array.append(name)
 	return channel_name_array
 
+func register_data_group(group: Guidot_Data_Group) -> void:
+	_data_groups.append(group)
+	for channel in group.get_channels():
+		register_data_channel(channel)
+
+func get_all_data_groups() -> Array[Guidot_Data_Group]:
+	return _data_groups
+
+func get_ungrouped_channels() -> Array[Guidot_Data]:
+	var grouped: Array = []
+	for g in _data_groups:
+		for ch in g.get_channels():
+			grouped.append(ch)
+	var result: Array[Guidot_Data] = []
+	for ch in _data_channel_node_ref.keys():
+		if ch not in grouped:
+			result.append(ch)
+	return result
+
 # TODO: Checks to make sure that the populated the data channel correctly
 func register_data_channel(data_channel: Guidot_Data) -> void:
-	
+
 	# Allow us to reference the data channel better through the use of dictionary
 	self._data_channel_node_ref[data_channel] = data_channel.get_name()
 	self._data_channel_name_ref[data_channel.get_name()] = data_channel
@@ -126,4 +147,3 @@ func _process(delta: float) -> void:
 		self.log(LOG_WARNING, [self.name, "has not been registered to any server"])
 		self.log(LOG_WARNING, ["Please register the client: ", self.name, "by calling <server>.register_client()"])
 		self._last_update_ms = self._curr_ms
-

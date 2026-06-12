@@ -156,11 +156,15 @@ static func _create_checkbox_with_label(label: String, flag: bool) -> HBoxContai
 
 	return l_hbox1
 
-static func setup_data_client_util(client_node: Guidot_Data_Client, data_node: Guidot_Data, name: String, unit: String, \
+static func setup_data_source_util(source_node: Guidot_Data_Source, data_node: Guidot_Data, name: String, unit: String, \
 	 description: String, min: float, max: float, exp_freq: float, color: String = "red") -> void:
 	data_node.setup_properties(name, unit, description, min, max, exp_freq, color)
-	client_node.register_data_channel(data_node)
-	client_node.update_server()
+	source_node.register_data_channel(data_node)
+	source_node.update_server()
+
+static func setup_data_group_util(source_node: Guidot_Data_Source, group: Guidot_Data_Group) -> void:
+	source_node.register_data_group(group)
+	source_node.update_server()
 
 static func profiler(func_to_profile: Callable) -> float:
 	var stime: int = Time.get_ticks_usec()
