@@ -517,8 +517,19 @@ func _on_axis_dropdown_selected(index: int, dropdown: OptionButton, channel_name
 	self.axis_assignment_changed.emit(channel_name, axis_id_enum_str)
 
 func _create_group_subheader(group_name: String) -> Button:
-	var btn: Button = self._create_config_button(group_name)
-	btn.text = "   " + btn.text
+	var btn: Button = Button.new()
+	btn.text = "   ⇓" + self.capitalize_words(group_name)
+	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	var normal_color: Color = 1.15 * Guidot_Utils.get_color("gd_black")
+	var hover_color: Color = 0.75 * Guidot_Utils.get_color("graph_settings_label")
+	var normal_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(normal_color, normal_color, [5, -1, -1, -1])
+	var hover_stylebox: StyleBoxFlat = Guidot_Stylebox.instantiate_flat_stylebox(hover_color, hover_color, [5, -1, -1, -1])
+	var empty_stylebox: StyleBoxEmpty = StyleBoxEmpty.new()
+	btn.add_theme_stylebox_override("normal", normal_stylebox)
+	btn.add_theme_stylebox_override("hover", hover_stylebox)
+	btn.add_theme_stylebox_override("hover_pressed", hover_stylebox)
+	btn.add_theme_stylebox_override("pressed", hover_stylebox)
+	btn.add_theme_stylebox_override("focus", empty_stylebox)
 	return btn
 
 func _wrap_with_indent(control: Control, indent: String) -> HBoxContainer:
@@ -529,7 +540,7 @@ func _wrap_with_indent(control: Control, indent: String) -> HBoxContainer:
 	hbox.add_child(control)
 	return hbox
 
-func _on_collapsible_header_pressed(button: Button, children: Array, label_text: String) -> void:
+func _on_collapsible_header_pressed(button: Button, children: Array, label_text: String, indent: String = "") -> void:
 	var any_visible: bool = false
 	for child in children:
 		if child.visible:
@@ -540,9 +551,9 @@ func _on_collapsible_header_pressed(button: Button, children: Array, label_text:
 		child.visible = new_visibility
 	var capitalized: String = self.capitalize_words(label_text)
 	if new_visibility:
-		button.text = "⇓ " + capitalized
+		button.text = indent + "⇓" + capitalized
 	else:
-		button.text = "⇒ " + capitalized
+		button.text = indent + "⇒" + capitalized
 
 func _on_group_select_all_pressed(select_all_cbox: CheckBox, channel_cboxes: Array) -> void:
 	var subscribe: bool = select_all_cbox.button_pressed
@@ -601,7 +612,7 @@ func query_server_information() -> void:
 					self._on_group_select_all_pressed.bind(select_all_cbox, group_cboxes)
 				)
 				group_btn.pressed.connect(
-					self._on_collapsible_header_pressed.bind(group_btn, group_ui_nodes, group.get_name())
+					self._on_collapsible_header_pressed.bind(group_btn, group_ui_nodes, group.get_name(), "   ")
 				)
 
 			for channel in source.get_ungrouped_channels():
