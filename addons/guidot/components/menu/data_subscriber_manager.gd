@@ -42,7 +42,7 @@ func get_selected_data() -> Dictionary:
 
 	return sel_data_dict
 
-# client_nodes have a structure of {"client_name": <Guidot_Data_Client>}
+# source_nodes have a structure of {"source_name": <Guidot_Data_Source>}
 func set_available_data_for_selection(client_nodes: Dictionary) -> void:
 	# Get the currently selected data from the checkbox
 	self._available_data = get_selected_data()

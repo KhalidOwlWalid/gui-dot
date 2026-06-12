@@ -6,7 +6,7 @@
 [ext_resource type="Script" path="res://addons/guidot/nodes/guidot_wizard.gd" id="4_d8se5"]
 [ext_resource type="Script" path="res://addons/guidot/nodes/guidot_color_picker.gd" id="5_b0il1"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6dedh"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0j20a"]
 content_margin_left = 8.0
 content_margin_top = 8.0
 content_margin_right = 8.0
@@ -18,7 +18,7 @@ border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.13, 0.15, 0.18, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_m2eyy"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_g2c31"]
 content_margin_left = 8.0
 content_margin_top = 8.0
 content_margin_right = 8.0
@@ -42,6 +42,7 @@ grow_vertical = 2
 
 [node name="Guidot_Data_Server2" type="Node" parent="."]
 script = ExtResource("1_683k6")
+_custom_server_name = null
 
 [node name="Node" type="Node" parent="."]
 script = ExtResource("2_juu06")
@@ -56,23 +57,23 @@ script = ExtResource("3_ti0gx")
 
 [node name="Guidot Wizard" type="PanelContainer" parent="."]
 z_index = 1
-custom_minimum_size = Vector2(200, 200)
+custom_minimum_size = Vector2(100, 100)
 layout_mode = 0
-offset_left = 618.0
-offset_top = 88.0
-offset_right = 981.0
-offset_bottom = 560.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_6dedh")
+offset_left = 735.0
+offset_top = 265.0
+offset_right = 1185.0
+offset_bottom = 815.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_0j20a")
 script = ExtResource("4_d8se5")
 
 [node name="Guidot_Color_Picker" type="PanelContainer" parent="."]
 visible = false
 z_index = 1
-custom_minimum_size = Vector2(200, 200)
+custom_minimum_size = Vector2(100, 100)
 layout_mode = 0
 offset_left = 735.0
 offset_top = 265.0
-offset_right = 1059.0
-offset_bottom = 894.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_m2eyy")
+offset_right = 1185.0
+offset_bottom = 815.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_g2c31")
 script = ExtResource("5_b0il1")

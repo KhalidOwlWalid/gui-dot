@@ -180,8 +180,9 @@ func _map_data_points_to_pixel_pos(gd_data: Guidot_Data, data_points: PackedVect
 # datasets = {Guidot_Data Object: <data_points>}
 func plot_multiple_data(datasets: Dictionary, y_axis_manager: RefCounted, time_range: Vector2):
 
-	# Clears the dictionary before adding new entries for each data channel
+	# Clears both caches before repopulating — keeps them in sync when channels are unsubscribed
 	self._data_channel_pixel_pos.clear()
+	self._cached_data_channel.clear()
 	var data_axis_map: Dictionary = y_axis_manager.get_data_to_axis_map()
 	
 	for gd_data in datasets.keys():

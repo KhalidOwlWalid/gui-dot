@@ -494,14 +494,46 @@ func _on_axis_dropdown_selected(index: int, dropdown: OptionButton, channel_name
 	self.log(LOG_INFO, ["Axis assignment:", channel_name, "->", axis_id_enum_str])
 	self.axis_assignment_changed.emit(channel_name, axis_id_enum_str)
 
+func _create_group_subheader(group_name: String) -> Button:
+	var btn: Button = self._create_config_button(group_name)
+	btn.text = "   " + btn.text
+	return btn
+
+func _wrap_with_indent(control: Control, indent: String) -> HBoxContainer:
+	var hbox: HBoxContainer = HBoxContainer.new()
+	var spacer: Label = Label.new()
+	spacer.text = indent
+	hbox.add_child(spacer)
+	hbox.add_child(control)
+	return hbox
+
+func _on_collapsible_header_pressed(button: Button, children: Array, label_text: String) -> void:
+	var any_visible: bool = false
+	for child in children:
+		if child.visible:
+			any_visible = true
+			break
+	var new_visibility: bool = not any_visible
+	for child in children:
+		child.visible = new_visibility
+	var capitalized: String = self.capitalize_words(label_text)
+	if new_visibility:
+		button.text = "⇓ " + capitalized
+	else:
+		button.text = "⇒ " + capitalized
+
+func _on_group_select_all_pressed(select_all_cbox: CheckBox, channel_cboxes: Array) -> void:
+	var subscribe: bool = select_all_cbox.button_pressed
+	for cbox in channel_cboxes:
+		cbox.button_pressed = subscribe
+		self._on_data_sub_cbox_pressed(cbox, cbox.text)
+
 func query_server_information() -> void:
-	
 	self._data_index_tree.clear()
 
 	var i: int = 0
-	var test = self._data_sub_vbox.get_children()
 	for child_node in self._data_sub_vbox.get_children():
-		# Skip the refresh button, since we know that it is the 0th child in the vbox
+		# Skip the refresh button at index 0
 		if (i == 0):
 			pass
 		else:
@@ -510,21 +542,57 @@ func query_server_information() -> void:
 
 	var gd_servers: Array[Node] = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)
 
-	# TODO: Implement caching to avoid having to redraw all of the nodes again
 	for server in gd_servers:
 		self._data_index_tree[server] = {}
-		for client in server.get_all_registered_clients().values():
-			self.log(LOG_DEBUG, ["Server:", server.get_custom_name(), "has", client.get_custom_name()])	
-			var client_button: Button = self._create_config_button(client.get_custom_name())
-			self._data_sub_vbox.add_child(client_button)
+		for source in server.get_all_registered_clients().values():
+			self.log(LOG_DEBUG, ["Server:", server.get_custom_name(), "has source:", source.get_custom_name()])
 
-			for data_chan_node in client.get_all_data_channels():
-				var cbox_state: bool = false
-				if (data_chan_node.get_name() in self.wizard_subscribed_data):
-					cbox_state = true
-				var channel_cbox: CheckBox = self._create_checkbox_button(cbox_state, data_chan_node.get_name())
-				channel_cbox.pressed.connect(self._on_data_sub_cbox_pressed.bind(channel_cbox, data_chan_node.get_name()))
-				self._data_sub_vbox.add_child(channel_cbox)
+			var source_ui_nodes: Array = []
+			var source_button: Button = self._create_config_button(source.get_custom_name())
+			self._data_sub_vbox.add_child(source_button)
+
+			for group in source.get_all_data_groups():
+				var group_ui_nodes: Array = []
+				var group_cboxes: Array = []
+
+				var group_btn: Button = self._create_group_subheader(group.get_name())
+				self._data_sub_vbox.add_child(group_btn)
+				source_ui_nodes.append(group_btn)
+
+				var select_all_cbox: CheckBox = self._create_checkbox_button(false, "Select All")
+				var select_all_row: HBoxContainer = self._wrap_with_indent(select_all_cbox, "      ")
+				self._data_sub_vbox.add_child(select_all_row)
+				group_ui_nodes.append(select_all_row)
+				source_ui_nodes.append(select_all_row)
+
+				for channel in group.get_channels():
+					var cbox_state: bool = channel.get_name() in self.wizard_subscribed_data
+					var cbox: CheckBox = self._create_checkbox_button(cbox_state, channel.get_name())
+					cbox.pressed.connect(self._on_data_sub_cbox_pressed.bind(cbox, channel.get_name()))
+					var cbox_row: HBoxContainer = self._wrap_with_indent(cbox, "         ")
+					self._data_sub_vbox.add_child(cbox_row)
+					group_ui_nodes.append(cbox_row)
+					source_ui_nodes.append(cbox_row)
+					group_cboxes.append(cbox)
+
+				select_all_cbox.pressed.connect(
+					self._on_group_select_all_pressed.bind(select_all_cbox, group_cboxes)
+				)
+				group_btn.pressed.connect(
+					self._on_collapsible_header_pressed.bind(group_btn, group_ui_nodes, group.get_name())
+				)
+
+			for channel in source.get_ungrouped_channels():
+				var cbox_state: bool = channel.get_name() in self.wizard_subscribed_data
+				var cbox: CheckBox = self._create_checkbox_button(cbox_state, channel.get_name())
+				cbox.pressed.connect(self._on_data_sub_cbox_pressed.bind(cbox, channel.get_name()))
+				var cbox_row: HBoxContainer = self._wrap_with_indent(cbox, "   ")
+				self._data_sub_vbox.add_child(cbox_row)
+				source_ui_nodes.append(cbox_row)
+
+			source_button.pressed.connect(
+				self._on_collapsible_header_pressed.bind(source_button, source_ui_nodes, source.get_custom_name())
+			)
 
 # Currently, the graph config tree builder only supports up to level 1 depth of nesting
 # so adding a nested dictionary inside another level 1 dictionary will simply add it to the same depth level
