@@ -55,7 +55,7 @@ func get_custom_name() -> String:
 	return self._metadata["custom_name"]
 
 # TODO (Khalid): Error handling to check if it is a duplicate
-func register_client(node: Guidot_Data_Client) -> bool:
+func register_client(node: Guidot_Data_Source) -> bool:
 	self._client_id_manager[node.name] = node	
 	return true
 
@@ -90,7 +90,7 @@ func get_node_id_with_channel_name(channel_name: String) -> Guidot_Data:
 
 # TODO: This needs to be refactored to utilize the client properly
 # What I am doing now is simply storing all of the information on the server side completely?
-func update_channel_manager(node: Guidot_Data_Client) -> bool:
+func update_channel_manager(node: Guidot_Data_Source) -> bool:
 	for data_node_ptr in node.get_all_data_channels().keys():
 		var data_channel_name: String = node.get_data_channel_name(data_node_ptr)
 		self._data_channel_manager[data_node_ptr] = PackedVector2Array()
