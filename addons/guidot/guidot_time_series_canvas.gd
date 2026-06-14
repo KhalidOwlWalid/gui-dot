@@ -1172,6 +1172,7 @@ func _input(event: InputEvent) -> void:
 			self._on_toggle_graph_pressed()
 
 		if (event.keycode == KEY_ESCAPE):
+			self.log(LOG_DEBUG, ["I am calling escape here"])
 			self.show_wizard(false)
 
 func _set_mouse_filter_action():
