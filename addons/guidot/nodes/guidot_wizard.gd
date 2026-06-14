@@ -807,6 +807,8 @@ func _process(delta: float) -> void:
 	# self.populate_fake_config_tree_entry()
 
 func _input(event: InputEvent) -> void:
+	if not self.visible:
+		return
 	super._input(event)
 
 	if (event is InputEventKey and event.pressed):
