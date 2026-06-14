@@ -23,7 +23,6 @@ var thread: Thread
 var mutex: Mutex
 @onready var counter: int = 0
 
-
 signal data_received
 
 func _counter() -> void:
