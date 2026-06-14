@@ -293,9 +293,9 @@ func _on_config_button_pressed(key_name: String, button: Button, base_branch_nam
 
 	key_name = self.capitalize_words(key_name)
 	if (not visible):
-		button.text = "⇒ " + key_name
+		button.text = "⇒  " + key_name
 	else:
-		button.text = "⇓ " + key_name
+		button.text = "⇓  " + key_name
 
 
 # path argument expects a valid full key path (nested dictionary) that exist in the dictionary
@@ -518,7 +518,7 @@ func _on_axis_dropdown_selected(index: int, dropdown: OptionButton, channel_name
 
 func _create_group_subheader(group_name: String) -> Button:
 	var btn: Button = Button.new()
-	btn.text = "   ⇓" + self.capitalize_words(group_name)
+	btn.text = "   ⇓ " + self.capitalize_words(group_name)
 	btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	var normal_color: Color = 1.15 * Guidot_Utils.get_color("gd_black")
 	var hover_color: Color = 0.75 * Guidot_Utils.get_color("graph_settings_label")
@@ -551,9 +551,9 @@ func _on_collapsible_header_pressed(button: Button, children: Array, label_text:
 		child.visible = new_visibility
 	var capitalized: String = self.capitalize_words(label_text)
 	if new_visibility:
-		button.text = indent + "⇓" + capitalized
+		button.text = indent + "⇓  " + capitalized
 	else:
-		button.text = indent + "⇒" + capitalized
+		button.text = indent + "⇒  " + capitalized
 
 func _on_group_select_all_pressed(select_all_cbox: CheckBox, channel_cboxes: Array) -> void:
 	var subscribe: bool = select_all_cbox.button_pressed
@@ -573,9 +573,13 @@ func query_server_information() -> void:
 			child_node.queue_free()
 		i += 1
 
+	# Returns Array[Guidot_Server]
 	var gd_servers: Array[Node] = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)
 
 	for server in gd_servers:
+
+		var server_label: Label = self._create_label(server.name, true, Guidot_Utils.get_color("graph_settings_label"))
+		self._data_sub_vbox.add_child(server_label)
 		self._data_index_tree[server] = {}
 		for source in server.get_all_registered_clients().values():
 			self.log(LOG_DEBUG, ["Server:", server.get_custom_name(), "has source:", source.get_custom_name()])

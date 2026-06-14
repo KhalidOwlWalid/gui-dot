@@ -1028,6 +1028,7 @@ func _draw():
 
 func plot_realtime_data() -> void:
 	
+	# TODO: Remove this and allow the user to select which server to choose from
 	self._guidot_server = self.get_tree().get_nodes_in_group(Guidot_Common._server_group_name)[0]
 
 	if (self._guidot_server != null):
@@ -1157,19 +1158,6 @@ func _input(event: InputEvent) -> void:
 				if (self._is_in_focus):
 					plot_node._is_in_focus = false
 				pass
-
-	# For hotkeys
-	# if (Input.is_action_just_pressed("nerd_stats")):
-	# 	self._toggle_nerd_stats = !self._toggle_nerd_stats
-	# 	self.log(LOG_DEBUG, ["Toggle for nerd stats:", self._toggle_nerd_stats])
-	# 	self.log(LOG_INFO, ["Displaying nerd stats"])
-
-	# 	if (self._toggle_nerd_stats):
-	# 		var curr_mouse_pos: Vector2 = self.get_viewport().get_mouse_position()
-	# 		debug_panel.set_position(curr_mouse_pos)
-	# 		debug_panel.show()
-	# 	else:
-	# 		debug_panel.hide()
 
 	if event is InputEventKey and event.pressed:
 
