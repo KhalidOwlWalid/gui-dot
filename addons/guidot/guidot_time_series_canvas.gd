@@ -756,11 +756,11 @@ func which_graph_in_focus(graph_name: String) -> void:
 		# to be selected again
 		self._graph_selected = false
 		if (self._guidot_wizard != null):
-			print(self._guidot_wizard.is_connected("config_tree_configured", self._apply_user_config))
 			self._guidot_wizard.config_tree_configured.disconnect(self._apply_user_config)
 			self._guidot_wizard.subscribe_to_data.disconnect(self._on_data_subscribed)
 			self._guidot_wizard.axis_assignment_changed.disconnect(self._on_wizard_axis_assignment)
 			self._guidot_wizard.line_color_changed.disconnect(self._on_line_color_changed)
+			self._guidot_wizard = null
 		self.ui_action_request.emit(Guidot_Common.UI_Action.REMOVE_FOCUS)
 
 func _get_data() -> PackedVector2Array:
@@ -1145,6 +1145,7 @@ func plot_fixedtime_data():
 func _update_buffer_mode(new_buff_mode: Graph_Buffer_Mode):
 	# self._config_tree[_GBS.global_key][self._graph_buffer_mode_key][_GBS.value_key]  = new_buff_mode
 	self._config_tree[_GBS.local_key][self._graph_buffer_mode_key][_GBS.value_key]  = new_buff_mode
+	self._prev_graph_mode = self._current_graph_mode
 	self._current_graph_mode = new_buff_mode
 	self.plot_node._curr_graph_mode = new_buff_mode
 
@@ -1154,9 +1155,6 @@ func _input(event: InputEvent) -> void:
 		
 		if event.pressed:
 			if event.button_index == MOUSE_BUTTON_LEFT:
-				# TODO (Khalid): At the moment, this does not work because if we click on the plot,
-				# the display also captures this signal, resulting in "double emit focus" signal generated
-				# self._emit_focus_requested_signal()
 				if (self._is_in_focus):
 					plot_node._is_in_focus = false
 				pass
