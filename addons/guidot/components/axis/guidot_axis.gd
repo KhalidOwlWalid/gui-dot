@@ -39,7 +39,7 @@ var _axis_limit_config: Guidot_Axis_Canvas_Limit_Config
 var _mouse_hold_frame_count: int = 5
 var _mouse_hold_frame_count_max: int = 5
 var _axis_drag_mode_active: bool = false
-var _axis_drag_mouse_pos: Vector2 = get_local_mouse_position()
+var _axis_drag_mouse_pos: Vector2 = Vector2(0, 0)
 var _drag_active: bool = false
 
 # ── Shared inline-edit infrastructure ────────────────────────────────────────
