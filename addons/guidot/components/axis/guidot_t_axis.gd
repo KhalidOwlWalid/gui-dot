@@ -44,6 +44,7 @@ func set_window_size_s(time_window_s: float) -> void:
 # Settings apply) switches the axis to FIXED mode.  The internal sliding-
 # window update bypasses this by calling _advance_window() instead.
 func setup_axis_range(min_v: float, max_v: float, trigger_redraw: bool = true) -> Guidot_Error:
+	self.change_graph_mode(TAxisMode.FIXED)
 	var gd_error: Guidot_Error = super.setup_axis_range(min_v, max_v, trigger_redraw)
 	return gd_error
 
