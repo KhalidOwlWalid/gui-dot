@@ -65,8 +65,10 @@ func set_axis_id(ax_id: int) -> void:
 	pass
 
 func init_event_handler() -> void:
-	self.mouse_entered.connect(_on_mouse_entered)
-	self.mouse_exited.connect(_on_mouse_exited)
+	if not self.mouse_entered.is_connected(_on_mouse_entered):
+		self.mouse_entered.connect(_on_mouse_entered)
+	if not self.mouse_exited.is_connected(_on_mouse_exited):
+		self.mouse_exited.connect(_on_mouse_exited)
 
 func setup_axis_node(name: String, color: Color) -> void:
 	self.name = name
