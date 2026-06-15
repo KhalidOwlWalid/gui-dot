@@ -1,0 +1,78 @@
+site_name: Guidot
+site_description: Real-time time-series graph widget for Godot 4
+site_author: KhalidOwlWalid
+site_url: https://khalidowlwalid.github.io/gui-dot/
+repo_name: KhalidOwlWalid/gui-dot
+repo_url: https://github.com/KhalidOwlWalid/gui-dot
+
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: deep purple
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: deep purple
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - content.code.copy
+    - content.code.annotate
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Introduction: introduction.md
+    - Installation: installation.md
+  - How to Use:
+    - Overview: how-to-use/overview.md
+    - Data Flow: how-to-use/data-flow.md
+    - Axis Controls: how-to-use/axis-controls.md
+    - Configuration: how-to-use/configuration.md
+  - Examples:
+    - Basic Sine Wave: examples/basic-sine-wave.md
+    - Multiple Channels: examples/multiple-channels.md
+    - Data Grouping: examples/data-grouping.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/KhalidOwlWalid/gui-dot
