@@ -239,7 +239,7 @@ func _draw_plots() -> void:
 		else:	
 			for i in range(1, data_points.size()):
 				draw_line(data_points[i - 1], data_points[i], gd_data.get_line_color(), 0.5, true)
-				draw_circle(data_points[i], 2.0, gd_data.get_line_color(), -1, true)
+				draw_circle(data_points[i], 2.0, gd_data.get_line_color(), true)
 
 func _draw_plots_new() -> void:
 	pass
