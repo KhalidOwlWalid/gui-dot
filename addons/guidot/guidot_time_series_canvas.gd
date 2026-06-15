@@ -703,7 +703,9 @@ func _on_data_subscribed(subscribe: bool, channel_name: String) -> void:
 		self.refresh_y_axis()
 	else:
 		if (channel_name in self._selected_channels_name):
+			self.log(LOG_DEBUG, ["Unsubscribing for: ", channel_name, "[Current subscribed channel: ", self._selected_channels_name, "]"])
 			self._selected_channels_name.erase(channel_name)
+			self.log(LOG_DEBUG, ["After unsubscribing for: ", channel_name, "[Current subscribed channel: ", self._selected_channels_name, "]"])
 			var gd_data_node: Guidot_Data = self._guidot_server.get_node_id_with_channel_name(channel_name)
 			self._y_axis_manager.get_data_to_axis_map().erase(gd_data_node)
 			self.refresh_y_axis()

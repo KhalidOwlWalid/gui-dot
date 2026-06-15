@@ -351,7 +351,7 @@ func _on_dropdown_selected(index: int, dropdown: OptionButton, branch_name: Stri
 func _on_data_sub_cbox_pressed(cbox: CheckBox, channel_name: String) -> void:
 	# Update local subscribed list and emit subscription change
 	var subscribed: bool = cbox.button_pressed
-	if subscribed:
+	if subscribed and channel_name not in self.wizard_subscribed_data:
 		if channel_name not in self.wizard_subscribed_data:
 			self.wizard_subscribed_data.append(channel_name)
 	else:
@@ -557,7 +557,10 @@ func _on_collapsible_header_pressed(button: Button, children: Array, label_text:
 
 func _on_group_select_all_pressed(select_all_cbox: CheckBox, channel_cboxes: Array) -> void:
 	var subscribe: bool = select_all_cbox.button_pressed
+
 	for cbox in channel_cboxes:
+		if cbox.button_pressed == subscribe:
+			continue
 		cbox.button_pressed = subscribe
 		self._on_data_sub_cbox_pressed(cbox, cbox.text)
 
