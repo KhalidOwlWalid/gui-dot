@@ -1,4 +1,4 @@
-# @tool
+@tool
 class_name Guidot_Time_Series_Graph
 extends PanelContainer
 
